@@ -31,9 +31,20 @@ module BloodContracts
     end
 
     def write(writer, context, input, output)
-      return data.to_s unless writer
+      return default_write_pattern(input, output) unless writer
       writer = context.method(writer) if context && writer.respond_to?(:to_sym)
       writer.call(input, output)
+    end
+
+    def default_write_pattern(input, output)
+      [
+        "INPUT:",
+        input,
+        "\n#{'=' * 90}\n",
+        "OUTPUT:",
+        output
+      ].map(&:to_s).join("\n")
+
     end
 
     # Quick open: `vim -O tmp/contract_tests/<tstamp>/<tag>/<tstamp>.*`
@@ -42,14 +53,18 @@ module BloodContracts
         stats[rule_name] += 1
         run_name = run_name(rule_name)
 
-        # Write to HTML
+        # TODO: Write to HTML
         input_fname = "#{run_name}.input"
         output_fname = "#{run_name}.output"
         File.open(input_fname, "w+") do |f|
-          f << write(input_writer, context, input, output)
+          f << write(input_writer, context, input, output).encode(
+            'UTF-8', invalid: :replace, undef: :replace, replace: '?'
+          )
         end
         File.open(output_fname, "w+") do |f|
-          f << write(output_writer, context, input, output)
+          f << write(output_writer, context, input, output).encode(
+            'UTF-8', invalid: :replace, undef: :replace, replace: '?'
+          )
         end
       end
     end

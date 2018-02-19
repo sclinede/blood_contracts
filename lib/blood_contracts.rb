@@ -42,13 +42,13 @@ module BloodContracts
 
         def _input_writer
           input_writer = @_writers.to_h[:input]
-          input_writer ||= :input_writer if defined? input_writer
+          input_writer ||= :input_writer if defined? self.input_writer
           input_writer
         end
 
         def _output_writer
           output_writer = @_writers.to_h[:output]
-          output_writer ||= :output_writer if defined? output_writer
+          output_writer ||= :output_writer if defined? self.output_writer
           output_writer
         end
 
