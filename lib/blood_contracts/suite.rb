@@ -6,6 +6,7 @@ module BloodContracts
     option :contract, default: -> { Hashie::Mash.new }
     option :input_writer, optional: true
     option :output_writer, optional: true
+    option :storage_backend, optional: true
     option :storage, default: -> { default_storage }
 
     def data_generator=(generator)

@@ -15,11 +15,11 @@ module BloodContracts
            ->(v) { v.to_f if v.to_f.positive? },
            optional: true
 
-    option :stop_on_unexpected, default: false
+    option :stop_on_unexpected, default: -> { false }
 
     def call
       iterate do
-        unexpected = match_rules(input, output) do |rules|
+        unexpected = match_rules(*run) do |input, output, rules|
           suite.storage.save_run(
             input: input, output: output, rules: rules, context: context,
           )
@@ -37,19 +37,6 @@ module BloodContracts
         percent = run_stats[rule.name]&.percent || 0.0
         check.call(percent, rule)
       end
-    end
-
-    def match_and_store(input, output)
-      matched_rules = match_rules(input, output) do |rules|
-        suite.storage.save_run(
-          input: input,
-          output: output,
-          rules: rules,
-          context: context,
-        )
-      end
-
-      throw :unexpected_behavior, :found if matched_rules.empty?
     end
 
     def failure_message
@@ -112,8 +99,8 @@ module BloodContracts
       matched_rules = suite.contract.select do |_name, rule|
         rule.check.call(input, output)
       end.keys
-
-      yield matched_rules.empty? ? [Storage::UNDEFINED_RULE] : matched_rules
+      matched_rules = [Storage::UNDEFINED_RULE] if matched_rules.empty?
+      yield(input, output, matched_rules)
 
       matched_rules
       # FIXME: Possible recursion?

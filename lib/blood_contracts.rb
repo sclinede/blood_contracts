@@ -4,7 +4,9 @@ require_relative "blood_contracts/storage"
 require_relative "blood_contracts/runner"
 
 module BloodContracts
-  if defined?(RSpec)
+
+  # Use https://github.com/razum2um/lurker/blob/master/lib/lurker/spec_helper/rspec.rb
+  if defined?(RSpec) && RSpec.respond_to?(:configure)
     module MeetContractMatcher
       extend RSpec::Matchers::DSL
 
