@@ -19,7 +19,8 @@ module BloodContracts
             context: self,
             suite: build_suite(options),
             iterations: @_iterations,
-            time_to_run: @_time_to_run
+            time_to_run: _time_to_run,
+            stop_on_unexpected: @_halt_on_unexpected,
           )
           @_contract_runner.call
         end
@@ -33,6 +34,10 @@ module BloodContracts
           suite.output_writer  = _output_writer     if _output_writer
 
           suite
+        end
+
+        def _time_to_run
+          ENV["duration"] || @_time_to_run
         end
 
         def _input_writer
@@ -69,6 +74,11 @@ module BloodContracts
         chain :during_n_seconds_run do |time_to_run|
           @_time_to_run = Float(time_to_run)
         end
+
+        chain :halt_on_unexpected do
+          @_halt_on_unexpected = true
+        end
+
       end
     end
   end

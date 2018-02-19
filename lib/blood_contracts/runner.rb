@@ -24,19 +24,24 @@ module BloodContracts
             input: input, output: output, rules: rules, context: context,
           )
         end.empty?
-        throw :unexpected_behavior, :found if stop_on_unexpected && unexpected
+        throw :unexpected_behavior, :stop if stop_on_unexpected && unexpected
       end
       valid?
     end
 
     def valid?
+      return if stopped_by_unexpected_behavior?
       return if found_unexpected_behavior?
 
-      run_stats = running_stats
+      last_run_stats = run_stats
       expectations_checks.all? do |rule, check|
-        percent = run_stats[rule.name]&.percent || 0.0
+        percent = last_run_stats[rule.name]&.percent || 0.0
         check.call(percent, rule)
       end
+    end
+
+    def found_unexpected_behavior?
+      run_stats.key?(Storage::UNDEFINED_RULE)
     end
 
     def failure_message
@@ -44,22 +49,23 @@ module BloodContracts
 
       if found_unexpected_behavior?
         "#{intro}\n#{contract_description}\n"\
-        " during #{iterations} run(s) but got unexpected behavior.\n"\
-        "For further investigations open:"\
-        " file://#{unexpected_behavior_report_path}"
+        " during #{iterations} run(s) but got unexpected behavior.\n\n"\
+        "For further investigations open: #{unexpected_behavior_report_path}/"
       else
         "#{intro}\n#{contract_description}\n"\
-        " during #{iterations} run(s) but got:\n#{stats_description}\n"
+        " during #{iterations} run(s) but got:\n#{stats_description}\n\n"\
+        "For further investigations open: #{suite.storage.path}"
       end
     end
 
     def unexpected_behavior_report_path
-      File.join(suite.storage.root, Storage::UNDEFINED_RULE.to_s)
+      File.join(suite.storage.path, Storage::UNDEFINED_RULE.to_s)
     end
 
     def description
       "meet the contract:\n#{contract_description} \n"\
-        " during #{iterations} run(s). Run(s) stats:\n#{stats_description}"
+      " during #{iterations} run(s). Stats:\n#{stats_description}\n\n"\
+      "For further investigations open: #{suite.storage.path}\n"
     end
 
     private
@@ -69,8 +75,8 @@ module BloodContracts
       [input, checking_proc.call(input)]
     end
 
-    def found_unexpected_behavior?
-      @_found_unexpected_behavior == :found
+    def stopped_by_unexpected_behavior?
+      @_stopped_by_unexpected_behavior == :stop
     end
 
     def stats
@@ -85,7 +91,7 @@ module BloodContracts
         @iterations = run_iterations + 1
       end
 
-      @_found_unexpected_behavior = catch(:unexpected_behavior) do
+      @_stopped_by_unexpected_behavior = catch(:unexpected_behavior) do
         run_iterations.times { yield }
       end
     end
@@ -134,14 +140,14 @@ module BloodContracts
 
     def contract_description
       suite.contract.map do |name, rule|
-        rule_description = " - '#{name}'"
+        rule_description = " - '#{name}' "
         if rule.threshold
           rule_description << <<~TEXT
-            in more then #{rule.threshold * 100}% of cases;
+            in more then #{(rule.threshold * 100).round(2)}% of cases;
           TEXT
         elsif rule.limit
           rule_description << <<~TEXT
-            in less then #{rule.limit * 100}% of cases;
+            in less then #{(rule.limit * 100).round(2)}% of cases;
           TEXT
         else
           next
@@ -151,20 +157,20 @@ module BloodContracts
     end
 
     def stats_description
-      running_stats.map do |name, occasions|
-        " - '#{name}' happened #{occasions.count} time(s) "\
-        "(#{occasions.percent * 100}% of the time)"
+      run_stats.map do |name, occasions|
+        " - '#{name}' happened #{occasions.times} time(s) "\
+        "(#{(occasions.percent * 100).round(2)}% of the time)"
       end.join("; \n")
     end
 
-    def running_stats
+    def run_stats
       Hash[
-        stats.map do |rule_name, count|
+        stats.map do |rule_name, times|
           [
             rule_name,
             Hashie::Mash.new(
-              count: count,
-              percent: (count.to_f / iterations).round(2),
+              times: times,
+              percent: (times.to_f / iterations),
             ),
           ]
         end

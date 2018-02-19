@@ -4,13 +4,11 @@ module BloodContracts
 
     # Split date and time, for more comfortable Dirs navigation
     option :start_time, default: -> { Time.current.to_s(:number) }
-    option :root,
-           default: -> { Rails.root.join("tmp/contract_tests/#{start_time}/") }
+    option :path, default: -> { "./tmp/contract_tests/#{start_time}/" }
+    option :root, default: -> { Rails.root.join(path) }
     option :stats, default: -> { Hash.new(0) }
     option :input_writer
     option :output_writer
-
-    attr_reader :root, :stats
 
     UNDEFINED_RULE = :__no_tag_match__
 
