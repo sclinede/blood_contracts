@@ -24,6 +24,10 @@ Or install it yourself as:
 
     $ gem install blood_contracts
 
+## Other specific use cases
+
+For Rack request/response validation use: `blood_contracts-rack`
+
 ## Usage
 
 ```ruby
