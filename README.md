@@ -7,6 +7,8 @@ Possible use-cases:
 - Automated detection of unexpected external API behavior (Rack::request/response pairs that don't match contract);
 - Contract definition assistance tool (generate real-a-like requests and iterate through oddities of your system behavior)
 
+<a href="https://evilmartians.com/">
+<img src="https://evilmartians.com/badges/sponsored-by-evil-martians.svg" alt="Sponsored by Evil Martians" width="236" height="54"></a>
 
 ## Installation
 
