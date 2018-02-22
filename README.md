@@ -24,10 +24,6 @@ Or install it yourself as:
 
     $ gem install blood_contracts
 
-## Other specific use cases
-
-For Rack request/response validation use: `blood_contracts-rack`
-
 ## Usage
 
 ```ruby
@@ -129,6 +125,10 @@ runner.run_stats # stats about each contract rule or exceptions occasions during
 
 ```
 
+## TODO
+- Add rake task to run contracts validation
+- Add executable to run contracts validation
+
 ## Possible Features
 - Store the actual code of the contract rules in Storage (gem 'sourcify')
 - Store reports in Storage
@@ -136,6 +136,10 @@ runner.run_stats # stats about each contract rule or exceptions occasions during
 - Contracts inheritance (already exists using `Hash#merge`?)
 - Export `Runner#run_stats` to CSV
 - Create simple web app, to read the reports
+
+## Other specific use cases
+
+For Rack request/response validation use: `blood_contracts-rack`
 
 ## Development
 

@@ -4,13 +4,21 @@ module BloodContracts
 
     # Split date and time, for more comfortable Dirs navigation
     option :start_time, default: -> { Time.current.to_s(:number) }
-    option :path, default: -> { "./tmp/contract_tests/#{start_time}/" }
+    option :custom_path, optional: true
     option :root, default: -> { Rails.root.join(path) }
     option :stats, default: -> { Hash.new(0) }
-    option :input_writer
-    option :output_writer
+    option :input_writer,  optional: true
+    option :output_writer, optional: true
 
     UNDEFINED_RULE = :__no_tag_match__
+
+    def default_path
+      "./tmp/contract_tests/"
+    end
+
+    def path
+      @path ||= File.join(default_path, custom_path.to_s, start_time)
+    end
 
     def input_writer=(writer)
       fail ArgumentError unless writer.respond_to?(:call) ||

@@ -26,14 +26,22 @@ module BloodContracts
         end
 
         def build_suite(options)
-          suite = options[:contract_suite] || Suite.new
+          storage = Storage.new(custom_path: _example_name_to_path)
+          storage.input_writer  = _input_writer  if _input_writer
+          storage.output_writer = _output_writer if _output_writer
+
+          suite = options[:contract_suite] || Suite.new(storage: storage)
 
           suite.data_generator = @_generator        if @_generator
           suite.contract       = options[:contract] if options[:contract]
-          suite.input_writer   = _input_writer      if _input_writer
-          suite.output_writer  = _output_writer     if _output_writer
-
           suite
+        end
+
+        def _example_name_to_path
+          method_missing(:class).
+            name.
+            sub("RSpec::ExampleGroups::", "").
+            snakecase
         end
 
         def _input_writer
