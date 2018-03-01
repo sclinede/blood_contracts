@@ -4,7 +4,6 @@ require_relative "blood_contracts/storage"
 require_relative "blood_contracts/runner"
 
 module BloodContracts
-
   # Use https://github.com/razum2um/lurker/blob/master/lib/lurker/spec_helper/rspec.rb
   if defined?(RSpec) && RSpec.respond_to?(:configure)
     module MeetContractMatcher
@@ -29,6 +28,8 @@ module BloodContracts
           storage = Storage.new(custom_path: _example_name_to_path)
           storage.input_writer  = _input_writer  if _input_writer
           storage.output_writer = _output_writer if _output_writer
+          storage.input_serializer  = _input_serializer
+          storage.output_serializer = _output_serializer
 
           suite = options[:contract_suite] || Suite.new(storage: storage)
 
@@ -38,10 +39,10 @@ module BloodContracts
         end
 
         def _example_name_to_path
-          method_missing(:class).
-            name.
-            sub("RSpec::ExampleGroups::", "").
-            snakecase
+          method_missing(:class)
+            .name
+            .sub("RSpec::ExampleGroups::", "")
+            .snakecase
         end
 
         def _input_writer
@@ -56,6 +57,14 @@ module BloodContracts
           output_writer
         end
 
+        def _input_serializer
+          @_input_serializer || {}
+        end
+
+        def _output_serializer
+          @_output_serializer || {}
+        end
+
         supports_block_expectations
 
         failure_message { @_contract_runner.failure_message }
@@ -66,7 +75,7 @@ module BloodContracts
           if generator.respond_to?(:to_sym)
             @_generator = method(generator.to_sym)
           else
-            fail ArgumentError unless generator.respond_to?(:call)
+            raise ArgumentError unless generator.respond_to?(:call)
             @_generator = generator
           end
         end
@@ -83,6 +92,13 @@ module BloodContracts
           @_halt_on_unexpected = true
         end
 
+        chain :serialize_input do |serializer|
+          @_input_serializer = serializer
+        end
+
+        chain :serialize_output do |serializer|
+          @_output_serializer = serializer
+        end
       end
     end
   end

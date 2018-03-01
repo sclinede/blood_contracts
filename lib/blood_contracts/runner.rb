@@ -12,7 +12,6 @@ module BloodContracts
       v.to_i.positive? ? v.to_i : 1
     end, default: -> { 1 }
 
-
     option :time_to_run, ->(v) do
       v = ENV["duration"] if ENV["duration"]
       v.to_f if v.to_f.positive?
@@ -73,9 +72,19 @@ module BloodContracts
 
     private
 
+    def debugging?
+      @debugging ||= suite.storage.find_run(ENV["debug"])
+    end
+
     def run
+      return debugging_run if debugging?
       input = suite.data_generator.call
       [input, checking_proc.call(input)]
+    end
+
+    def debugging_run
+      run_pattern = ENV["debug"]
+      suite.storage.load_run(run_pattern)
     end
 
     def stopped_by_unexpected_behavior?
@@ -87,7 +96,8 @@ module BloodContracts
     end
 
     def iterate
-      run_iterations = iterations
+      run_iterations = 1 if debugging?
+      run_iterations ||= iterations
 
       if time_to_run
         run_iterations = iterations_count_from_time_to_run { yield }
@@ -114,7 +124,7 @@ module BloodContracts
       matched_rules
       # FIXME: Possible recursion?
       # Write test about error in the yield (e.g. writing error)
-    rescue => e
+    rescue StandardError => e
       yield [Storage::UNDEFINED_RULE]
       raise e
     end
@@ -134,8 +144,6 @@ module BloodContracts
             [rule.merge(name: name), method(:threshold_check)]
           elsif rule.limit
             [rule.merge(name: name), method(:limit_check)]
-          else
-            nil
           end
         end.compact
       ]

@@ -9,8 +9,8 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Sergey Dolganov"]
   spec.email         = ["dolganov@evl.ms"]
 
-  spec.summary       = %q{Ruby gem to define and validate behavior of API using contracts.}
-  spec.description   = %q{Ruby gem to define and validate behavior of API using contracts.}
+  spec.summary       = "Ruby gem to define and validate behavior of API using contracts."
+  spec.description   = "Ruby gem to define and validate behavior of API using contracts."
   spec.homepage      = "https://github.com/sclinede/blood_contracts"
   spec.license       = "MIT"
 
