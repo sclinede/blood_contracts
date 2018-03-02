@@ -19,7 +19,11 @@ module BloodContracts
 
     option :stop_on_unexpected, default: -> { false }
 
+    option :stats, default: -> { Hash.new(0) }
+
     def call
+      return true if debug_mode? && !debugging_sample?
+
       iterate do
         unexpected = match_rules(*run) do |input, output, rules|
           suite.storage.save_run(
@@ -56,28 +60,38 @@ module BloodContracts
       else
         "#{intro}\n#{contract_description}\n"\
         " during #{iterations} run(s) but got:\n#{stats_description}\n\n"\
-        "For further investigations open: #{suite.storage.path}"
+        "For further investigations open: #{suite.storage.suggestion}"
       end
     end
 
     def unexpected_behavior_report_path
-      File.join(suite.storage.path, Storage::UNDEFINED_RULE.to_s)
+      File.join(suite.storage.suggestion, Storage::UNDEFINED_RULE.to_s)
     end
 
     def description
+      return "skipped in debugging" if debug_mode? && !debugging_sample?
+
       "meet the contract:\n#{contract_description} \n"\
       " during #{iterations} run(s). Stats:\n#{stats_description}\n\n"\
-      "For further investigations open: #{suite.storage.path}\n"
+      "For further investigations open: #{suite.storage.suggestion}\n"
     end
 
     private
 
-    def debugging?
-      @debugging ||= suite.storage.find_run(ENV["debug"])
+    def debug_mode?
+      return @debug_mode if defined? @debug_mode
+      @debug_mode = ENV["debug"].present?
+    end
+
+    def debugging_sample?
+      return @debugging_sample if defined? @debugging_sample
+      @debugging_sample =
+        debug_mode? && suite.storage.run_exists?(ENV["debug"])
     end
 
     def run
-      return debugging_run if debugging?
+      return debugging_run if debugging_sample?
+
       input = suite.data_generator.call
       [input, checking_proc.call(input)]
     end
@@ -91,12 +105,8 @@ module BloodContracts
       @_stopped_by_unexpected_behavior == :stop
     end
 
-    def stats
-      suite.storage.stats
-    end
-
     def iterate
-      run_iterations = 1 if debugging?
+      run_iterations = 1 if debugging_sample?
       run_iterations ||= iterations
 
       if time_to_run
@@ -119,7 +129,9 @@ module BloodContracts
         rule.check.call(input, output)
       end.keys
       matched_rules = [Storage::UNDEFINED_RULE] if matched_rules.empty?
-      yield(input, output, matched_rules)
+      Array(matched_rules).each { |rule| stats[rule] += 1 }
+
+      yield(input, output, matched_rules) unless debugging_sample?
 
       matched_rules
       # FIXME: Possible recursion?

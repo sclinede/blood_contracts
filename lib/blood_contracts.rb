@@ -25,11 +25,11 @@ module BloodContracts
         end
 
         def build_suite(options)
-          storage = Storage.new(custom_path: _example_name_to_path)
+          storage = Storage.new(example_name: _example_name_to_path)
           storage.input_writer  = _input_writer  if _input_writer
           storage.output_writer = _output_writer if _output_writer
-          storage.input_serializer  = _input_serializer
-          storage.output_serializer = _output_serializer
+          storage.input_serializer  = @_input_serializer
+          storage.output_serializer = @_output_serializer
 
           suite = options[:contract_suite] || Suite.new(storage: storage)
 
@@ -55,14 +55,6 @@ module BloodContracts
           output_writer = @_writers.to_h[:output]
           output_writer ||= :output_writer if defined? self.output_writer
           output_writer
-        end
-
-        def _input_serializer
-          @_input_serializer || {}
-        end
-
-        def _output_serializer
-          @_output_serializer || {}
         end
 
         supports_block_expectations
