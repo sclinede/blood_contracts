@@ -3,7 +3,7 @@ module BloodContracts
     extend Dry::Initializer
 
     option :data_generator, optional: true
-    option :contract, default: -> { Hashie::Mash.new }
+    option :contract, ->(v) { Hashie::Mash.new(v) }, default: -> { Hash.new }
 
     option :input_writer,  optional: true
     option :output_writer, optional: true

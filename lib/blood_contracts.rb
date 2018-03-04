@@ -1,7 +1,10 @@
 require "blood_contracts/version"
 require_relative "blood_contracts/suite"
 require_relative "blood_contracts/storage"
+require_relative "blood_contracts/base_runner"
 require_relative "blood_contracts/runner"
+require_relative "blood_contracts/debugger"
+require_relative "blood_contracts/base_contract"
 
 module BloodContracts
   # Use https://github.com/razum2um/lurker/blob/master/lib/lurker/spec_helper/rspec.rb
@@ -9,14 +12,15 @@ module BloodContracts
     module MeetContractMatcher
       extend RSpec::Matchers::DSL
 
-      matcher :meet_contract_rules do |options|
-        match do |actual|
-          raise ArgumentError unless actual.respond_to?(:call)
+      matcher :meet_contract_rules do |args|
+        match do |subject|
+          raise ArgumentError unless valid_subject?(subject)
+          runner = ENV["debug"] ? Debugger : Runner
 
-          @_contract_runner = Runner.new(
+          @_contract_runner = runner.new(
             actual,
             context: self,
-            suite: build_suite(options),
+            suite: build_suite(args || subject),
             iterations: @_iterations,
             time_to_run: @_time_to_run,
             stop_on_unexpected: @_halt_on_unexpected,
@@ -24,18 +28,28 @@ module BloodContracts
           @_contract_runner.call
         end
 
-        def build_suite(options)
+        def build_suite(args)
+          if args.respond_to?(:to_contract_suite)
+            suite = args.to_contract_suite(name: _example_name_to_path)
+          elsif args.respond_to?(:to_hash)
+            suite = Suite.new(storage: new_storage)
+            suite.contract       = options[:contract] if options[:contract]
+          end
+          suite.data_generator = @_generator if @_generator
+          suite
+        end
+
+        def valid_subject?(subject)
+          subject.respond_to?(:call) || subject.respond_to?(:to_contract_suite)
+        end
+
+        def new_storage
           storage = Storage.new(example_name: _example_name_to_path)
           storage.input_writer  = _input_writer  if _input_writer
           storage.output_writer = _output_writer if _output_writer
           storage.input_serializer  = @_input_serializer
           storage.output_serializer = @_output_serializer
-
-          suite = options[:contract_suite] || Suite.new(storage: storage)
-
-          suite.data_generator = @_generator        if @_generator
-          suite.contract       = options[:contract] if options[:contract]
-          suite
+          storage
         end
 
         def _example_name_to_path

@@ -27,6 +27,7 @@ Gem::Specification.new do |spec|
 
   # Will be removed soon
   spec.add_runtime_dependency "activesupport", ">= 3.1"
+  spec.add_runtime_dependency "nanoid"
 
   spec.add_development_dependency "bundler", "~> 1.16"
   spec.add_development_dependency "rake", "~> 10.0"

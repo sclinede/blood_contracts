@@ -19,7 +19,8 @@ module BloodContracts
     option :backend, default: -> { FileBackend.new(self, example_name) }
 
     def_delegators :@backend, :sample_exists?, :read_sample, :suggestion,
-                   :serialize_input, :serialize_output, :save_sample
+                   :serialize_input, :serialize_output, :save_sample,
+                   :find_all_samples, :unexpected_suggestion
 
     def input_serializer=(serializer)
       @input_serializer = valid_serializer(serializer)
@@ -38,6 +39,7 @@ module BloodContracts
     end
 
     UNDEFINED_RULE = :__no_tag_match__
+    EXCEPTION_CAUGHT = :__exception_raised__
 
     def valid_writer(writer, fallback: false)
       return method(:default_write_pattern) if !writer && fallback
@@ -97,7 +99,6 @@ module BloodContracts
 
     def parse_run_patter(run_pattern)
       run, tag, sample = run_pattern.split("/").last(3)
-      sample = File.basename(sample, File.extname(sample))
       [run, tag, sample]
     end
 
@@ -107,6 +108,11 @@ module BloodContracts
         input_serializer[:load].call(read_sample(run, tag, sample, "input")),
         output_serializer[:load].call(read_sample(run, tag, sample, "output")),
       ]
+    end
+
+    def find_all(run_pattern)
+      return [] unless all_serializers_present? && run_pattern
+      find_all_samples(*parse_run_patter(run_pattern))
     end
 
     def run_exists?(run_pattern)

@@ -1,11 +1,17 @@
+require 'nanoid'
+
 module BloodContracts
   module Storages
     class FileBackend < BaseBackend
-      option :start_time, default: -> { Date.current.to_s(:number) }
+      option :name, default: -> { ::Nanoid.generate(size: 10) }
       option :root, default: -> { Rails.root.join(path) }
 
       def suggestion
-        path
+        "#{path}/*/*"
+      end
+
+      def unexpected_suggestion
+        "#{path}/#{Storage::UNDEFINED_RULE}/*"
       end
 
       def default_path
@@ -13,14 +19,21 @@ module BloodContracts
       end
 
       def timestamp
-        @timestamp ||= Time.current.to_s(:usec)[8..-5]
+        @timestamp ||= Time.current.to_s(:usec)[8..-3]
       end
 
       def reset_timesgamp!
         @timestamp = nil
       end
 
-      def path(run_name: start_time)
+      def find_all_samples(run, tag, sample)
+        run_path = path(run_name: run)
+        files = Dir.glob("#{run_path}/#{tag.to_s}/#{sample}*")
+        files.select { |f| f.end_with?(".output") }
+             .map { |f| f.chomp(".output") }
+      end
+
+      def path(run_name: name)
         File.join(default_path, example_name.to_s, run_name)
       end
 
