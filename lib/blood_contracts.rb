@@ -5,8 +5,19 @@ require_relative "blood_contracts/base_runner"
 require_relative "blood_contracts/runner"
 require_relative "blood_contracts/debugger"
 require_relative "blood_contracts/base_contract"
+require_relative "blood_contracts/contract"
 
 module BloodContracts
+  def run_name
+    @__contracts_run_name
+  end
+  module_function :run_name
+
+  def run_name=(run_name)
+    @__contracts_run_name = run_name
+  end
+  module_function :run_name=
+
   # Use https://github.com/razum2um/lurker/blob/master/lib/lurker/spec_helper/rspec.rb
   if defined?(RSpec) && RSpec.respond_to?(:configure)
     module MeetContractMatcher
@@ -18,7 +29,7 @@ module BloodContracts
           runner = ENV["debug"] ? Debugger : Runner
 
           @_contract_runner = runner.new(
-            actual,
+            subject,
             context: self,
             suite: build_suite(args || subject),
             iterations: @_iterations,
@@ -33,7 +44,7 @@ module BloodContracts
             suite = args.to_contract_suite(name: _example_name_to_path)
           elsif args.respond_to?(:to_hash)
             suite = Suite.new(storage: new_storage)
-            suite.contract       = options[:contract] if options[:contract]
+            suite.contract = args[:contract] if args[:contract]
           end
           suite.data_generator = @_generator if @_generator
           suite
@@ -106,6 +117,13 @@ module BloodContracts
           @_output_serializer = serializer
         end
       end
+    end
+  end
+
+  RSpec.configure do |config|
+    config.include ::BloodContracts::MeetContractMatcher
+    config.before(:suite) do
+      BloodContracts.run_name = ::Nanoid.generate(size: 10)
     end
   end
 end

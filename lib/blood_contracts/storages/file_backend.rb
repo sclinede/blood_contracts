@@ -3,7 +3,6 @@ require 'nanoid'
 module BloodContracts
   module Storages
     class FileBackend < BaseBackend
-      option :name, default: -> { ::Nanoid.generate(size: 10) }
       option :root, default: -> { Rails.root.join(path) }
 
       def suggestion
@@ -26,7 +25,31 @@ module BloodContracts
         @timestamp = nil
       end
 
-      def find_all_samples(run, tag, sample)
+      def parse_run_pattern(run_pattern)
+        path_items = run_pattern.split("/")
+        sample = path_items.pop
+        tag = path_items.pop
+        path_str = path_items.join("/")
+        run_n_example_str = path_str.sub(default_path, '')
+        if run_n_example_str.end_with?('*')
+          [
+            run_n_example_str.chomp("*"),
+            tag,
+            sample
+          ]
+        elsif run_n_example_str.end_with?(example_name)
+          [
+            run_n_example_str.chomp(example_name),
+            tag,
+            sample
+          ]
+        else
+          %w(__no_match__ __no_match__ __no_match__)
+        end
+      end
+
+      def find_all_samples(run_pattern)
+        run, tag, sample = parse_run_pattern(run_pattern)
         run_path = path(run_name: run)
         files = Dir.glob("#{run_path}/#{tag.to_s}/#{sample}*")
         files.select { |f| f.end_with?(".output") }
@@ -34,19 +57,21 @@ module BloodContracts
       end
 
       def path(run_name: name)
-        File.join(default_path, example_name.to_s, run_name)
+        File.join(default_path, run_name, example_name.to_s)
       end
 
       def sample_name(tag, run_path: root, sample: timestamp)
         File.join(run_path, tag.to_s, sample)
       end
 
-      def sample_exists?(run, tag, sample)
+      def sample_exists?(run_pattern)
+        run, tag, sample = parse_run_pattern(run_pattern)
         name = sample_name(tag, run_path: path(run_name: run), sample: sample)
         File.exist?("#{name}.input")
       end
 
-      def read_sample(run, tag, sample, dump_type)
+      def read_sample(run_pattern, dump_type)
+        run, tag, sample = parse_run_pattern(run_pattern)
         name = sample_name(tag, run_path: path(run_name: run), sample: sample)
         File.read("#{name}.#{dump_type}.dump")
       end

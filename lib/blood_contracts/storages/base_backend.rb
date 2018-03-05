@@ -6,6 +6,9 @@ module BloodContracts
 
       param :storage
       param :example_name
+      option :name, default: -> do
+        BloodContracts.run_name || ::Nanoid.generate(size: 10)
+      end
       def_delegators :@storage, :input_writer, :output_writer,
                      :input_serializer, :output_serializer
 

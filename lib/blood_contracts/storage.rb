@@ -8,6 +8,8 @@ module BloodContracts
 
     FileBackend = BloodContracts::Storages::FileBackend
 
+    option :example_name
+
     # Split date and time, for more comfortable Dirs navigation
     option :input_writer,
            ->(v) { valid_writer(v, fallback: true) }, optional: true
@@ -15,7 +17,6 @@ module BloodContracts
            ->(v) { valid_writer(v, fallback: true) }, optional: true
     option :input_serializer,  ->(v) { valid_serializer(v) }, optional: true
     option :output_serializer, ->(v) { valid_serializer(v) }, optional: true
-    option :example_name, optional: true
     option :backend, default: -> { FileBackend.new(self, example_name) }
 
     def_delegators :@backend, :sample_exists?, :read_sample, :suggestion,
@@ -97,28 +98,22 @@ module BloodContracts
       [input_serializer, output_serializer].map(&:size).reduce(:+).positive?
     end
 
-    def parse_run_patter(run_pattern)
-      run, tag, sample = run_pattern.split("/").last(3)
-      [run, tag, sample]
-    end
-
     def load_run(run_pattern)
-      run, tag, sample = parse_run_patter(run_pattern)
       [
-        input_serializer[:load].call(read_sample(run, tag, sample, "input")),
-        output_serializer[:load].call(read_sample(run, tag, sample, "output")),
+        input_serializer[:load].call(read_sample(run_pattern, "input")),
+        output_serializer[:load].call(read_sample(run_pattern, "output")),
       ]
     end
 
     def find_all(run_pattern)
       return [] unless all_serializers_present? && run_pattern
-      find_all_samples(*parse_run_patter(run_pattern))
+      find_all_samples(run_pattern)
     end
 
     def run_exists?(run_pattern)
       return unless all_serializers_present? && run_pattern
       # ../../<run name>/<rule name>/<sample>
-      sample_exists?(*parse_run_patter(run_pattern))
+      sample_exists?(run_pattern)
     end
   end
 end
