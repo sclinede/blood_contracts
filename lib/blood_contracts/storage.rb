@@ -12,8 +12,8 @@ module BloodContracts
 
     option :contract_name
 
-    DEFAULT_WRITER = -> (input, output) do
-      "INPUT:\n#{input}\n\n#{'=' * 90}\n\nOUTPUT:\n#{output}"
+    DEFAULT_WRITER = -> (options) do
+      "INPUT:\n#{options.input}\n\n#{'=' * 90}\n\nOUTPUT:\n#{options.output}"
     end
 
     option :input_writer,
