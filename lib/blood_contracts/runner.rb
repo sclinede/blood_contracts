@@ -97,20 +97,20 @@ module BloodContracts
       suite.storage.save_run(options: options, rules: rules, context: context)
 
       rules
-    # rescue StandardError => e
-    #   # FIXME: Possible recursion?
-    #   # Write test about error in the yield (e.g. writing error)
-    #   exception_options = {
-    #     options: {
-    #       input: input,
-    #       output: output,
-    #       meta: {exception: e},
-    #     },
-    #     rules: [Storage::EXCEPTION_CAUGHT],
-    #     context: context,
-    #   }
-    #   suite.storage.save_run(exception_options)
-    #   raise
+    rescue StandardError => e
+      # FIXME: Possible recursion?
+      # Write test about error in the yield (e.g. writing error)
+      exception_options = {
+        options: {
+          input: input,
+          output: output,
+          meta: {exception: e},
+        },
+        rules: [Storage::EXCEPTION_CAUGHT],
+        context: context,
+      }
+      suite.storage.save_run(exception_options)
+      raise
     end
   end
 end
