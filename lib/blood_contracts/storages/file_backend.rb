@@ -100,7 +100,7 @@ module BloodContracts
         return unless (dump_proc = input_serializer[:dump])
         name = sample_name(tag)
         File.open("#{name}.input.dump", "w+") do |f|
-          f << write(dump_proc, context, options)
+          f << write(dump_proc, context, options.input)
         end
       end
 
@@ -108,7 +108,7 @@ module BloodContracts
         return unless (dump_proc = output_serializer[:dump])
         name = sample_name(tag)
         File.open("#{name}.output.dump", "w+") do |f|
-          f << write(dump_proc, context, options)
+          f << write(dump_proc, context, options.output)
         end
       end
 
@@ -116,7 +116,7 @@ module BloodContracts
         return unless (dump_proc = meta_serializer[:dump])
         name = sample_name(tag)
         File.open("#{name}.meta.dump", "w+") do |f|
-          f << write(dump_proc, context, options)
+          f << write(dump_proc, context, options.meta)
         end
       end
     end
