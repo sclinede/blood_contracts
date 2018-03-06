@@ -25,7 +25,6 @@ module BloodContracts
 
       matcher :meet_contract_rules do |args|
         match do |subject|
-          raise ArgumentError unless valid_subject?(subject)
           runner = ENV["debug"] ? Debugger : Runner
 
           @_contract_runner = runner.new(
@@ -40,26 +39,29 @@ module BloodContracts
         end
 
         def build_suite(args)
+          suite = nil
           if args.respond_to?(:to_contract_suite)
             suite = args.to_contract_suite(name: _example_name_to_path)
-          elsif args.respond_to?(:to_hash)
+          elsif args.respond_to?(:to_hash) && args.fetch(:contract) { false }
             suite = Suite.new(storage: new_storage)
-            suite.contract = args[:contract] if args[:contract]
+            suite.contract = args[:contract]
+          else
+            raise "Matcher arguments is not a Blood Contract"
           end
           suite.data_generator = @_generator if @_generator
           suite
         end
 
-        def valid_subject?(subject)
-          subject.respond_to?(:call) || subject.respond_to?(:to_contract_suite)
-        end
-
         def new_storage
-          storage = Storage.new(example_name: _example_name_to_path)
+          storage = Storage.new(contract_name: _example_name_to_path)
           storage.input_writer  = _input_writer  if _input_writer
           storage.output_writer = _output_writer if _output_writer
-          storage.input_serializer  = @_input_serializer
-          storage.output_serializer = @_output_serializer
+          if @_input_serializer
+            storage.input_serializer  = @_input_serializer
+          end
+          if @_output_serializer
+            storage.output_serializer = @_output_serializer
+          end
           storage
         end
 

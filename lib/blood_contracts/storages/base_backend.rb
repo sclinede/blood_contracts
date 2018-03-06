@@ -10,21 +10,25 @@ module BloodContracts
         BloodContracts.run_name || ::Nanoid.generate(size: 10)
       end
       def_delegators :@storage, :input_writer, :output_writer,
-                     :input_serializer, :output_serializer
+                     :input_serializer, :output_serializer, :meta_serializer
 
       def find_all_samples(run, tag, sample)
         raise NotImplementedError
       end
 
-      def save_sample(_tag, _input, _output, _context)
+      def save_sample(_tag, _options, _context)
         raise NotImplementedError
       end
 
-      def serialize_input(_tag, _input, _context)
+      def serialize_input(_tag, _options, _context)
         raise NotImplementedError
       end
 
-      def serialize_output(_tag, _output, _context)
+      def serialize_output(_tag, _options, _context)
+        raise NotImplementedError
+      end
+
+      def serialize_meta(_tag, _options, _context)
         raise NotImplementedError
       end
 

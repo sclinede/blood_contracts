@@ -21,7 +21,7 @@ module BloodContracts
         @timestamp ||= Time.current.to_s(:usec)[8..-3]
       end
 
-      def reset_timesgamp!
+      def reset_timestamp!
         @timestamp = nil
       end
 
@@ -76,39 +76,47 @@ module BloodContracts
         File.read("#{name}.#{dump_type}.dump")
       end
 
-      def write(writer, cntxt, args)
+      def write(writer, cntxt, options)
         writer = cntxt.method(writer) if cntxt && writer.respond_to?(:to_sym)
-        writer.call(*args).encode(
+        writer.call(options).encode(
           "UTF-8", invalid: :replace, undef: :replace, replace: "?",
         )
       end
 
-      def save_sample(tag, input, output, context)
+      def save_sample(tag, options, context)
         FileUtils.mkdir_p File.join(root, tag.to_s)
 
-        reset_timesgamp!
+        reset_timestamp!
         name = sample_name(tag)
         File.open("#{name}.input", "w+") do |f|
-          f << write(input_writer, context, [input, output])
+          f << write(input_writer, context, options)
         end
         File.open("#{name}.output", "w+") do |f|
-          f << write(output_writer, context, [input, output])
+          f << write(output_writer, context, options)
         end
       end
 
-      def serialize_input(tag, input, context)
+      def serialize_input(tag, options, context)
         return unless (dump_proc = input_serializer[:dump])
         name = sample_name(tag)
         File.open("#{name}.input.dump", "w+") do |f|
-          f << write(dump_proc, context, [input])
+          f << write(dump_proc, context, options)
         end
       end
 
-      def serialize_output(tag, output, context)
+      def serialize_output(tag, options, context)
         return unless (dump_proc = output_serializer[:dump])
         name = sample_name(tag)
         File.open("#{name}.output.dump", "w+") do |f|
-          f << write(dump_proc, context, [output])
+          f << write(dump_proc, context, options)
+        end
+      end
+
+      def serialize_meta(tag, options, context)
+        return unless (dump_proc = meta_serializer[:dump])
+        name = sample_name(tag)
+        File.open("#{name}.meta.dump", "w+") do |f|
+          f << write(dump_proc, context, options)
         end
       end
     end

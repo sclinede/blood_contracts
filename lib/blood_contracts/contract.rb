@@ -4,6 +4,29 @@ module BloodContracts
     param :contract_hash, ->(v) { Hashie::Mash.new(v) }
     param :stats
 
+    def match
+      options = Hashie::Mash.new(Hash[%i(input output meta).zip(yield)])
+
+      rule_names = select_matched_rules!(options).keys
+
+      if rule_names.empty?
+        stats.store(Storage::UNDEFINED_RULE)
+      else
+        Array(rule_names).each(&stats.method(:store))
+      end
+
+      [rule_names, options]
+    end
+
+    def select_matched_rules!(options)
+      contract_hash.select do |name, rule|
+        rule_options = options.shallow_merge(meta: {})
+        matched = rule.check.call(rule_options)
+        options.meta.merge!(name.to_sym => rule_options.meta)
+        matched
+      end
+    end
+
     def valid?
       return if stats.found_unexpected_behavior?
 

@@ -62,11 +62,6 @@ module BloodContracts
       suite.storage.unexpected_suggestion
     end
 
-    def run
-      input = suite.data_generator.call
-      [input, checking_proc.call(input)]
-    end
-
     def stopped_by_unexpected_behavior?
       @_stopped_by_unexpected_behavior == :stop
     end
@@ -90,29 +85,32 @@ module BloodContracts
     end
 
     def match_rules
-      input, output = run
-      matched_rules = suite.contract.select do |_name, rule|
-        rule.check.call(input, output)
-      end.keys
+      input = nil
+      output = nil
 
-      matched_rules = [Storage::UNDEFINED_RULE] if matched_rules.empty?
+      rules, options = contract.match do
+        input = suite.data_generator.call
+        output = checking_proc.call(input)
+        [input, output, Hash.new]
+      end
 
-      Array(matched_rules).each(&stats.method(:store))
+      suite.storage.save_run(options: options, rules: rules, context: context)
 
-      process_match(input, output, matched_rules)
-
-      matched_rules
-    rescue StandardError
-      # FIXME: Possible recursion?
-      # Write test about error in the yield (e.g. writing error)
-      process_match(input, output, [Storage::EXCEPTION_CAUGHT])
-      raise
-    end
-
-    def process_match(input, output, rules)
-      suite.storage.save_run(
-        input: input, output: output, rules: rules, context: context,
-      )
+      rules
+    # rescue StandardError => e
+    #   # FIXME: Possible recursion?
+    #   # Write test about error in the yield (e.g. writing error)
+    #   exception_options = {
+    #     options: {
+    #       input: input,
+    #       output: output,
+    #       meta: {exception: e},
+    #     },
+    #     rules: [Storage::EXCEPTION_CAUGHT],
+    #     context: context,
+    #   }
+    #   suite.storage.save_run(exception_options)
+    #   raise
     end
   end
 end
