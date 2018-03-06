@@ -1,11 +1,11 @@
 require "blood_contracts/version"
 require_relative "blood_contracts/suite"
 require_relative "blood_contracts/storage"
-require_relative "blood_contracts/base_runner"
+require_relative "blood_contracts/contract"
+require_relative "blood_contracts/statistics"
 require_relative "blood_contracts/runner"
 require_relative "blood_contracts/debugger"
 require_relative "blood_contracts/base_contract"
-require_relative "blood_contracts/contract"
 
 module BloodContracts
   def run_name
@@ -124,6 +124,9 @@ module BloodContracts
     config.include ::BloodContracts::MeetContractMatcher
     config.before(:suite) do
       BloodContracts.run_name = ::Nanoid.generate(size: 10)
+    end
+    config.define_derived_metadata(file_path: %r{/spec/contracts/}) do |meta|
+      meta[:contract] = true
     end
   end
 end
