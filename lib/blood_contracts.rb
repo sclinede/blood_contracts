@@ -1,4 +1,5 @@
 require "blood_contracts/version"
+require "dry-initializer"
 require_relative "blood_contracts/suite"
 require_relative "blood_contracts/storage"
 require_relative "blood_contracts/contract"
@@ -69,7 +70,7 @@ module BloodContracts
           method_missing(:class)
             .name
             .sub("RSpec::ExampleGroups::", "")
-            .snakecase
+            .underscore
         end
 
         def _input_writer
