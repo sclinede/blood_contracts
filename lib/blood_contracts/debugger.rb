@@ -1,7 +1,7 @@
 module BloodContracts
   class Debugger < Runner
     def runs
-      @runs ||= suite.storage.find_all(ENV["debug"]).each
+      @runs ||= storage.find_all_samples(ENV["debug"]).each
     end
 
     def iterations
@@ -20,9 +20,8 @@ module BloodContracts
 
     private
 
-    def match_rules
-      rules, _ = contract.match { suite.storage.load_run(runs.next) }
-      rules
+    def match_rules?(matches_storage:)
+      matcher.call(*storage.load_sample(runs.next), storage: matches_storage)
     end
 
     def unexpected_further_investigation

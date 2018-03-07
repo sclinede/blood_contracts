@@ -5,6 +5,7 @@ require "blood_contracts/version"
 
 Gem::Specification.new do |spec|
   spec.name          = "blood_contracts"
+
   spec.version       = BloodContracts::VERSION
   spec.authors       = ["Sergey Dolganov"]
   spec.email         = ["dolganov@evl.ms"]
@@ -23,13 +24,14 @@ Gem::Specification.new do |spec|
   # spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  spec.add_runtime_dependency "dry-initializer", "~> 2.0"
+  spec.required_ruby_version = '>= 2.2.0'
 
-  # Will be removed soon
-  spec.add_runtime_dependency "activesupport", ">= 3.1"
-  spec.add_runtime_dependency "nanoid"
+  spec.add_runtime_dependency "dry-initializer", "~> 2.0"
+  spec.add_runtime_dependency "nanoid", "~> 0.2"
+  spec.add_runtime_dependency "hashie", "~> 3.0"
 
   spec.add_development_dependency "bundler", "~> 1.16"
   spec.add_development_dependency "rake", "~> 10.0"
   spec.add_development_dependency "rspec", "~> 3.0"
+  spec.add_development_dependency "pry", "~> 0.9"
 end

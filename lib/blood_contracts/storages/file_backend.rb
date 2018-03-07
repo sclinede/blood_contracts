@@ -1,5 +1,3 @@
-require 'nanoid'
-
 module BloodContracts
   module Storages
     class FileBackend < BaseBackend
@@ -25,8 +23,8 @@ module BloodContracts
         @timestamp = nil
       end
 
-      def parse_run_pattern(run_pattern)
-        path_items = run_pattern.split("/")
+      def parse_sample_name(sample_name)
+        path_items = sample_name.split("/")
         sample = path_items.pop
         tag = path_items.pop
         path_str = path_items.join("/")
@@ -48,8 +46,8 @@ module BloodContracts
         end
       end
 
-      def find_all_samples(run_pattern)
-        run, tag, sample = parse_run_pattern(run_pattern)
+      def find_all_samples(sample_name)
+        run, tag, sample = parse_sample_name(sample_name)
         run_path = path(run_name: run)
         files = Dir.glob("#{run_path}/#{tag.to_s}/#{sample}*")
         files.select { |f| f.end_with?(".output") }
@@ -64,16 +62,18 @@ module BloodContracts
         File.join(run_path, tag.to_s, sample)
       end
 
-      def sample_exists?(run_pattern)
-        run, tag, sample = parse_run_pattern(run_pattern)
+      def sample_exists?(sample_name)
+        run, tag, sample = parse_sample_name(sample_name)
         name = sample_name(tag, run_path: path(run_name: run), sample: sample)
         File.exist?("#{name}.input")
       end
 
-      def read_sample(run_pattern, dump_type)
-        run, tag, sample = parse_run_pattern(run_pattern)
+      def load_sample_chunk(dump_type, sample_name)
+        run, tag, sample = parse_sample_name(sample_name)
         name = sample_name(tag, run_path: path(run_name: run), sample: sample)
-        File.read("#{name}.#{dump_type}.dump")
+        send("#{dump_type}_serializer")[:load].call(
+          File.read("#{name}.#{dump_type}.dump")
+        )
       end
 
       def write(writer, cntxt, options)
@@ -83,7 +83,7 @@ module BloodContracts
         )
       end
 
-      def save_sample(tag, options, context)
+      def describe_sample(tag, options, context)
         FileUtils.mkdir_p File.join(root, tag.to_s)
 
         reset_timestamp!
@@ -96,29 +96,37 @@ module BloodContracts
         end
       end
 
-      def serialize_input(tag, options, context)
-        return unless (dump_proc = input_serializer[:dump])
-        name = sample_name(tag)
-        File.open("#{name}.input.dump", "w+") do |f|
-          f << write(dump_proc, context, options.input)
+      def serialize_sample_chunk(type, tag, options, context)
+        return unless (dump_proc = send("#{type}_serializer")[:dump])
+        name, data = sample_name(tag), options.send(type)
+        File.open("#{name}.#{type}.dump", "w+") do |f|
+          f << write(dump_proc, context, data)
         end
       end
-
-      def serialize_output(tag, options, context)
-        return unless (dump_proc = output_serializer[:dump])
-        name = sample_name(tag)
-        File.open("#{name}.output.dump", "w+") do |f|
-          f << write(dump_proc, context, options.output)
-        end
-      end
-
-      def serialize_meta(tag, options, context)
-        return unless (dump_proc = meta_serializer[:dump])
-        name = sample_name(tag)
-        File.open("#{name}.meta.dump", "w+") do |f|
-          f << write(dump_proc, context, options.meta)
-        end
-      end
+      #
+      # def serialize_input(tag, options, context)
+      #   return unless (dump_proc = input_serializer[:dump])
+      #   name = sample_name(tag)
+      #   File.open("#{name}.input.dump", "w+") do |f|
+      #     f << write(dump_proc, context, options.input)
+      #   end
+      # end
+      #
+      # def serialize_output(tag, options, context)
+      #   return unless (dump_proc = output_serializer[:dump])
+      #   name = sample_name(tag)
+      #   File.open("#{name}.output.dump", "w+") do |f|
+      #     f << write(dump_proc, context, options.output)
+      #   end
+      # end
+      #
+      # def serialize_meta(tag, options, context)
+      #   return unless (dump_proc = meta_serializer[:dump])
+      #   name = sample_name(tag)
+      #   File.open("#{name}.meta.dump", "w+") do |f|
+      #     f << write(dump_proc, context, options.meta)
+      #   end
+      # end
     end
   end
 end

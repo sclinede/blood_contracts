@@ -9,19 +9,20 @@ module BloodContracts
       end
 
       def contract_rule(name, &block)
-        define_method("__#{name}_rule", block)
+        define_method("_#{name}", block)
         rules << name
       end
     end
 
     def call(data)
+      return yield(data) if block_given?
       action.call(data)
     end
 
     def contract
-      @contract ||= Hash[self.class.rules.map do |name, block|
-        [name, {check: method("__#{name}_rule")}]
-      end]
+      @contract ||= Hash[
+        self.class.rules.map { |name| [name, {check: method("_#{name}")}] }
+      ]
     end
 
     def build_storage(name)
@@ -30,11 +31,11 @@ module BloodContracts
       s.output_writer = method(:output_writer) if defined? output_writer
       s.input_serializer  = input_serializer   if defined? input_serializer
       s.output_serializer = output_serializer  if defined? output_serializer
-      s.meta_serializer   = output_serializer  if defined? meta_serializer
+      s.meta_serializer   = meta_serializer    if defined? meta_serializer
       s
     end
 
-    def to_contract_suite(name: self.class.to_s)
+    def to_contract_suite(name: self.class.to_s.pathize)
       Suite.new(storage: build_storage(name), contract: contract)
     end
   end
