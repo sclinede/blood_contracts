@@ -2,14 +2,15 @@ module BloodContracts
   class Suite
     extend Dry::Initializer
 
+    option :contract, ->(v) { Hashie::Mash.new(v) }
     option :data_generator, optional: true
-    option :contract, ->(v) { Hashie::Mash.new(v) }, default: -> { Hash.new }
 
     option :input_writer,  optional: true
     option :output_writer, optional: true
 
-    option :input_serializer,  ->(v) { parse_serializer(v) }, optional: true
-    option :output_serializer, ->(v) { parse_serializer(v) }, optional: true
+    option :input_serializer,  optional: true
+    option :output_serializer, optional: true
+    option :meta_serializer, optional: true
 
     option :storage_backend, optional: true
     option :storage, default: -> { default_storage }
@@ -17,11 +18,6 @@ module BloodContracts
     def data_generator=(generator)
       raise ArgumentError unless generator.respond_to?(:call)
       @data_generator = generator
-    end
-
-    def contract=(contract)
-      raise ArgumentError unless contract.respond_to?(:to_h)
-      @contract = Hashie::Mash.new(contract.to_h)
     end
 
     def input_writer=(writer)
@@ -38,6 +34,7 @@ module BloodContracts
         output_writer: output_writer,
         input_serializer: input_serializer,
         output_serializer: output_serializer,
+        meta_serializer: meta_serializer,
       )
     end
   end

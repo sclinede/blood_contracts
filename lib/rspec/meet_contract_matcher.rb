@@ -23,9 +23,11 @@ module RSpec
         suite = nil
         if args.respond_to?(:to_contract_suite)
           suite = args.to_contract_suite(name: _example_name_to_path)
-        elsif args.respond_to?(:to_hash) && args.fetch(:contract) { false }
-          suite = ::BloodContracts::Suite.new(storage: new_storage)
-          suite.contract = args[:contract]
+        elsif args.respond_to?(:to_h) && args.to_h.fetch(:contract) { false }
+          ::BloodContracts::Suite.new(
+            storage: new_storage,
+            contract: args[:contract]
+          )
         else
           raise "Matcher arguments is not a Blood Contract"
         end

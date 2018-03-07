@@ -67,7 +67,6 @@ module BloodContracts
       { load: Oj.method(:load), dump: Oj.method(:dump) }
     end
 
-    # Quick open: `vim -O tmp/contract_tests/<tstamp>/<tag>/<tstamp>.*`
     def store(options:, rules:, context:)
       options = Hashie::Mash.new(options)
 
