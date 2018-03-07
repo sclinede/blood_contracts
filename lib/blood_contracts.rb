@@ -6,7 +6,6 @@ require "hashie/mash"
 
 require_relative "blood_contracts/suite"
 require_relative "blood_contracts/storage"
-require_relative "blood_contracts/statistics"
 require_relative "blood_contracts/runner"
 require_relative "blood_contracts/debugger"
 require_relative "blood_contracts/base_contract"

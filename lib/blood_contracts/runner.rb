@@ -1,6 +1,8 @@
 require_relative "contracts/validator"
 require_relative "contracts/matcher"
 require_relative "contracts/description"
+require_relative "contracts/iterator"
+require_relative "contracts/statistics"
 
 module BloodContracts
   class Runner
@@ -11,19 +13,16 @@ module BloodContracts
     option :suite
     option :storage, default: -> { suite.storage }
 
-    option :iterations, ->(v) do
-      v = ENV["iterations"] if ENV["iterations"]
-      v.to_i.positive? ? v.to_i : 1
-    end, default: -> { 1 }
-    option :time_to_run, ->(v) do
-      v = ENV["duration"] if ENV["duration"]
-      v.to_f if v.to_f.positive?
-    end, optional: true
+    option :iterations, default: -> { 1 }
+    option :time_to_run, optional: true
+    option :stop_on_unexpected, default: -> { false }
+    option :iterator, default: -> do
+      Contracts::Iterator.new(iterations, time_to_run)
+    end
 
     option :context, optional: true
-    option :stop_on_unexpected, default: -> { false }
 
-    option :statistics, default: -> { Statistics.new(iterations) }
+    option :statistics, default: -> { Contracts::Statistics.new(iterator) }
     option :matcher,   default: -> { Contracts::Matcher.new(suite.contract) }
     option :validator, default: -> { Contracts::Validator.new(suite.contract) }
     option :contract_description, default: -> do
@@ -31,15 +30,15 @@ module BloodContracts
     end
 
     def call
-      iterate do
-        next if match_rules?(matches_storage: statistics) do
-          input = suite.data_generator.call
-          [input, checking_proc.call(input)]
+      return false if :halt == catch(:unexpected_behavior) do
+        iterator.next do
+          next if match_rules?(matches_storage: statistics) do
+            input = suite.data_generator.call
+            [input, checking_proc.call(input)]
+          end
+          throw :unexpected_behavior, :halt if stop_on_unexpected
         end
-        throw :unexpected_behavior, :stop if stop_on_unexpected
       end
-      return if stopped_by_unexpected_behavior?
-
       validator.valid?(statistics)
     end
 
@@ -47,21 +46,21 @@ module BloodContracts
     def failure_message
       intro = "expected that given Proc would meet the contract:"
 
-      if validator.expected_behavior?
+      if stats.unexpected_behavior?
         "#{intro}\n#{contract_description}\n"\
-          " during #{iterations} run(s) but got:\n#{statistics}\n\n"\
-          "For further investigations open: #{storage.suggestion}"
+        " during #{iterator.count} run(s) but got unexpected behavior.\n\n"\
+        "For further investigations open: #{storage.unexpected_suggestion}"
       else
         "#{intro}\n#{contract_description}\n"\
-        " during #{iterations} run(s) but got unexpected behavior.\n\n"\
-        "For further investigations open: #{storage.unexpected_suggestion}"
+          " during #{iterator.count} run(s) but got:\n#{statistics}\n\n"\
+          "For further investigations open: #{storage.suggestion}"
       end
     end
 
     # FIXME: Move to locales
     def description
       "meet the contract:\n#{contract_description} \n"\
-      " during #{iterations} run(s). Stats:\n#{statistics}\n\n"\
+      " during #{iterator.count} run(s). Stats:\n#{statistics}\n\n"\
       "For further investigations open: #{storage.suggestion}\n"
     end
 
@@ -76,28 +75,6 @@ module BloodContracts
       # Write test about error in the storage#store (e.g. writing error)
       store_exception(error, input, output, context)
       raise
-    end
-
-    def stopped_by_unexpected_behavior?
-      @_stopped_by_unexpected_behavior == :stop
-    end
-
-    def iterate
-      run_iterations ||= iterations
-
-      if time_to_run
-        run_iterations = iterations_count_from_time_to_run { yield }
-        @iterations = run_iterations + 1
-      end
-
-      @_stopped_by_unexpected_behavior = catch(:unexpected_behavior) do
-        run_iterations.times { yield }
-      end
-    end
-
-    def iterations_count_from_time_to_run
-      time_per_action = Benchmark.measure { yield }
-      (time_to_run / time_per_action.real).ceil
     end
 
     def store_exception(error, input, output, context)
