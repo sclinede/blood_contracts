@@ -1,5 +1,6 @@
 require_relative "./storages/base_backend.rb"
 require_relative "./storages/file_backend.rb"
+require_relative "./storages/postgres_backend.rb"
 require_relative "./storages/serializer.rb"
 
 module BloodContracts
@@ -8,12 +9,11 @@ module BloodContracts
     extend Forwardable
 
     Serializer = BloodContracts::Storages::Serializer
-    FileBackend = BloodContracts::Storages::FileBackend
 
     option :contract_name
 
-    DEFAULT_WRITER = -> (options) do
-      "INPUT:\n#{options.input}\n\n#{'=' * 90}\n\nOUTPUT:\n#{options.output}"
+    DEFAULT_WRITER = ->(round) do
+      "INPUT:\n#{round.input}\n\n#{'=' * 90}\n\nOUTPUT:\n#{round.output}"
     end
 
     option :input_writer,
@@ -27,13 +27,28 @@ module BloodContracts
            ->(v) { Serializer.call(v) }, default: -> { default_serializer }
     option :meta_serializer,
            ->(v) { Serializer.call(v) }, default: -> { default_serializer }
+    option :error_serializer,
+           ->(v) { Serializer.call(v) }, default: -> { default_serializer }
 
-    option :backend, default: -> { FileBackend.new(self, contract_name) }
+    option :backend, default: -> do
+      default_storage_klass.new(self, contract_name)
+    end
 
     def_delegators :@backend, :sample_exists?,
                    :load_sample, :find_all_samples,
                    :serialize_sample, :describe_sample,
                    :suggestion, :unexpected_suggestion
+
+    def default_storage_klass
+      case BloodContracts.config.storage["type"].downcase.to_sym
+      when :file
+        BloodContracts::Storages::FileBackend
+      when :postgres
+        BloodContracts::Storages::PostgresBackend
+      else
+        raise "Unknown storage type configured!"
+      end
+    end
 
     def self.valid_writer(writer)
       return writer if writer.respond_to?(:call) || writer.respond_to?(:to_sym)
@@ -52,6 +67,10 @@ module BloodContracts
       @meta_serializer = Serializer.call(serializer)
     end
 
+    def error_serializer=(serializer)
+      @error_serializer = Serializer.call(serializer)
+    end
+
     def input_writer=(writer)
       @input_writer = self.class.valid_writer(writer)
     end
@@ -67,12 +86,11 @@ module BloodContracts
       { load: Oj.method(:load), dump: Oj.method(:dump) }
     end
 
-    def store(options:, rules:, context:)
-      options = Hashie::Mash.new(options)
-
+    def store(round:, rules:, context:)
+      return unless BloodContracts.config.store
       Array(rules).each do |rule_name|
-        describe_sample(rule_name, options, context)
-        serialize_sample(rule_name, options, context)
+        describe_sample(rule_name, round, context)
+        serialize_sample(rule_name, round, context)
       end
     end
   end

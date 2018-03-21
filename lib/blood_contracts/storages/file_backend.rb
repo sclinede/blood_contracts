@@ -28,18 +28,18 @@ module BloodContracts
         sample = path_items.pop
         tag = path_items.pop
         path_str = path_items.join("/")
-        run_n_example_str = path_str.sub(default_path, '')
-        if run_n_example_str.end_with?('*')
+        run_n_example_str = path_str.sub(default_path, "")
+        if run_n_example_str.end_with?("*")
           [
             run_n_example_str.chomp("*"),
             tag,
-            sample
+            sample,
           ]
         elsif run_n_example_str.end_with?(example_name)
           [
             run_n_example_str.chomp(example_name),
             tag,
-            sample
+            sample,
           ]
         else
           %w(__no_match__ __no_match__ __no_match__)
@@ -49,7 +49,7 @@ module BloodContracts
       def find_all_samples(sample_name)
         run, tag, sample = parse_sample_name(sample_name)
         run_path = path(run_name: run)
-        files = Dir.glob("#{run_path}/#{tag.to_s}/#{sample}*")
+        files = Dir.glob("#{run_path}/#{tag}/#{sample}*")
         files.select { |f| f.end_with?(".output") }
              .map { |f| f.chomp(".output") }
       end
@@ -72,33 +72,34 @@ module BloodContracts
         run, tag, sample = parse_sample_name(sample_name)
         name = sample_name(tag, run_path: path(run_name: run), sample: sample)
         send("#{dump_type}_serializer")[:load].call(
-          File.read("#{name}.#{dump_type}.dump")
+          File.read("#{name}.#{dump_type}.dump"),
         )
       end
 
-      def write(writer, cntxt, options)
+      def write(writer, cntxt, round)
         writer = cntxt.method(writer) if cntxt && writer.respond_to?(:to_sym)
-        writer.call(options).encode(
+        writer.call(round).encode(
           "UTF-8", invalid: :replace, undef: :replace, replace: "?",
         )
       end
 
-      def describe_sample(tag, options, context)
+      def describe_sample(tag, round, context)
         FileUtils.mkdir_p File.join(root, tag.to_s)
 
         reset_timestamp!
         name = sample_name(tag)
         File.open("#{name}.input", "w+") do |f|
-          f << write(input_writer, context, options)
+          f << write(input_writer, context, round)
         end
         File.open("#{name}.output", "w+") do |f|
-          f << write(output_writer, context, options)
+          f << write(output_writer, context, round)
         end
       end
 
-      def serialize_sample_chunk(type, tag, options, context)
+      def serialize_sample_chunk(chunk, tag, round, context)
         return unless (dump_proc = send("#{type}_serializer")[:dump])
-        name, data = sample_name(tag), options.send(type)
+        name = sample_name(tag)
+        data = round.send(chunk)
         File.open("#{name}.#{type}.dump", "w+") do |f|
           f << write(dump_proc, context, data)
         end

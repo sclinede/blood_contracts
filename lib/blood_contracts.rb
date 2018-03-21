@@ -4,6 +4,7 @@ require_relative "extensions/string.rb"
 require "dry-initializer"
 require "hashie/mash"
 
+require_relative "blood_contracts/config"
 require_relative "blood_contracts/suite"
 require_relative "blood_contracts/storage"
 require_relative "blood_contracts/runner"
@@ -20,6 +21,13 @@ module BloodContracts
     @__contracts_run_name = run_name
   end
   module_function :run_name=
+
+  def config
+    @config ||= Config.new
+    yield @config if block_given?
+    @config
+  end
+  module_function :config
 
   if defined?(RSpec) && RSpec.respond_to?(:configure)
     require_relative "rspec/meet_contract_matcher"

@@ -10,13 +10,13 @@ class String
   # Compare this method to {String#modulize) and {String#methodize).
   #
   def pathize
-    gsub(/([A-Z]+)([A-Z])/,'\1_\2').
-    gsub(/([a-z])([A-Z])/,'\1_\2').
-    gsub('__','/').
-    gsub('::','/').
-    gsub(/\s+/, '').                # spaces are bad form
-    gsub(/[?%*:|"<>.]+/, '').   # reserved characters
-    downcase
+    gsub(/([A-Z]+)([A-Z])/, '\1_\2')
+      .gsub(/([a-z])([A-Z])/, '\1_\2')
+      .gsub("__", "/")
+      .gsub("::", "/")
+      .gsub(/\s+/, "") # spaces are bad form
+      .gsub(/[?%*:|"<>.]+/, "") # reserved characters
+      .downcase
   end
 
   # Compare to Rails definition:

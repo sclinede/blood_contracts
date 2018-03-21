@@ -1,4 +1,4 @@
-require 'nanoid'
+require "nanoid"
 
 module BloodContracts
   module Storages
@@ -12,19 +12,19 @@ module BloodContracts
         BloodContracts.run_name || ::Nanoid.generate(size: 10)
       end
       def_delegators :@storage, :input_writer, :output_writer,
-                     :input_serializer, :output_serializer, :meta_serializer
+                     :input_serializer, :output_serializer, :meta_serializer,
+                     :error_serializer
 
-
-      def sample_exists?(sample_name)
+      def sample_exists?(_sample_name)
         raise NotImplementedError
       end
 
-      def find_all_samples(run, tag, sample)
+      def find_all_samples(_run, _tag, _sample)
         raise NotImplementedError
       end
 
       def load_sample(_sample_name)
-        %i(input output meta).map do |type|
+        %i(input output meta error).map do |type|
           load_sample_chunk(type, _sample_name)
         end
       end
@@ -33,17 +33,17 @@ module BloodContracts
         raise NotImplementedError
       end
 
-      def describe_sample(_tag, _options, _context)
+      def describe_sample(_tag, _round, _context)
         raise NotImplementedError
       end
 
-      def serialize_sample(tag, options, context)
-        %i(input output meta).each do |type|
-          serialize_sample_chunk(type, tag, options, context)
+      def serialize_sample(tag, round, context)
+        %i(input output meta error).each do |type|
+          serialize_sample_chunk(type, tag, round, context)
         end
       end
 
-      def serialize_sample_chunk(_type, _tag, _option, _context)
+      def serialize_sample_chunk(_type, _tag, _round, _context)
         raise NotImplementedError
       end
 

@@ -9,14 +9,15 @@ module RSpec
         runner = ENV["debug"] ? Debugger : Runner
 
         @_contract_runner = runner.new(
-          subject,
           context: self,
           suite: build_suite(args || subject),
           iterations: @_iterations,
           time_to_run: @_time_to_run,
           stop_on_unexpected: @_halt_on_unexpected,
         )
-        @_contract_runner.call
+        @_contract_runner.call do |meta|
+          subject
+        end
       end
 
       def build_suite(args)
@@ -26,7 +27,7 @@ module RSpec
         elsif args.respond_to?(:to_h) && args.to_h.fetch(:contract) { false }
           ::BloodContracts::Suite.new(
             storage: new_storage,
-            contract: args[:contract]
+            contract: args[:contract],
           )
         else
           raise "Matcher arguments is not a Blood Contract"
@@ -39,12 +40,8 @@ module RSpec
         storage = Storage.new(contract_name: _example_name_to_path)
         storage.input_writer  = _input_writer  if _input_writer
         storage.output_writer = _output_writer if _output_writer
-        if @_input_serializer
-          storage.input_serializer  = @_input_serializer
-        end
-        if @_output_serializer
-          storage.output_serializer = @_output_serializer
-        end
+        storage.input_serializer  = @_input_serializer if @_input_serializer
+        storage.output_serializer = @_output_serializer if @_output_serializer
         storage
       end
 

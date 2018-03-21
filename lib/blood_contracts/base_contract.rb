@@ -1,7 +1,11 @@
 module BloodContracts
   class BaseContract
     extend Dry::Initializer
-    option :action
+    option :object, optional: true
+    option :method_name, optional: true
+    option :action, optional: true, as: :action_proc
+
+    option :meta, default: -> { Hash.new }
 
     class << self
       def rules
@@ -14,14 +18,45 @@ module BloodContracts
       end
     end
 
-    def call(data)
-      return yield(data) if block_given?
-      action.call(data)
+    def enable!
+      Thread.current[to_s.pathize] = true
+    end
+
+    def disable!
+      Thread.current[to_s.pathize] = false
+    end
+
+    def enabled?
+      if Thread.current[to_s.pathize].nil?
+        Thread.current[to_s.pathize] = BloodContracts.config.enabled
+      end
+      !!Thread.current[to_s.pathize]
+    end
+
+    def action
+      @action ||= action_proc || object.method(method_name)
+    end
+
+    def runner
+      @runner ||= Runner.new(context: self, suite: to_contract_suite)
+    end
+
+    def call(*args, **kwargs)
+      return yield unless enabled?
+      result = nil
+      runner.call(*args, **kwargs) do |meta|
+        result = if block_given?
+                  yield(meta)
+                else
+                  action.call(*args, **kwargs)
+                end
+      end
+      result
     end
 
     def contract
       @contract ||= Hash[
-        self.class.rules.map { |name| [name, {check: method("_#{name}")}] }
+        self.class.rules.map { |name| [name, { check: method("_#{name}") }] }
       ]
     end
 

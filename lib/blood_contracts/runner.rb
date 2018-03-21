@@ -1,4 +1,5 @@
 require_relative "contracts/validator"
+require_relative "contracts/round"
 require_relative "contracts/matcher"
 require_relative "contracts/description"
 require_relative "contracts/iterator"
@@ -7,8 +8,6 @@ require_relative "contracts/statistics"
 module BloodContracts
   class Runner
     extend Dry::Initializer
-
-    param :checking_proc
 
     option :suite
     option :storage, default: -> { suite.storage }
@@ -29,12 +28,16 @@ module BloodContracts
       Contracts::Description.call(suite.contract)
     end
 
-    def call
+    def call(*args, **kwargs)
       return false if :halt == catch(:unexpected_behavior) do
         iterator.next do
           next if match_rules?(matches_storage: statistics) do
-            input = suite.data_generator.call
-            [input, checking_proc.call(input)]
+            meta = {}
+            begin
+              [{args: args, kwargs: kwargs}, yield(meta), meta]
+            rescue StandardError => error
+              [{args: args, kwargs: kwargs}, "", meta, error]
+            end
           end
           throw :unexpected_behavior, :halt if stop_on_unexpected
         end
@@ -67,26 +70,9 @@ module BloodContracts
     protected
 
     def match_rules?(matches_storage:)
-      matcher.call(*yield, storage: matches_storage) do |rules, options|
-        storage.store(options: options, rules: rules, context: context)
+      matcher.call(*yield, storage: matches_storage) do |rules, round|
+        storage.store(round: round, rules: rules, context: context)
       end
-    rescue StandardError => error
-      # FIXME: Possible recursion?
-      # Write test about error in the storage#store (e.g. writing error)
-      store_exception(error, input, output, context)
-      raise
-    end
-
-    def store_exception(error, input, output, context)
-      storage.store(
-        options: {
-          input: input,
-          output: output || {},
-          meta: {exception: error},
-        },
-        rules: [Storage::EXCEPTION_CAUGHT],
-        context: context,
-      )
     end
   end
 end
