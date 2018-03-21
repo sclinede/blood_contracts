@@ -28,6 +28,7 @@ module BloodContracts
       private
 
       def wrap_error(exception)
+        return {} if exception.to_h.empty?
         {
           exception.class.to_s => {
             message: exception.message,
