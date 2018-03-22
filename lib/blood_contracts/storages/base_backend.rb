@@ -15,6 +15,13 @@ module BloodContracts
                      :input_serializer, :output_serializer, :meta_serializer,
                      :error_serializer
 
+      def write(writer, cntxt, round_data)
+        writer = cntxt.method(writer) if cntxt && writer.respond_to?(:to_sym)
+        writer.call(round_data).encode(
+          "UTF-8", invalid: :replace, undef: :replace, replace: "?",
+        )
+      end
+
       def sample_exists?(_sample_name)
         raise NotImplementedError
       end
@@ -33,17 +40,17 @@ module BloodContracts
         raise NotImplementedError
       end
 
-      def describe_sample(_tag, _round, _context)
+      def describe_sample(_tag, _round_data, _context)
         raise NotImplementedError
       end
 
-      def serialize_sample(tag, round, context)
+      def serialize_sample(tag, round_data, context)
         %i(input output meta error).each do |type|
-          serialize_sample_chunk(type, tag, round, context)
+          serialize_sample_chunk(type, tag, round_data, context)
         end
       end
 
-      def serialize_sample_chunk(_type, _tag, _round, _context)
+      def serialize_sample_chunk(_type, _tag, _round_data, _context)
         raise NotImplementedError
       end
 

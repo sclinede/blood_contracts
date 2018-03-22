@@ -5,7 +5,7 @@ module BloodContracts
 
       param :contract_hash, ->(v) { Hashie::Mash.new(v) }
 
-      def call(input, output, meta, error = {}, storage:)
+      def call(input, output, meta, error = nil, storage:)
         round = Round.new(
           input: input, output: output, error: wrap_error(error), meta: meta,
         )
@@ -28,7 +28,7 @@ module BloodContracts
       private
 
       def wrap_error(exception)
-        return {} if exception.to_h.empty?
+        return {} if exception.to_s.empty?
         {
           exception.class.to_s => {
             message: exception.message,

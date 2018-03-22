@@ -2,6 +2,7 @@ require_relative "./storages/base_backend.rb"
 require_relative "./storages/file_backend.rb"
 require_relative "./storages/postgres_backend.rb"
 require_relative "./storages/serializer.rb"
+require_relative "./storages/sampler.rb"
 
 module BloodContracts
   class Storage
@@ -50,6 +51,10 @@ module BloodContracts
       end
     end
 
+    def sampler
+      @sampler ||= Storages::Sampler.new(contract_name, backend)
+    end
+
     def self.valid_writer(writer)
       return writer if writer.respond_to?(:call) || writer.respond_to?(:to_sym)
       raise ArgumentError
@@ -89,6 +94,8 @@ module BloodContracts
     def store(round:, rules:, context:)
       return unless BloodContracts.config.store
       Array(rules).each do |rule_name|
+        require'pry';binding.pry
+        next if sampler.limit_reached?(rule_name)
         describe_sample(rule_name, round, context)
         serialize_sample(rule_name, round, context)
       end

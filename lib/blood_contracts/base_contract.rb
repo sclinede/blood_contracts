@@ -8,6 +8,14 @@ module BloodContracts
     option :meta, default: -> { Hash.new }
 
     class << self
+      def priority(config)
+        priorities = {}
+        config.each_pair do |priority, rules|
+          rules.each { |rule| priorities[rule] ||= priority }
+        end
+        BloodContracts.config.priorities[to_s.pathize] ||= priorities
+      end
+
       def rules
         @rules ||= Set.new
       end
