@@ -29,19 +29,19 @@ module BloodContracts
     end
 
     def call(*args, **kwargs)
-      return false if :halt == catch(:unexpected_behavior) do
+      return false if catch(:unexpected_behavior) do
         iterator.next do
           next if match_rules?(matches_storage: statistics) do
             meta = {}
             begin
-              [{args: args, kwargs: kwargs}, yield(meta), meta]
+              [{ args: args, kwargs: kwargs }, yield(meta), meta]
             rescue StandardError => error
-              [{args: args, kwargs: kwargs}, "", meta, error]
+              [{ args: args, kwargs: kwargs }, "", meta, error]
             end
           end
           throw :unexpected_behavior, :halt if stop_on_unexpected
         end
-      end
+      end == :halt
       validator.valid?(statistics)
     end
 

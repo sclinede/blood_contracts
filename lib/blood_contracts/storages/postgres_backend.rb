@@ -12,7 +12,7 @@ module BloodContracts
           return @connection if defined? @connection
           raise "'pg' gem was not required" unless defined?(PG)
           @connection = PG.connect(
-            BloodContracts.config.storage["database_url"]
+            BloodContracts.config.storage["database_url"],
           )
         end
 
@@ -28,8 +28,8 @@ module BloodContracts
               contract text,
               session text,
               rule text,
-              round integer,
-              period integer,
+              round bigint,
+              period bigint,
 
               input text,
               output text,
@@ -63,7 +63,7 @@ module BloodContracts
 
       def find_all_samples(sample_name)
         match = parse(sample_name)
-        session, period, rule, round = match.map { |v| v.sub('*', '.*') }
+        session, period, rule, round = match.map { |v| v.sub("*", ".*") }
         connection.exec <<-SQL
           SELECT session || '/' || contract || '/' || period || '/' ||
                  rule || '/' || round as name
@@ -87,7 +87,7 @@ module BloodContracts
 
       def find_sample(sample_name)
         match = parse(sample_name)
-        session, period, rule, round = match.map { |v| v.sub('*', '.*') }
+        session, period, rule, round = match.map { |v| v.sub("*", ".*") }
         connection.exec(<<-SQL).first.to_h["name"]
           SELECT session || '/' || contract || '/' || period || '/' ||
                  rule || '/' || round as name
@@ -102,7 +102,7 @@ module BloodContracts
 
       def sample_exists?(sample_name)
         match = parse(sample_name)
-        session, period, rule, round = match.map { |v| v.sub('*', '.*') }
+        session, period, rule, round = match.map { |v| v.sub("*", ".*") }
         connection.exec(<<-SQL).first["count"].to_i.positive?
           SELECT COUNT(1) FROM #{table_name}
           WHERE contract ~ '#{contract}'

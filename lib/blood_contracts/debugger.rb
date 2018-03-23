@@ -22,9 +22,9 @@ module BloodContracts
 
     def debug_runs
       return storage.find_all_samples(ENV["debug"]).each if ENV["debug"]
-      raise "Nothing to debug!" unless File.exists?(config.debug_file)
+      raise "Nothing to debug!" unless File.exist?(config.debug_file)
       File.foreach(config.debug_file)
-          .map { |s| s.gsub("\n", "") }
+          .map { |s| s.delete("\n") }
           .map do |sample|
             storage.find_sample(sample)
           end.compact.each

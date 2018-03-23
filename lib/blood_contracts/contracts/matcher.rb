@@ -11,11 +11,11 @@ module BloodContracts
         )
         rule_names = select_matched_rules!(round).keys
         if rule_names.empty?
-          if error.present?
-            rule_names = [Storage::EXCEPTION_CAUGHT]
-          else
-            rule_names = [Storage::UNDEFINED_RULE]
-          end
+          rule_names = if error.present?
+                         [Storage::EXCEPTION_CAUGHT]
+                       else
+                         [Storage::UNDEFINED_RULE]
+                       end
         end
         Array(rule_names).each(&storage.method(:store))
 
@@ -42,12 +42,12 @@ module BloodContracts
           exception.class.to_s => {
             message: exception.message,
             backtrace: exception.backtrace,
-          }
+          },
         }
       end
 
       def select_matched_rules!(round)
-        contract_hash.select do |name, rule|
+        contract_hash.select do |_name, rule|
           rule.check.call(round)
         end
       end

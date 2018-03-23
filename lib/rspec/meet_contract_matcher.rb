@@ -15,7 +15,7 @@ module RSpec
           time_to_run: @_time_to_run,
           stop_on_unexpected: @_halt_on_unexpected,
         )
-        @_contract_runner.call do |meta|
+        @_contract_runner.call do |_meta|
           subject
         end
       end

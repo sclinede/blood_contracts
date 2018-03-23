@@ -26,7 +26,7 @@ module BloodContracts
       end
 
       def contract_rule(name, tag: DEFAULT_TAG, &block)
-        define_method("_#{name.to_s}", &block)
+        define_method("_#{name}", &block)
         rules << name
 
         tags = BloodContracts.config.tags[to_s.pathize] || {}
@@ -79,13 +79,18 @@ module BloodContracts
 
     def build_storage(name)
       s = Storage.new(contract_name: name)
+
       s.input_writer  = method(:input_writer)  if defined? input_writer
+      s.input_writer  = method(:request_writer)  if defined? request_writer
       s.output_writer = method(:output_writer) if defined? output_writer
+      s.output_writer = method(:response_writer) if defined? response_writer
+
       s.input_serializer  = request_serializer if defined? request_serializer
       s.input_serializer  = input_serializer   if defined? input_serializer
       s.output_serializer = output_serializer  if defined? output_serializer
       s.output_serializer = response_serializer if defined? response_serializer
-      s.meta_serializer   = meta_serializer    if defined? meta_serializer
+
+      s.meta_serializer   = meta_serializer if defined? meta_serializer
       s
     end
 

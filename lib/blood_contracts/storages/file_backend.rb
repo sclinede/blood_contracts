@@ -3,12 +3,11 @@ require_relative "./files/name_generator.rb"
 module BloodContracts
   module Storages
     class FileBackend < BaseBackend
-
       def name_generator
         @name_generator ||= Files::NameGenerator.new(
           name,
           example_name,
-          "./tmp/blood_contracts/"
+          "./tmp/blood_contracts/",
         )
       end
 
