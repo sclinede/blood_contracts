@@ -36,7 +36,7 @@ module BloodContracts
     end
 
     def_delegators :@backend, :sample_exists?,
-                   :load_sample, :find_all_samples,
+                   :load_sample, :find_all_samples, :find_sample,
                    :serialize_sample, :describe_sample,
                    :suggestion, :unexpected_suggestion
 
@@ -94,7 +94,6 @@ module BloodContracts
     def store(round:, rules:, context:)
       return unless BloodContracts.config.store
       Array(rules).each do |rule_name|
-        require'pry';binding.pry
         next if sampler.limit_reached?(rule_name)
         describe_sample(rule_name, round, context)
         serialize_sample(rule_name, round, context)

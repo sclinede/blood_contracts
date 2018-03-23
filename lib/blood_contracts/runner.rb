@@ -66,6 +66,7 @@ module BloodContracts
       " during #{iterator.count} run(s). Stats:\n#{statistics}\n\n"\
       "For further investigations open: #{storage.suggestion}\n"
     end
+    alias :to_s :description
 
     protected
 

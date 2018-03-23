@@ -22,6 +22,10 @@ module BloodContracts
         )
       end
 
+      def find_sample(_sample_name)
+        raise NotImplementedError
+      end
+
       def sample_exists?(_sample_name)
         raise NotImplementedError
       end

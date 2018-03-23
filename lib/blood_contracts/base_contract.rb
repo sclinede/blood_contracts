@@ -1,28 +1,37 @@
+require_relative "./concerns/debuggable.rb"
+
 module BloodContracts
   class BaseContract
     extend Dry::Initializer
+    prepend Concerns::Debuggable
+
     option :object, optional: true
     option :method_name, optional: true
     option :action, optional: true, as: :action_proc
 
-    option :meta, default: -> { Hash.new }
+    DEFAULT_TAG = :default
 
     class << self
-      def priority(config)
-        priorities = {}
-        config.each_pair do |priority, rules|
-          rules.each { |rule| priorities[rule] ||= priority }
+      attr_reader :rules
+      def inherited(child_klass)
+        child_klass.instance_variable_set(:@rules, Set.new)
+      end
+
+      def tag(config)
+        tags = BloodContracts.config.tags[to_s.pathize] || {}
+        config.each_pair do |tag, rules|
+          rules.each { |rule| tags[rule.to_s] ||= tag.to_s }
         end
-        BloodContracts.config.priorities[to_s.pathize] ||= priorities
+        BloodContracts.config.tags[to_s.pathize] = tags
       end
 
-      def rules
-        @rules ||= Set.new
-      end
-
-      def contract_rule(name, &block)
-        define_method("_#{name}", block)
+      def contract_rule(name, tag: DEFAULT_TAG, &block)
+        define_method("_#{name.to_s}", &block)
         rules << name
+
+        tags = BloodContracts.config.tags[to_s.pathize] || {}
+        tags[name.to_s] = tag
+        BloodContracts.config.tags[to_s.pathize] = tags
       end
     end
 
@@ -54,10 +63,10 @@ module BloodContracts
       result = nil
       runner.call(*args, **kwargs) do |meta|
         result = if block_given?
-                  yield(meta)
-                else
-                  action.call(*args, **kwargs)
-                end
+                   yield(meta)
+                 else
+                   action.call(*args, **kwargs)
+                 end
       end
       result
     end
@@ -72,8 +81,10 @@ module BloodContracts
       s = Storage.new(contract_name: name)
       s.input_writer  = method(:input_writer)  if defined? input_writer
       s.output_writer = method(:output_writer) if defined? output_writer
+      s.input_serializer  = request_serializer if defined? request_serializer
       s.input_serializer  = input_serializer   if defined? input_serializer
       s.output_serializer = output_serializer  if defined? output_serializer
+      s.output_serializer = response_serializer if defined? response_serializer
       s.meta_serializer   = meta_serializer    if defined? meta_serializer
       s
     end

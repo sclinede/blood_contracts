@@ -3,6 +3,7 @@ module BloodContracts
     module Files
       class NameGenerator
         extend Dry::Initializer
+        extend Forwardable
 
         param :run_name
         param :example_name
@@ -10,6 +11,7 @@ module BloodContracts
         option :period, optional: true
         option :round, optional: true
         option :root, default: -> { Rails.root.join(path) }
+        def_delegator :BloodContracts, :config
 
         def call(tag)
           File.join(path, current_period.to_s, tag.to_s, current_round.to_s)
@@ -24,7 +26,7 @@ module BloodContracts
         end
 
         def current_period
-          period || Time.now.to_i / BloodContracts.config.sampling_period
+          period || Time.now.to_i / (config.sampling["period"] || 1)
         end
 
         def current_round
@@ -58,7 +60,7 @@ module BloodContracts
         end
 
         def parse(sample_name)
-          path_items = sample_name.split("/")
+          path_items = sample_name.to_s.split("/")
           period, tag, sample = path_items.pop(3)
           run_n_example_str = path_items.join("/").sub(default_path, "")
           if run_n_example_str.end_with?("*")

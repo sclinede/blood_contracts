@@ -65,11 +65,13 @@ module BloodContracts
         match = parse(sample_name)
         session, period, rule, round = match.map { |v| v.sub('*', '.*') }
         connection.exec <<-SQL
-          SELECT name FROM #{table_name}
+          SELECT session || '/' || contract || '/' || period || '/' ||
+                 rule || '/' || round as name
+          FROM #{table_name}
           WHERE contract ~ '#{contract}'
           AND session ~ '#{connection.escape_string(session)}'
-          AND period ~ '#{period}'
-          AND round ~ '#{round}'
+          AND period::text ~ '#{period}'
+          AND round::text ~ '#{round}'
           AND rule ~ '#{connection.escape_string(rule)}';
         SQL
       end
@@ -78,8 +80,23 @@ module BloodContracts
         connection.exec(<<-SQL).first["count"].to_i
           SELECT COUNT(1) FROM #{table_name}
           WHERE contract = '#{example_name}'
-          AND period = '#{current_period}'
+          AND period::text ~ '#{current_period}'
           AND rule = '#{connection.escape_string(rule)}';
+        SQL
+      end
+
+      def find_sample(sample_name)
+        match = parse(sample_name)
+        session, period, rule, round = match.map { |v| v.sub('*', '.*') }
+        connection.exec(<<-SQL).first.to_h["name"]
+          SELECT session || '/' || contract || '/' || period || '/' ||
+                 rule || '/' || round as name
+          FROM #{table_name}
+          WHERE contract ~ '#{contract}'
+          AND session ~ '#{connection.escape_string(session)}'
+          AND period::text ~ '#{period}'
+          AND round::text ~ '#{round}'
+          AND rule ~ '#{connection.escape_string(rule)}';
         SQL
       end
 
@@ -90,8 +107,8 @@ module BloodContracts
           SELECT COUNT(1) FROM #{table_name}
           WHERE contract ~ '#{contract}'
           AND session ~ '#{connection.escape_string(session)}'
-          AND period ~ '#{period}'
-          AND round ~ '#{round}'
+          AND period::text ~ '#{period}'
+          AND round::text ~ '#{round}'
           AND rule ~ '#{connection.escape_string(rule)}';
         SQL
       end
@@ -99,8 +116,8 @@ module BloodContracts
       def load_sample_chunk(dump_type, sample_name)
         session, period, rule, round = parse(sample_name)
         send("#{dump_type}_serializer")[:load].call(
-          connection.exec(<<-SQL).first
-            SELECT #{dump_type}_dump FROM #{table_name}
+          connection.exec(<<-SQL).first.to_h.fetch("dump")
+            SELECT #{dump_type}_dump as dump FROM #{table_name}
             WHERE contract = '#{contract}'
             AND session = '#{connection.escape_string(session)}'
             AND period = '#{period}'
@@ -141,7 +158,7 @@ module BloodContracts
           AND session = '#{connection.escape_string(session)}'
           AND period = '#{current_period}'
           AND round = '#{current_round}'
-          AND rule = '#{connection.escape_string(rule)}';
+          AND rule = '#{connection.escape_string(rule.to_s)}';
         SQL
       end
     end

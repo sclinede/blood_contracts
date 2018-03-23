@@ -5,20 +5,27 @@ module BloodContracts
       attr_reader :data
 
       def_delegators :@data, :input, :output, :meta, :error
+
+      def input
+        @data[:input]
+      end
       alias :request :input
+
+      def output
+        @data[:output]
+      end
       alias :response :output
 
-      def initialize(**kwargs)
-        @data = Hashie::Mash.new(kwargs)
+      def meta
+        @data[:meta]
       end
 
-      def with_sub_meta(key)
-        sub_round = self.class.new(
-          input: input, output: output, meta: {}, error: error,
-        )
-        result = yield(sub_round)
-        data.meta[key] = sub_round.meta
-        result
+      def error
+        @data[:error]
+      end
+
+      def initialize(**kwargs)
+        @data = kwargs
       end
     end
   end

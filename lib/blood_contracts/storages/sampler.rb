@@ -7,16 +7,16 @@ module BloodContracts
       param :backend
 
       def limit_reached?(rule)
-        priorities = BloodContracts.config.priorities[contract_name]
-        rule_priority = priorities[rule].to_s
-        return unless limits.fetch(rule_priority) { false }
-        backend.samples_count(rule) >= limits[rule_priority]
+        tags = BloodContracts.config.tags[contract_name]
+        rule_tag = tags[rule].to_s
+        return unless limits.fetch(rule_tag) { false }
+        backend.samples_count(rule) >= limits[rule_tag]
       end
 
       private
 
       def limits
-        BloodContracts.config.sampling_limits.to_h
+        BloodContracts.config.sampling["limits_per_tag"].to_h
       end
     end
   end

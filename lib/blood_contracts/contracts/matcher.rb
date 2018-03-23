@@ -21,14 +21,23 @@ module BloodContracts
 
         yield rule_names, round if block_given?
 
-        raise error if error.present?
+        try_reraise error
         !storage.found_unexpected_behavior?
       end
 
       private
 
+      def try_reraise(error)
+        error ||= {}
+        raise error unless error.respond_to?(:to_hash)
+        warn(<<~TEXT) unless error.empty?
+          Skipped raise of #{error.keys.first} while debugging
+        TEXT
+      end
+
       def wrap_error(exception)
         return {} if exception.to_s.empty?
+        return exception.to_h if exception.respond_to?(:to_hash)
         {
           exception.class.to_s => {
             message: exception.message,
@@ -39,7 +48,7 @@ module BloodContracts
 
       def select_matched_rules!(round)
         contract_hash.select do |name, rule|
-          round.with_sub_meta(name) { |sub_round| rule.check.call(sub_round) }
+          rule.check.call(round)
         end
       end
     end

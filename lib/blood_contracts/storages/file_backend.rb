@@ -30,6 +30,10 @@ module BloodContracts
              .map { |f| f.chomp(".output") }
       end
 
+      def find_samples(sample_name)
+        find_all(sample_name).first
+      end
+
       def sample_exists?(sample_name)
         name_generator.exists?(sample_name)
       end

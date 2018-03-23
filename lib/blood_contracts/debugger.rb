@@ -1,7 +1,7 @@
 module BloodContracts
   class Debugger < Runner
     def runs
-      @runs ||= storage.find_all_samples(ENV["debug"]).each
+      @runs ||= debug_runs # storage.find_all_samples(ENV["debug"]).each
     end
 
     def iterations
@@ -19,6 +19,20 @@ module BloodContracts
     end
 
     private
+
+    def debug_runs
+      return storage.find_all_samples(ENV["debug"]).each if ENV["debug"]
+      raise "Nothing to debug!" unless File.exists?(config.debug_file)
+      File.foreach(config.debug_file)
+          .map { |s| s.gsub("\n", "") }
+          .map do |sample|
+            storage.find_sample(sample)
+          end.compact.each
+    end
+
+    def config
+      BloodContracts.config
+    end
 
     def match_rules?(matches_storage:)
       matcher.call(*storage.load_sample(runs.next), storage: matches_storage)
