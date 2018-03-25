@@ -7,7 +7,7 @@ module BloodContracts
         @name_generator ||= Files::NameGenerator.new(
           name,
           example_name,
-          "./tmp/blood_contracts/",
+          "./tmp/blood_contracts/"
         )
       end
 
@@ -40,7 +40,7 @@ module BloodContracts
       def load_sample_chunk(dump_type, sample_name)
         name = name_generator.extract_name_from(sample_name)
         send("#{dump_type}_serializer")[:load].call(
-          File.read("#{name}.#{dump_type}.dump"),
+          File.read("#{name}.#{dump_type}.dump")
         )
       end
 

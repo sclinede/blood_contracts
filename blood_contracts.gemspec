@@ -1,5 +1,5 @@
 
-lib = File.expand_path("../lib", __FILE__)
+lib = File.expand_path("lib", __dir__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require "blood_contracts/version"
 
@@ -24,15 +24,15 @@ Gem::Specification.new do |spec|
   # spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  spec.required_ruby_version = ">= 2.2.0"
+  spec.required_ruby_version = ">= 2.4.0"
 
   spec.add_runtime_dependency "dry-initializer", "~> 2.0"
   spec.add_runtime_dependency "hashie", "~> 3.0"
   spec.add_runtime_dependency "nanoid", "~> 0.2"
 
   spec.add_development_dependency "bundler", "~> 1.16"
-  spec.add_development_dependency "rubocop", "~> 0.52"
   spec.add_development_dependency "pry", "~> 0.9"
   spec.add_development_dependency "rake", "~> 10.0"
   spec.add_development_dependency "rspec", "~> 3.0"
+  spec.add_development_dependency "rubocop", "~> 0.52"
 end

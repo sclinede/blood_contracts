@@ -1,0 +1,76 @@
+---
+AllCops:
+  Exclude:
+    - bin/*
+    - lib/tasks/**/*
+    - tmp/**/*
+    - blood_contracts.gemspec
+
+  TargetRubyVersion: 2.4
+
+Documentation:
+  Enabled: false
+
+Lint/AmbiguousBlockAssociation:
+  Enabled: false # this is a whole damned mess
+
+Metrics/BlockLength:
+  Exclude:
+    - "Gemfile"
+    - "spec/**/*"
+    - "lib/rspec/meet_contract_matcher.rb"
+
+Style/Alias:
+  Enabled: false # `alias_method` and `alias` have diferent behaviour
+
+Style/AndOr:
+  Enabled: false # '&&' has greater precedence over 'and' and works differently
+
+Style/AsciiComments:
+  Enabled: false # need to illustrate translations
+
+Style/BlockComments:
+  Enabled: false # @gzigzigzeo loves it
+
+Style/BracesAroundHashParameters:
+  EnforcedStyle: context_dependent
+
+Style/ClassAndModuleChildren:
+  EnforcedStyle: compact
+
+Style/DoubleNegation:
+  Enabled: false # this is an overkill
+
+Style/EachWithObject:
+  Enabled: false # an idiotism
+
+Style/FrozenStringLiteralComment:
+  Enabled: false # not to be used before migration to Ruby 3+
+
+Style/Lambda:
+  Enabled: false # is necessary to use lambda as an argument
+
+Style/ModuleFunction:
+  Enabled: false # module_function and extend(self) has different behaviour
+
+Style/NumericLiterals:
+  Enabled: false
+
+Style/PercentLiteralDelimiters:
+  Enabled: false
+
+Style/RescueModifier:
+  Enabled: false
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+Style/SingleLineBlockParams:
+  Enabled: false # I do know better how to name those params
+
+Style/ClassAndModuleChildren:
+  Enabled: false # prefer compact style, but nested one can be used to
+                 # shortcut references to constants in the same context
+
+Bundler/OrderedGems:
+  Enabled: false

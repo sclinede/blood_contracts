@@ -1,5 +1,5 @@
 if defined?(Concurrent::Future)
-  require 'concurrent'
+  require "concurrent"
 
   module BloodContracts
     module Concerns

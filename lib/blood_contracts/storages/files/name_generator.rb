@@ -49,7 +49,7 @@ module BloodContracts
           self.class.new(
             run_name, example_name, default_path,
             period: period,
-            round: round,
+            round: round
           )
         end
 
@@ -68,14 +68,14 @@ module BloodContracts
               run_n_example_str.chomp("*"),
               period,
               tag,
-              sample,
+              sample
             ]
           elsif run_n_example_str.end_with?(example_name)
             [
               run_n_example_str.chomp(example_name),
               period,
               tag,
-              sample,
+              sample
             ]
           else
             %w(__no_match__) * 4

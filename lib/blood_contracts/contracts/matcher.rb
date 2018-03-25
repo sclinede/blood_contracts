@@ -7,7 +7,7 @@ module BloodContracts
 
       def call(input, output, meta, error = nil, storage:)
         round = Round.new(
-          input: input, output: output, error: wrap_error(error), meta: meta,
+          input: input, output: output, error: wrap_error(error), meta: meta
         )
         rule_names = select_matched_rules!(round).keys
         if rule_names.empty?
@@ -32,8 +32,8 @@ module BloodContracts
         {
           exception.class.to_s => {
             message: exception.message,
-            backtrace: exception.backtrace,
-          },
+            backtrace: exception.backtrace
+          }
         }
       end
 

@@ -25,7 +25,7 @@ module BloodContracts
       def object_serializer_to_hash
         {
           load: serializer.method(:load),
-          dump: serializer.method(:dump),
+          dump: serializer.method(:dump)
         }
       end
 

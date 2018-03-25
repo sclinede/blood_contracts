@@ -62,7 +62,9 @@ module BloodContracts
 
     def call(*args, **kwargs)
       return yield unless enabled?
-      output, meta, error = "", {}, nil
+      output = ""
+      meta = {}
+      error = nil
       begin
         output = yield(meta)
       rescue StandardError => exception
@@ -72,7 +74,7 @@ module BloodContracts
         before_runner(meta)
         runner.call(
           args: args, kwargs: kwargs,
-          output: output, meta: meta, error: error,
+          output: output, meta: meta, error: error
         )
       end
     end

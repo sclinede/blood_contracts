@@ -32,7 +32,7 @@ module BloodContracts
       return false if catch(:unexpected_behavior) do
         iterator.next do
           next if match_rules?(matches_storage: statistics) do
-            output, meta, error = yield(meta) if block_given?
+            (output, meta, error = yield(meta)) if block_given?
             [{ args: args, kwargs: kwargs }, output, meta, error]
           end
           throw :unexpected_behavior, :halt if stop_on_unexpected

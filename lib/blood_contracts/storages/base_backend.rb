@@ -18,7 +18,7 @@ module BloodContracts
       def write(writer, cntxt, round_data)
         writer = cntxt.method(writer) if cntxt && writer.respond_to?(:to_sym)
         writer.call(round_data).encode(
-          "UTF-8", invalid: :replace, undef: :replace, replace: "?",
+          "UTF-8", invalid: :replace, undef: :replace, replace: "?"
         )
       end
 
@@ -34,9 +34,9 @@ module BloodContracts
         raise NotImplementedError
       end
 
-      def load_sample(_sample_name)
+      def load_sample(sample_name)
         %i(input output meta error).map do |type|
-          load_sample_chunk(type, _sample_name)
+          load_sample_chunk(type, sample_name)
         end
       end
 

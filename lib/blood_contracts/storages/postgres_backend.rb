@@ -12,7 +12,7 @@ module BloodContracts
           return @connection if defined? @connection
           raise "'pg' gem was not required" unless defined?(PG)
           @connection = PG.connect(
-            BloodContracts.config.storage["database_url"],
+            BloodContracts.config.storage["database_url"]
           )
         end
 

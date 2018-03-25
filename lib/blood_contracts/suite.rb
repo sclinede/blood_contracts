@@ -34,7 +34,7 @@ module BloodContracts
         output_writer: output_writer,
         input_serializer:  input_serializer,
         output_serializer: output_serializer,
-        meta_serializer:   meta_serializer,
+        meta_serializer:   meta_serializer
       )
     end
   end
