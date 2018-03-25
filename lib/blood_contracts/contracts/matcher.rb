@@ -21,19 +21,10 @@ module BloodContracts
 
         yield rule_names, round if block_given?
 
-        try_reraise error
         !storage.found_unexpected_behavior?
       end
 
       private
-
-      def try_reraise(error)
-        error ||= {}
-        raise error unless error.respond_to?(:to_hash)
-        warn(<<~TEXT) unless error.empty?
-          Skipped raise of #{error.keys.first} while debugging
-        TEXT
-      end
 
       def wrap_error(exception)
         return {} if exception.to_s.empty?

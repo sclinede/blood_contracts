@@ -58,17 +58,23 @@ module BloodContracts
       @runner ||= Runner.new(context: self, suite: to_contract_suite)
     end
 
+    def before_runner(meta); end
+
     def call(*args, **kwargs)
       return yield unless enabled?
-      result = nil
-      runner.call(*args, **kwargs) do |meta|
-        result = if block_given?
-                   yield(meta)
-                 else
-                   action.call(*args, **kwargs)
-                 end
+      output, meta, error = "", {}, nil
+      begin
+        output = yield(meta)
+      rescue StandardError => exception
+        error = exception
+        raise error
+      ensure
+        before_runner(meta)
+        runner.call(
+          args: args, kwargs: kwargs,
+          output: output, meta: meta, error: error,
+        )
       end
-      result
     end
 
     def contract
@@ -80,9 +86,9 @@ module BloodContracts
     def build_storage(name)
       s = Storage.new(contract_name: name)
 
-      s.input_writer  = method(:input_writer)  if defined? input_writer
+      s.input_writer  = method(:input_writer)    if defined? input_writer
       s.input_writer  = method(:request_writer)  if defined? request_writer
-      s.output_writer = method(:output_writer) if defined? output_writer
+      s.output_writer = method(:output_writer)   if defined? output_writer
       s.output_writer = method(:response_writer) if defined? response_writer
 
       s.input_serializer  = request_serializer if defined? request_serializer

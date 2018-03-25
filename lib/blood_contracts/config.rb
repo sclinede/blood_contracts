@@ -8,7 +8,7 @@ module BloodContracts
     attr_config store: true,
                 sampling: {
                   period: nil,
-                  limits_per_tag: {},
+                  limit_per_tag: {},
                 },
                 storage: {
                   type: :file, # or :postgres

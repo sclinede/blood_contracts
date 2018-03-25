@@ -21,6 +21,14 @@ module BloodContracts
         return @runner if @runner.is_a?(Debugger)
         @runner = Debugger.new(context: self, suite: to_contract_suite)
       end
+
+      def warn_about_reraise(error)
+        error ||= {}
+        raise error unless error.respond_to?(:to_hash)
+        warn(<<~TEXT) unless error.empty?
+          Skipped raise of #{error.keys.first} while debugging
+        TEXT
+      end
     end
   end
 end

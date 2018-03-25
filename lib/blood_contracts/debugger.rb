@@ -8,7 +8,7 @@ module BloodContracts
       runs.size
     end
 
-    def call
+    def call(args: nil, kwargs: nil, output: "", meta: {}, error: nil)
       return super if debugging_samples?
       true
     end
