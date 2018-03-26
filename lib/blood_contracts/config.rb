@@ -6,6 +6,7 @@ module BloodContracts
   class Config < Anyway::Config
     config_name :contracts
     attr_config store: true,
+                enabled: false,
                 sampling: {
                   period: nil,
                   limit_per_tag: {}
@@ -15,7 +16,6 @@ module BloodContracts
                   # database_url: ENV["DATABASE_URL"], # when :postgres storage
                   # table_name: "samples",             # when :postgres storage
                 },
-                enabled: false,
                 tags: {},
                 debug_file: ".bcontracts_debug"
   end

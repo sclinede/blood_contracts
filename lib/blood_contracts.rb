@@ -29,18 +29,17 @@ module BloodContracts
   end
   module_function :config
 
+  def storage
+    @storage ||= Hashie::Hash[BloodContracts.config.storage].symbolize_keys!
+  end
+  module_function :storage
+
+  def sampling
+    @sampling ||= Hashie::Hash[BloodContracts.config.sampling].symbolize_keys!
+  end
+  module_function :sampling
+
   if defined?(RSpec) && RSpec.respond_to?(:configure)
     require_relative "rspec/meet_contract_matcher"
-
-    RSpec.configure do |config|
-      config.include ::RSpec::MeetContractMatcher
-      config.filter_run_excluding contract: true
-      config.before(:suite) do
-        BloodContracts.run_name = ::Nanoid.generate(size: 10)
-      end
-      config.define_derived_metadata(file_path: %r{/spec/contracts/}) do |meta|
-        meta[:contract] = true
-      end
-    end
   end
 end

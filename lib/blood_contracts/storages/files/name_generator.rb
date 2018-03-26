@@ -11,7 +11,6 @@ module BloodContracts
         option :period, optional: true
         option :round, optional: true
         option :root, default: -> { Rails.root.join(path) }
-        def_delegator :BloodContracts, :config
 
         def call(tag)
           File.join(path, current_period.to_s, tag.to_s, current_round.to_s)
@@ -26,7 +25,7 @@ module BloodContracts
         end
 
         def current_period
-          period || Time.now.to_i / (config.sampling["period"] || 1)
+          period || Time.now.to_i / (BloodContracts.sampling[:period] || 1)
         end
 
         def current_round

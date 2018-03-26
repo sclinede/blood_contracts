@@ -11,13 +11,15 @@ module BloodContracts
         def connection
           return @connection if defined? @connection
           raise "'pg' gem was not required" unless defined?(PG)
-          @connection = PG.connect(
-            BloodContracts.config.storage["database_url"]
-          )
+          @connection = PG.connect(BloodContracts.storage[:database_url])
         end
 
         def table_name
-          @table_name ||= BloodContracts.config.storage["table_name"]
+          @table_name ||= BloodContracts.storage[:table_name]
+        end
+
+        def drop_table!
+          connection.exec "DROP TABLE IF EXISTS #{table_name};"
         end
 
         def create_table!

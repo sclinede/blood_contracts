@@ -41,7 +41,7 @@ module BloodContracts
                    :suggestion, :unexpected_suggestion
 
     def default_storage_klass
-      case BloodContracts.config.storage["type"].downcase.to_sym
+      case BloodContracts.storage[:type].downcase.to_sym
       when :file
         BloodContracts::Storages::FileBackend
       when :postgres
