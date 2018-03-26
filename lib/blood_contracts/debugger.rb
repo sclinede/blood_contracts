@@ -23,11 +23,15 @@ module BloodContracts
     def debug_runs
       return storage.find_all_samples(ENV["debug"]).each if ENV["debug"]
       raise "Nothing to debug!" unless File.exist?(config.debug_file)
-      File.foreach(config.debug_file)
-          .map { |s| s.delete("\n") }
-          .map do |sample|
-            storage.find_sample(sample)
-          end.compact.each
+      found_samples.each
+    end
+
+    def found_samples
+      @found_samples ||= File.foreach(config.debug_file)
+                             .map { |s| s.delete("\n") }
+                             .map do |sample|
+                               storage.find_sample(sample)
+                             end.compact
     end
 
     def config
@@ -38,12 +42,12 @@ module BloodContracts
       matcher.call(*storage.load_sample(runs.next), storage: matches_storage)
     end
 
-    def unexpected_further_investigation
-      ENV["debug"]
+    def unexpected_suggestion
+      ENV["debug"] || "\n - #{found_samples.join("\n - ")}"
     end
 
-    def further_investigation
-      ENV["debug"]
+    def suggestion
+      ENV["debug"] || "\n - #{found_samples.join("\n - ")}"
     end
 
     def debugging_samples?

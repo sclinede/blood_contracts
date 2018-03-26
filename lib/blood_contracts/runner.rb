@@ -48,11 +48,11 @@ module BloodContracts
       if stats.unexpected_behavior?
         "#{intro}\n#{contract_description}\n"\
         " during #{iterator.count} run(s) but got unexpected behavior.\n\n"\
-        "For further investigations open: #{storage.unexpected_suggestion}"
+        "For further investigations check: #{unexpected_suggestion}"
       else
         "#{intro}\n#{contract_description}\n"\
           " during #{iterator.count} run(s) but got:\n#{statistics}\n\n"\
-          "For further investigations open: #{storage.suggestion}"
+          "For further investigations check: #{suggestion}"
       end
     end
 
@@ -60,11 +60,19 @@ module BloodContracts
     def description
       "meet the contract:\n#{contract_description} \n"\
       " during #{iterator.count} run(s). Stats:\n#{statistics}\n\n"\
-      "For further investigations open: #{storage.suggestion}\n"
+      "For further investigations check: #{suggestion}\n"
     end
     alias :to_s :description
 
     protected
+
+    def unexpected_suggestion
+      storage.unexpected_suggestion
+    end
+
+    def suggestion
+      storage.suggestion
+    end
 
     def match_rules?(matches_storage:)
       matcher.call(*yield, storage: matches_storage) do |rules, round|
