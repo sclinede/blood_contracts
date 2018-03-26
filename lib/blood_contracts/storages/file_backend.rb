@@ -45,22 +45,22 @@ module BloodContracts
       end
 
       def describe_sample(tag, round, context)
-        FileUtils.mkdir_p File.join(name_generator.root, tag.to_s)
         name_generator.reset_timestamp!
         name = name_generator.call(tag)
-        File.open("#{name}.input", "w+") do |f|
+        FileUtils.mkdir_p(name)
+        File.open("#{name}/input", "w+") do |f|
           f << write(input_writer, context, round)
         end
-        File.open("#{name}.output", "w+") do |f|
+        File.open("#{name}/output", "w+") do |f|
           f << write(output_writer, context, round)
         end
       end
 
       def serialize_sample_chunk(chunk, tag, round, context)
-        return unless (dump_proc = send("#{type}_serializer")[:dump])
+        return unless (dump_proc = send("#{chunk}_serializer")[:dump])
         name = name_generator.call(tag)
         data = round.send(chunk)
-        File.open("#{name}.#{type}.dump", "w+") do |f|
+        File.open("#{name}/#{chunk}.dump", "w+") do |f|
           f << write(dump_proc, context, data)
         end
       end
