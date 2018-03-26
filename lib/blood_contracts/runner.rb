@@ -28,6 +28,7 @@ module BloodContracts
       Contracts::Description.call(suite.contract)
     end
 
+    # FIXME: block argument is missing.
     def call(args:, kwargs:, output: "", meta: {}, error: nil)
       return false if catch(:unexpected_behavior) do
         iterator.next do

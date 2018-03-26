@@ -11,7 +11,14 @@ module BloodContracts
         def connection
           return @connection if defined? @connection
           raise "'pg' gem was not required" unless defined?(PG)
-          @connection = PG.connect(BloodContracts.storage[:database_url])
+          if BloodContracts.storage[:connection]
+            @connection = BloodContracts.storage[:connection].call
+          elsif BloodContracts.storage[:database_url]
+            @connection = PG.connect(BloodContracts.storage[:database_url])
+          else
+            raise ArgumentError.new("Postgres connection not configured!")
+          end
+          @connection
         end
 
         def table_name
