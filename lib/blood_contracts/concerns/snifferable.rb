@@ -2,16 +2,18 @@ if defined?(Sniffer)
   module BloodContracts::Concerns::Snifferable
     def sniffer_request(http_call)
       return {} unless requested_http?(http_call)
-      last_http_session = http_call.meta["last_http_session"].to_h
-      last_http_request = last_http_session.deep_stringify_keys["request"]
-      last_http_request.slice("body", "query")
+      last_http_session = http_call.meta["last_http_session"].to_a
+      last_http_session.map do |session|
+        session["request"].to_h.slice("body", "query")
+      end
     end
 
     def sniffer_response(http_call)
       return {} unless requested_http?(http_call)
-      last_http_session = http_call.meta["last_http_session"].to_h
-      last_http_response = last_http_session.deep_stringify_keys["response"]
-      last_http_response.slice("body", "status")
+      last_http_session = http_call.meta["last_http_session"].to_a
+      last_http_session.map do |session|
+        session["response"].to_h.slice("body", "status")
+      end
     end
 
     def requested_http?(http_call)
@@ -34,8 +36,9 @@ if defined?(Sniffer)
       requested_api = sniffer_buffer.size.positive?
       meta["requested_http"] = requested_api
       return unless requested_api
-      last_http_session = sniffer_buffer.last.to_h.deep_stringify_keys
-      meta["last_http_session"] = last_http_session
+      meta["last_http_session"] = sniffer_buffer.map do |session|
+        ::Hashie::Hash[session.to_h].stringify_keys
+      end
     end
 
     def before_runner(meta)
