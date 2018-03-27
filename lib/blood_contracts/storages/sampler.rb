@@ -8,7 +8,7 @@ module BloodContracts
 
       def limit_reached?(rule)
         tags = BloodContracts.config.tags[contract_name]
-        rule_tag = tags[rule].to_s
+        rule_tag = tags[rule].to_sym
         return unless limits.fetch(rule_tag) { false }
         backend.samples_count(rule) >= limits[rule_tag]
       end
