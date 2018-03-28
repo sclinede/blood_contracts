@@ -31,6 +31,8 @@ module BloodContracts
       end
 
       def call(*args, **kwargs)
+        return super unless debug_enabled?
+
         output, error = nil, nil
         runner.iterator.next do
           next if runner.call(args: args, kwargs: kwargs) do |meta|
