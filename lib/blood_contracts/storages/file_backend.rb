@@ -25,12 +25,12 @@ module BloodContracts
 
       def find_all_samples(sample_name)
         files = name_generator.find_all(sample_name)
-        files.select { |f| f.end_with?(".output") }
-             .map { |f| f.chomp(".output") }
+        files.select { |f| f.end_with?("/output") }
+             .map { |f| f.chomp("/output") }
       end
 
-      def find_samples(sample_name)
-        find_all(sample_name).first
+      def find_sample(sample_name)
+        find_all_samples(sample_name).first
       end
 
       def sample_exists?(sample_name)
@@ -40,7 +40,7 @@ module BloodContracts
       def load_sample_chunk(dump_type, sample_name)
         name = name_generator.extract_name_from(sample_name)
         send("#{dump_type}_serializer")[:load].call(
-          File.read("#{name}.#{dump_type}.dump")
+          File.read("#{name}/#{dump_type}.dump")
         )
       end
 

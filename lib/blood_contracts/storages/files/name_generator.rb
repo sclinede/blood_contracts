@@ -37,11 +37,11 @@ module BloodContracts
         end
 
         def find_all(sample_name)
-          Dir.glob("#{extract_name_from(sample_name)}*")
+          Dir.glob("#{extract_name_from(sample_name)}/*")
         end
 
         def exists?(sample_name)
-          File.exist?("#{extract_name_from(sample_name)}.input")
+          File.exist?("#{extract_name_from(sample_name)}/input")
         end
 
         def build_with(run_name, period, round)

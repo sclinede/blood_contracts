@@ -33,6 +33,23 @@ module BloodContracts
         tags[name.to_s] = tag
         BloodContracts.config.tags[to_s.pathize] = tags
       end
+
+      def apply_to(klass:, methods:)
+        patch = Module.new
+        patch.module_eval <<~CODE
+          def contract
+            @contract ||= #{self}.new
+          end
+
+          %i(#{Array(methods).join(',')}).each do |method_name|
+            define_method(method_name) do |*args, **kwargs|
+              contract.call(*args, **kwargs) { super(*args, **kwargs) }
+            end
+          end
+        CODE
+
+        klass.prepend patch
+      end
     end
 
     def enable!

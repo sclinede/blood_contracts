@@ -29,6 +29,25 @@ module BloodContracts
           Skipped raise of #{error.keys.first} while debugging
         TEXT
       end
+
+      def call(*args, **kwargs)
+        output, error = nil, nil
+        runner.iterator.next do
+          next if runner.call(args: args, kwargs: kwargs) do |meta|
+            begin
+              output = yield(meta)
+            rescue StandardError => exception
+              error = exception
+            ensure
+              before_runner(meta)
+            end
+            [output, meta, error]
+          end
+          return output if runner.stop_on_unexpected
+          warn_about_reraise(error) if error
+        end
+        output
+      end
     end
   end
 end

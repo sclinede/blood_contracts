@@ -1,48 +1,26 @@
+require_relative '../blood_contracts/concerns/testable.rb'
+
 module RSpec
   module MeetContractMatcher
     extend RSpec::Matchers::DSL
-    Runner = ::BloodContracts::Runner
-    Debugger = ::BloodContracts::Debugger
+    # Runner = ::BloodContracts::Runner
+    # Debugger = ::BloodContracts::Debugger
+    Testable = ::BloodContracts::Concerns::Testable
 
-    matcher :meet_contract_rules do |args|
-      match do |subject|
-        runner = ENV["debug"] ? Debugger : Runner
+    matcher :meet_contract_rules_of do |contract|
+      match do |block|
+        contract.class.prepend Testable unless contract.debug_enabled?
+        @_contract_runner = contract.runner
 
-        @_contract_runner = runner.new(
-          context: self,
-          suite: build_suite(args || subject),
-          iterations: @_iterations,
-          time_to_run: @_time_to_run,
-          stop_on_unexpected: @_halt_on_unexpected
-        )
-        @_contract_runner.call do |_meta|
-          subject
+        next false if :halt == catch(:unexpected) do
+          @_contract_runner.iterator.next do
+            block.call
+            next if @_contract_runner.valid?
+            throw :unexpected, :halt if @_contract_runner.stop_on_unexpected
+          end
         end
-      end
 
-      def build_suite(args)
-        suite = nil
-        if args.respond_to?(:to_contract_suite)
-          suite = args.to_contract_suite(name: _example_name_to_path)
-        elsif args.respond_to?(:to_h) && args.to_h.fetch(:contract) { false }
-          ::BloodContracts::Suite.new(
-            storage: new_storage,
-            contract: args[:contract]
-          )
-        else
-          raise "Matcher arguments is not a Blood Contract"
-        end
-        suite.data_generator = @_generator if @_generator
-        suite
-      end
-
-      def new_storage
-        storage = Storage.new(contract_name: _example_name_to_path)
-        storage.input_writer  = _input_writer  if _input_writer
-        storage.output_writer = _output_writer if _output_writer
-        storage.input_serializer  = @_input_serializer if @_input_serializer
-        storage.output_serializer = @_output_serializer if @_output_serializer
-        storage
+        @_contract_runner.valid?
       end
 
       def _example_name_to_path
@@ -50,18 +28,6 @@ module RSpec
           .name
           .sub("RSpec::ExampleGroups::", "")
           .pathize
-      end
-
-      def _input_writer
-        input_writer = @_writers.to_h[:input]
-        input_writer ||= :input_writer if defined? self.input_writer
-        input_writer
-      end
-
-      def _output_writer
-        output_writer = @_writers.to_h[:output]
-        output_writer ||= :output_writer if defined? self.output_writer
-        output_writer
       end
 
       supports_block_expectations
@@ -79,24 +45,16 @@ module RSpec
         end
       end
 
-      chain :during_n_iterations_run do |iterations|
+      chain :during_n_iterations do |iterations|
         @_iterations = Integer(iterations)
       end
 
-      chain :during_n_seconds_run do |time_to_run|
+      chain :during_n_seconds do |time_to_run|
         @_time_to_run = Float(time_to_run)
       end
 
       chain :halt_on_unexpected do
         @_halt_on_unexpected = true
-      end
-
-      chain :serialize_input do |serializer|
-        @_input_serializer = serializer
-      end
-
-      chain :serialize_output do |serializer|
-        @_output_serializer = serializer
       end
     end
   end

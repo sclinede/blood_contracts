@@ -30,15 +30,13 @@ module BloodContracts
 
     # FIXME: block argument is missing.
     def call(args:, kwargs:, output: "", meta: {}, error: nil)
-      return false if catch(:unexpected_behavior) do
-        iterator.next do
-          next if match_rules?(matches_storage: statistics) do
-            (output, meta, error = yield(meta)) if block_given?
-            [{ args: args, kwargs: kwargs }, output, meta, error]
-          end
-          throw :unexpected_behavior, :halt if stop_on_unexpected
-        end
-      end == :halt
+      match_rules?(matches_storage: statistics) do
+        (output, meta, error = yield(meta)) if block_given?
+        [{ args: args, kwargs: kwargs }, output, meta, error]
+      end
+    end
+
+    def valid?
       validator.valid?(statistics)
     end
 
@@ -46,7 +44,7 @@ module BloodContracts
     def failure_message
       intro = "expected that given Proc would meet the contract:"
 
-      if stats.unexpected_behavior?
+      if statistics.found_unexpected_behavior?
         "#{intro}\n#{contract_description}\n"\
         " during #{iterator.count} run(s) but got unexpected behavior.\n\n"\
         "For further investigations check: #{unexpected_suggestion}"
