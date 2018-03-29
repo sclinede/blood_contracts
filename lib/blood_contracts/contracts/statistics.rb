@@ -20,6 +20,9 @@ module BloodContracts
           " - '#{name}' happened #{occasions.times} time(s) "\
           "(#{(occasions.percent * 100).round(2)}% of the time)"
         end.join("; \n")
+
+        return "Nothing captured.\n\n" if rule_stats.empty?
+
         if found_unexpected_behavior?
           " during #{iterations_count} run(s) but got unexpected behavior. "\
           "Stats:\n#{rule_stats}\n\n"
