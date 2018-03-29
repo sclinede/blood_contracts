@@ -3,7 +3,6 @@ module BloodContracts
     extend Dry::Initializer
 
     option :contract, ->(v) { Hashie::Mash.new(v) }
-    option :data_generator, optional: true
 
     option :input_writer,  optional: true
     option :output_writer, optional: true
@@ -14,11 +13,6 @@ module BloodContracts
 
     option :storage_backend, optional: true
     option :storage, default: -> { default_storage }
-
-    def data_generator=(generator)
-      raise ArgumentError unless generator.respond_to?(:call)
-      @data_generator = generator
-    end
 
     def input_writer=(writer)
       storage.input_writer = writer

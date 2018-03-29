@@ -1,6 +1,7 @@
 module BloodContracts
   module RunBuilder
     using StringPathize
+
     def runner
       @runner ||= Runner.new(context: self, suite: to_contract_suite)
     end

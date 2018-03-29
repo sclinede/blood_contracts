@@ -4,7 +4,7 @@ require "anyway_config"
 
 module BloodContracts
   class Config < Anyway::Config
-    # TODO: sync using Postrges storage
+    # TODO: sync using Postrges or Redis storage
     config_name :contracts
     attr_config store: true,
                 enabled: false,
