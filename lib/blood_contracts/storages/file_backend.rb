@@ -16,7 +16,8 @@ module BloodContracts
       end
 
       def unexpected_suggestion
-        "#{name_generator.path}/#{Storage::UNDEFINED_RULE}/*"
+        "#{name_generator.path}/#{name_generator.current_period}"\
+        "/#{Storage::UNDEFINED_RULE}/*"
       end
 
       def samples_count(tag)

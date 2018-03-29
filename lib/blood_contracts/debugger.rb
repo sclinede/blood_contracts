@@ -11,8 +11,11 @@ module BloodContracts
     end
 
     def call(args: nil, kwargs: nil, output: "", meta: {}, error: nil)
-      return super if debugging_samples?
-      true
+      return [] unless debugging_samples?
+
+      data = storage.load_sample(runs.next)
+      matcher.call(*data, statistics: statistics)
+      data
     end
 
     def description
@@ -31,17 +34,13 @@ module BloodContracts
     def found_samples
       @found_samples ||= File.foreach(config.debug_file)
                              .map { |s| s.delete("\n") }
-                             .map do |sample|
-                               storage.find_sample(sample)
-                             end.compact
+                             .flat_map do |sample|
+                               storage.find_all_samples(sample)
+                              end.compact
     end
 
     def config
       BloodContracts.config
-    end
-
-    def match_rules?(matches_storage:)
-      matcher.call(*storage.load_sample(runs.next), storage: matches_storage)
     end
 
     def unexpected_suggestion

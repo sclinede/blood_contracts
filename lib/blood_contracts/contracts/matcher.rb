@@ -5,7 +5,7 @@ module BloodContracts
 
       param :contract_hash, ->(v) { Hashie::Mash.new(v) }
 
-      def call(input, output, meta, error = nil, storage:)
+      def call(input, output, meta, error = nil, statistics:)
         round = Round.new(
           input: input, output: output, error: wrap_error(error), meta: meta
         )
@@ -17,11 +17,11 @@ module BloodContracts
                          [Storage::UNDEFINED_RULE]
                        end
         end
-        Array(rule_names).each(&storage.method(:store))
+        Array(rule_names).each(&statistics.method(:store))
 
         yield rule_names, round if block_given?
 
-        !storage.found_unexpected_behavior?
+        !statistics.found_unexpected_behavior?
       end
 
       private

@@ -38,18 +38,11 @@ module BloodContracts
 
         output = nil
         iterator = Iterator.new(debugger.iterations)
+        debugger.statistics.iterations_count = iterator.count
+
         iterator.next do
-          output, error = nil, nil
-          debugger.call(args: args, kwargs: kwargs) do |meta|
-            begin
-              output = yield(meta)
-            rescue StandardError => exception
-              error = exception
-            ensure
-              before_runner(meta)
-            end
-            [output, meta, error]
-          end
+          data = debugger.call
+          error = data.last
           warn_about_reraise_on(error)
         end
         output

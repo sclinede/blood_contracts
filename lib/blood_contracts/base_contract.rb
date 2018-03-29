@@ -1,10 +1,8 @@
 require_relative "./concerns/dsl.rb"
-require_relative "./concerns/debuggable.rb"
 
 module BloodContracts
   class BaseContract
     extend Concerns::DSL
-    prepend Concerns::Debuggable
 
     def enable!
       Thread.current[to_s.pathize] = true
@@ -29,23 +27,26 @@ module BloodContracts
       @runner ||= Runner.new(context: self, suite: to_contract_suite)
     end
 
-    def before_runner(meta); end
+    def before_runner(args:, kwargs:, output:, error:, meta:); end
+    def before_call(args:, kwargs:, meta:); end
 
     def call(*args, **kwargs)
       return yield unless enabled?
-      output = ""
-      meta = {}
-      error = nil
+
+      output, meta, error = "", {}, nil
+      before_call(args: args, kwargs: kwargs, meta: meta)
+
       begin
         output = yield(meta)
       rescue StandardError => exception
         error = exception
         raise error
       ensure
-        before_runner(meta)
+        before_runner(
+          args: args, kwargs: kwargs, output: output, meta: meta, error: error
+        )
         runner.call(
-          args: args, kwargs: kwargs,
-          output: output, meta: meta, error: error
+          args: args, kwargs: kwargs, output: output, meta: meta, error: error
         )
       end
     end

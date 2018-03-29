@@ -7,25 +7,25 @@ module BloodContracts
       def_delegators :@data, :input, :output, :meta, :error
 
       def input
-        @data[:input]
+        @data["input"]
       end
       alias :request :input
 
       def output
-        @data[:output]
+        @data["output"]
       end
       alias :response :output
 
       def meta
-        @data[:meta]
+        @data["meta"]
       end
 
       def error
-        @data[:error]
+        @data["error"]
       end
 
       def initialize(**kwargs)
-        @data = kwargs
+        @data = ::Hashie::Hash[kwargs].stringify_keys
       end
     end
   end

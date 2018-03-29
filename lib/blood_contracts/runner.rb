@@ -19,10 +19,14 @@ module BloodContracts
 
     # FIXME: block argument is missing.
     def call(args:, kwargs:, output: "", meta: {}, error: nil)
-      match_rules?(matches_storage: statistics) do
-        (output, meta, error = yield(meta)) if block_given?
-        [{ args: args, kwargs: kwargs }, output, meta, error]
+      (output, meta, error = yield(meta)) if block_given?
+      data = [{ args: args, kwargs: kwargs }, output, meta, error]
+
+      matcher.call(*data, statistics: statistics) do |rules, round|
+        storage.store(round: round, rules: rules, context: context)
       end
+
+      data
     end
 
     def valid?
@@ -63,10 +67,7 @@ module BloodContracts
       storage.suggestion
     end
 
-    def match_rules?(matches_storage:)
-      matcher.call(*yield, storage: matches_storage) do |rules, round|
-        storage.store(round: round, rules: rules, context: context)
-      end
+    def match_rules?
     end
   end
 end

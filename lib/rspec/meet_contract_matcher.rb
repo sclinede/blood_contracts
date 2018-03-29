@@ -10,9 +10,14 @@ module RSpec
 
     matcher :meet_contract_rules_of do |contract|
       match do |block|
+        if contract.respond_to?(:find_contract)
+          contract = contract.find_contract(described_class)
+        end
+        contract.enable!
+
         if contract.debug_enabled?
-          @_contract_runner = contract.runner
-          block.call
+          @_contract_runner = contract.debugger
+          contract.call
         else
           contract.class.prepend Testable
 
@@ -28,6 +33,8 @@ module RSpec
             end
           end
         end
+
+        contract.disable!
 
         @_contract_runner.valid?
       end

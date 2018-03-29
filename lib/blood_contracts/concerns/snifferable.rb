@@ -41,16 +41,15 @@ if defined?(Sniffer)
       end
     end
 
-    def before_runner(meta)
-      merge_sniffer_buffer!(meta, Sniffer.data)
-      disable_sniffer!
+    def before_call(*)
+      super
+      enable_sniffer!
     end
 
-    def call(*)
-      super do |meta|
-        enable_sniffer!
-        yield(meta)
-      end
+    def before_runner(meta:, **kwargs)
+      super
+      merge_sniffer_buffer!(meta, Sniffer.data)
+      disable_sniffer!
     end
   end
 end

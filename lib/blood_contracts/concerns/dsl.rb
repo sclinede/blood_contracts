@@ -1,3 +1,5 @@
+require_relative "debuggable"
+
 module BloodContracts
   module Concerns
     module DSL
@@ -6,6 +8,7 @@ module BloodContracts
       attr_reader :rules
       def inherited(child_klass)
         child_klass.instance_variable_set(:@rules, Set.new)
+        child_klass.prepend Concerns::Debuggable
       end
 
       def tag(config)
@@ -35,7 +38,7 @@ module BloodContracts
         end
 
         patch = Module.new do
-          def contract(klass)
+          def find_contract(klass)
             send("#{klass.to_s.downcase.gsub(/\W/, '_')}_contract")
           end
         end
@@ -48,7 +51,11 @@ module BloodContracts
           %i(#{Array(methods).join(',')}).each do |method_name|
             define_method(method_name) do |*args, **kwargs|
               #{contract_accessor}.call(*args, **kwargs) do
-                super(*args, **kwargs)
+                if kwargs.empty?
+                  super(*args)
+                else
+                  super(*args, **kwargs)
+                end
               end
             end
           end
