@@ -35,6 +35,13 @@ module BloodContracts
       end
 
       def apply_to(klass:, methods:)
+        if klass.instance_methods.include?(:contract)
+          return warn <<~WARNING
+            \nWARNING! Class #{klass} already has a contract assigned.
+            Skipping #{self}#apply_to(...) at #{caller[0]}.\n
+          WARNING
+        end
+
         patch = Module.new
         patch.module_eval <<~CODE
           def contract
