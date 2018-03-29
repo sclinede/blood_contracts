@@ -1,6 +1,6 @@
 module BloodContracts
   module Storages
-    module Files
+    module Samples
       class NameGenerator
         extend Dry::Initializer
         extend Forwardable

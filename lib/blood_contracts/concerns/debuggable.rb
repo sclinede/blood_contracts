@@ -1,7 +1,7 @@
 module BloodContracts
   module Concerns
     module Debuggable
-      using StringExtensions
+      using StringPathize
 
       def enable_debug!
         Thread.current["#{to_s.pathize}_debug"] = true

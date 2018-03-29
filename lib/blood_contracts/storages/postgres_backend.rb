@@ -1,4 +1,4 @@
-require_relative "./files/name_generator.rb"
+require_relative "./samples/name_generator.rb"
 
 module BloodContracts
   module Storages
@@ -59,7 +59,7 @@ module BloodContracts
                      :current_round
 
       def name_generator
-        @name_generator ||= Files::NameGenerator.new(name, example_name, "/")
+        @name_generator ||= Samples::NameGenerator.new(name, example_name, "/")
       end
 
       def suggestion

@@ -2,7 +2,7 @@ require_relative "concerns/debuggable"
 
 module BloodContracts
   module DSL
-    using StringExtensions
+    using StringPathize
     DEFAULT_TAG = :default
 
     attr_reader :rules

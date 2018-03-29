@@ -3,7 +3,7 @@ require "blood_contracts/version"
 require "dry-initializer"
 require "hashie/mash"
 
-require_relative "extensions/string.rb"
+require_relative "blood_contracts/ext/string_pathize"
 require_relative "blood_contracts/config"
 require_relative "blood_contracts/suite"
 require_relative "blood_contracts/storage"
