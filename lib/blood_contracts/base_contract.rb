@@ -1,8 +1,9 @@
-require_relative "./concerns/dsl.rb"
+require_relative "./dsl.rb"
 
 module BloodContracts
   class BaseContract
-    extend Concerns::DSL
+    using StringExtensions
+    extend DSL
 
     def enable!
       Thread.current[to_s.pathize] = true
