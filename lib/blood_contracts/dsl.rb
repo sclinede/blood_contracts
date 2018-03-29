@@ -29,7 +29,7 @@ module BloodContracts
     end
 
     def apply_to(klass:, methods:, override: false)
-      contract_accessor = "#{self.to_s.downcase.gsub(/\W/, '_')}_contract"
+      contract_accessor = "#{to_s.downcase.gsub(/\W/, '_')}_contract"
       if klass.instance_methods.include?(contract_accessor) && !override
         return warn <<~WARNING
           WARNING! Class #{klass} already has a contract assigned.

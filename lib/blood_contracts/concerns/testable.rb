@@ -2,7 +2,8 @@ module BloodContracts
   module Concerns
     module Testable
       def call(*args, **kwargs)
-        output, error = nil, nil
+        output = nil
+        error = nil
         runner.call(args: args, kwargs: kwargs) do |meta|
           before_call(args: args, kwargs: kwargs, meta: meta)
           begin

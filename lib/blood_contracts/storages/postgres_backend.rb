@@ -16,7 +16,7 @@ module BloodContracts
           elsif BloodContracts.storage[:database_url]
             @connection = PG.connect(BloodContracts.storage[:database_url])
           else
-            raise ArgumentError.new("Postgres connection not configured!")
+            raise ArgumentError, "Postgres connection not configured!"
           end
           @connection
         end

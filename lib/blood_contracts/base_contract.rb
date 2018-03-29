@@ -23,12 +23,15 @@ module BloodContracts
     end
 
     def before_runner(args:, kwargs:, output:, error:, meta:); end
+
     def before_call(args:, kwargs:, meta:); end
 
     def call(*args, **kwargs)
       return yield unless enabled?
 
-      output, meta, error = "", {}, nil
+      output = ""
+      meta = {}
+      error = nil
       before_call(args: args, kwargs: kwargs, meta: meta)
 
       begin

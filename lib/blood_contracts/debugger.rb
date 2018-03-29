@@ -35,8 +35,8 @@ module BloodContracts
       @found_samples ||= File.foreach(config.debug_file)
                              .map { |s| s.delete("\n") }
                              .flat_map do |sample|
-                               storage.find_all_samples(sample)
-                              end.compact
+        storage.find_all_samples(sample)
+      end.compact
     end
 
     def config

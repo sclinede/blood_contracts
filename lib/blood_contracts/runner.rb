@@ -15,7 +15,7 @@ module BloodContracts
     option :context, optional: true
 
     option :statistics, default: -> { Contracts::Statistics.new }
-    option :matcher,   default: -> { Contracts::Matcher.new(suite.contract) }
+    option :matcher, default: -> { Contracts::Matcher.new(suite.contract) }
 
     # FIXME: block argument is missing.
     def call(args:, kwargs:, output: "", meta: {}, error: nil)
@@ -67,7 +67,6 @@ module BloodContracts
       storage.suggestion
     end
 
-    def match_rules?
-    end
+    def match_rules?; end
   end
 end

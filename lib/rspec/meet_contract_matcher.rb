@@ -1,4 +1,4 @@
-require_relative '../blood_contracts/concerns/testable.rb'
+require_relative "../blood_contracts/concerns/testable.rb"
 
 module RSpec
   module MeetContractMatcher
@@ -25,13 +25,13 @@ module RSpec
           iterator = Iterator.new(@_iterations, @_time_to_run)
           @_contract_runner.statistics.iterations_count = iterator.count
 
-          next false if :halt == catch(:unexpected) do
+          next false if catch(:unexpected) do
             iterator.next do
               block.call
               next if @_contract_runner.valid?
               throw :unexpected, :halt if @_halt_on_unexpected
             end
-          end
+          end == :halt
         end
 
         contract.disable!
