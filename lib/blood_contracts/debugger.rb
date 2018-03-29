@@ -1,5 +1,7 @@
 module BloodContracts
   class Debugger < Runner
+    option :statistics, default: -> { Contracts::Statistics.new(iterations) }
+
     def runs
       @runs ||= debug_runs # storage.find_all_samples(ENV["debug"]).each
     end

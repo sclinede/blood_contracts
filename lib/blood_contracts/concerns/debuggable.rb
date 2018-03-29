@@ -13,7 +13,7 @@ module BloodContracts
       end
 
       def debug_enabled?
-        !!Thread.current["#{to_s.pathize}_debug"]
+        !!Thread.current["#{to_s.pathize}_debug"] || !!ENV["DEBUG_CONTRACTS"]
       end
 
       def runner
@@ -21,8 +21,9 @@ module BloodContracts
         return @runner if @runner.is_a?(Debugger)
         @runner = Debugger.new(context: self, suite: to_contract_suite)
       end
+      alias :debugger :runner
 
-      def warn_about_reraise(error)
+      def warn_about_reraise_on(error)
         error ||= {}
         raise error unless error.respond_to?(:to_hash)
         warn(<<~TEXT) unless error.empty?
@@ -30,12 +31,16 @@ module BloodContracts
         TEXT
       end
 
+      Iterator = ::BloodContracts::Contracts::Iterator
+
       def call(*args, **kwargs)
         return super unless debug_enabled?
 
-        output, error = nil, nil
-        runner.iterator.next do
-          next if runner.call(args: args, kwargs: kwargs) do |meta|
+        output = nil
+        iterator = Iterator.new(debugger.iterations)
+        iterator.next do
+          output, error = nil, nil
+          debugger.call(args: args, kwargs: kwargs) do |meta|
             begin
               output = yield(meta)
             rescue StandardError => exception
@@ -45,8 +50,7 @@ module BloodContracts
             end
             [output, meta, error]
           end
-          return output if runner.stop_on_unexpected
-          warn_about_reraise(error) if error
+          warn_about_reraise_on(error)
         end
         output
       end

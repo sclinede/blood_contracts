@@ -2,7 +2,9 @@ module BloodContracts
   module Contracts
     class Statistics
       extend Dry::Initializer
-      param :iterator
+      param :iterations_count, ->(v) { v.to_i }, default: -> { 1 }
+      attr_writer :iterations_count
+
       option :storage, default: -> { Hash.new(0) }
 
       def store(rule)
@@ -14,10 +16,16 @@ module BloodContracts
       end
 
       def to_s
-        to_h.map do |name, occasions|
+        rule_stats = to_h.map do |name, occasions|
           " - '#{name}' happened #{occasions.times} time(s) "\
           "(#{(occasions.percent * 100).round(2)}% of the time)"
         end.join("; \n")
+        if found_unexpected_behavior?
+          " during #{iterations_count} run(s) but got unexpected behavior. "\
+          "Stats:\n#{rule_stats}\n\n"
+        else
+          " during #{iterations_count} run(s) got:\n#{rule_stats}\n\n"
+        end
       end
 
       def found_unexpected_behavior?
@@ -27,7 +35,7 @@ module BloodContracts
       private
 
       def rule_stats(times)
-        Hashie::Mash.new(times: times, percent: (times.to_f / iterator.count))
+        Hashie::Mash.new(times: times, percent: (times.to_f / iterations_count))
       end
     end
   end

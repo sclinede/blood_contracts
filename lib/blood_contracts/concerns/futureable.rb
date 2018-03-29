@@ -9,7 +9,6 @@ if defined?(Concurrent::Future)
         end
 
         def runner
-          return super if debug_enabled?
           @runner ||= RunnerFuture.new(_runner)
         end
 

@@ -6,28 +6,30 @@ module RSpec
     # Runner = ::BloodContracts::Runner
     # Debugger = ::BloodContracts::Debugger
     Testable = ::BloodContracts::Concerns::Testable
+    Iterator = ::BloodContracts::Contracts::Iterator
 
     matcher :meet_contract_rules_of do |contract|
       match do |block|
-        contract.class.prepend Testable unless contract.debug_enabled?
-        @_contract_runner = contract.runner
+        if contract.debug_enabled?
+          @_contract_runner = contract.runner
+          block.call
+        else
+          contract.class.prepend Testable
 
-        next false if :halt == catch(:unexpected) do
-          @_contract_runner.iterator.next do
-            block.call
-            next if @_contract_runner.valid?
-            throw :unexpected, :halt if @_contract_runner.stop_on_unexpected
+          @_contract_runner = contract.runner
+          iterator = Iterator.new(@_iterations, @_time_to_run)
+          @_contract_runner.statistics.iterations_count = iterator.count
+
+          next false if :halt == catch(:unexpected) do
+            iterator.next do
+              block.call
+              next if @_contract_runner.valid?
+              throw :unexpected, :halt if @_halt_on_unexpected
+            end
           end
         end
 
         @_contract_runner.valid?
-      end
-
-      def _example_name_to_path
-        method_missing(:class)
-          .name
-          .sub("RSpec::ExampleGroups::", "")
-          .pathize
       end
 
       supports_block_expectations
@@ -35,15 +37,6 @@ module RSpec
       failure_message { @_contract_runner.failure_message }
 
       description { @_contract_runner.description }
-
-      chain :using_generator do |generator|
-        if generator.respond_to?(:to_sym)
-          @_generator = method(generator.to_sym)
-        else
-          raise ArgumentError unless generator.respond_to?(:call)
-          @_generator = generator
-        end
-      end
 
       chain :during_n_iterations do |iterations|
         @_iterations = Integer(iterations)
