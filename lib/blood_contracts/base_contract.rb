@@ -1,63 +1,10 @@
+require_relative "./concerns/dsl.rb"
 require_relative "./concerns/debuggable.rb"
 
 module BloodContracts
   class BaseContract
-    extend Dry::Initializer
+    extend Concerns::DSL
     prepend Concerns::Debuggable
-
-    option :object, optional: true
-    option :method_name, optional: true
-    option :action, optional: true, as: :action_proc
-
-    DEFAULT_TAG = :default
-
-    class << self
-      attr_reader :rules
-      def inherited(child_klass)
-        child_klass.instance_variable_set(:@rules, Set.new)
-      end
-
-      def tag(config)
-        tags = BloodContracts.config.tags[to_s.pathize] || {}
-        config.each_pair do |tag, rules|
-          rules.each { |rule| tags[rule.to_s] ||= tag.to_s }
-        end
-        BloodContracts.config.tags[to_s.pathize] = tags
-      end
-
-      def contract_rule(name, tag: DEFAULT_TAG, &block)
-        define_method("_#{name}", &block)
-        rules << name
-
-        tags = BloodContracts.config.tags[to_s.pathize] || {}
-        tags[name.to_s] = tag
-        BloodContracts.config.tags[to_s.pathize] = tags
-      end
-
-      def apply_to(klass:, methods:)
-        if klass.instance_methods.include?(:contract)
-          return warn <<~WARNING
-            \nWARNING! Class #{klass} already has a contract assigned.
-            Skipping #{self}#apply_to(...) at #{caller[0]}.\n
-          WARNING
-        end
-
-        patch = Module.new
-        patch.module_eval <<~CODE
-          def contract
-            @contract ||= #{self}.new
-          end
-
-          %i(#{Array(methods).join(',')}).each do |method_name|
-            define_method(method_name) do |*args, **kwargs|
-              contract.call(*args, **kwargs) { super(*args, **kwargs) }
-            end
-          end
-        CODE
-
-        klass.prepend patch
-      end
-    end
 
     def enable!
       Thread.current[to_s.pathize] = true
