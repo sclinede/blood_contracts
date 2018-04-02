@@ -15,6 +15,26 @@ module BloodContracts
                      :input_serializer, :output_serializer, :meta_serializer,
                      :error_serializer
 
+      def disable_contract!(*)
+        false
+      end
+
+      def enable_contracts_global!
+        raise ArgumentError, "Global enable for contracts is not supported"
+      end
+
+      def disable_contracts_global!
+        raise ArgumentError, "Global enable for contracts is not supported"
+      end
+
+      def enable_contract!(*)
+        false
+      end
+
+      def contract_enabled?(*)
+        false
+      end
+
       def write(writer, cntxt, round_data)
         writer = cntxt.method(writer) if cntxt && writer.respond_to?(:to_sym)
         writer.call(round_data).encode(

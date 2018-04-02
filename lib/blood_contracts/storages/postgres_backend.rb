@@ -11,52 +11,109 @@ module BloodContracts
         def connection
           return @connection if defined? @connection
           raise "'pg' gem was not required" unless defined?(PG)
-          if BloodContracts.storage[:connection]
-            @connection = BloodContracts.storage[:connection].call
-          elsif BloodContracts.storage[:database_url]
-            @connection = PG.connect(BloodContracts.storage[:database_url])
+
+          if (connection = BloodContracts.storage_config[:connection])
+            @connection = connection.call
+          elsif (database_url = BloodContracts.storage_config[:database_url])
+            @connection = PG.connect(database_url)
           else
             raise ArgumentError, "Postgres connection not configured!"
           end
+
           @connection
         end
 
+        def config_table_name
+          @config_table_name ||=
+            BloodContracts.storage_config.fetch(:config_table_name)
+        end
+
         def table_name
-          @table_name ||= BloodContracts.storage[:table_name]
-        end
-
-        def drop_table!
-          connection.exec "DROP TABLE IF EXISTS #{table_name};"
-        end
-
-        def create_table!
-          connection.exec(<<-SQL)
-            CREATE TABLE IF NOT EXISTS #{table_name} (
-              created_at timestamp DEFAULT current_timestamp,
-
-              contract text,
-              session text,
-              rule text,
-              round bigint,
-              period bigint,
-
-              input text,
-              output text,
-              input_dump text,
-              output_dump text,
-              meta_dump text,
-              error_dump text,
-              CONSTRAINT uniq_#{table_name}_name
-              UNIQUE(contract, session, period, rule, round)
-            );
-          SQL
+          @table_name ||=
+            BloodContracts.storage_config.fetch(:samples_table_name)
         end
       end
 
-      def_delegators :"self.class", :connection, :table_name
+      def drop_table!
+        connection.exec <<~SQL
+          DROP TABLE IF EXISTS #{config_table_name};
+          DROP TABLE IF EXISTS #{table_name};
+        SQL
+
+      end
+
+      def create_table!
+        connection.exec(<<~SQL)
+          CREATE TABLE IF NOT EXISTS #{config_table_name}
+          AS SELECT false as enabled, ARRAY[]::text[] as enabled_contracts;
+
+          CREATE TABLE IF NOT EXISTS #{table_name} (
+            created_at timestamp DEFAULT current_timestamp,
+
+            contract text,
+            session text,
+            rule text,
+            round bigint,
+            period bigint,
+
+            input text,
+            output text,
+            input_dump text,
+            output_dump text,
+            meta_dump text,
+            error_dump text,
+            CONSTRAINT uniq_#{table_name}_name
+            UNIQUE(contract, session, period, rule, round)
+          );
+        SQL
+      end
+
+      def_delegators :"self.class", :connection, :table_name, :config_table_name
       def_delegators :name_generator,
                      :extract_name_from, :path, :parse, :current_period,
                      :current_round
+
+      def disable_contract!(contract_name = contract)
+        escaped_contract_name = connection.escape_string(contract_name.to_s)
+
+        connection.exec(<<~SQL)
+          UPDATE #{config_table_name}
+          SET enabled_contracts =
+              array_remove(enabled_contracts, '#{escaped_contract_name}'::text)
+        SQL
+      end
+
+      def enable_contract!(contract_name = contract)
+        escaped_contract_name = connection.escape_string(contract_name.to_s)
+
+        connection.exec(<<~SQL)
+          UPDATE #{config_table_name}
+          SET enabled_contracts =
+              enabled_contracts || '#{escaped_contract_name}'::text
+        SQL
+      end
+
+      def enable_contracts_global!
+        connection.exec(<<~SQL)
+          UPDATE #{config_table_name} SET enabled = true;
+        SQL
+      end
+
+      def disable_contracts_global!
+        connection.exec(<<~SQL)
+          UPDATE #{config_table_name} SET enabled = false;
+        SQL
+      end
+
+      def contract_enabled?(contract_name = contract)
+        escaped_contract_name = connection.escape_string(contract_name.to_s)
+
+        !!connection.exec(<<-SQL).first.to_h["enabled"]
+          SELECT true as enabled FROM #{config_table_name}
+          WHERE enabled
+          OR enabled_contracts @> ARRAY['#{escaped_contract_name}']::text[]
+        SQL
+      end
 
       def name_generator
         @name_generator ||= Samples::NameGenerator.new(name, example_name, "/")

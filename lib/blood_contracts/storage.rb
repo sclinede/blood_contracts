@@ -38,10 +38,12 @@ module BloodContracts
     def_delegators :@backend, :sample_exists?,
                    :load_sample, :find_all_samples, :find_sample,
                    :serialize_sample, :describe_sample,
-                   :suggestion, :unexpected_suggestion
+                   :suggestion, :unexpected_suggestion,
+                   :contract_enabled?, :enable_contract!, :disable_contract!,
+                   :enable_contracts_global!, :disable_contracts_global!
 
     def default_storage_klass
-      case BloodContracts.storage[:type].downcase.to_sym
+      case BloodContracts.storage_config[:type].downcase.to_sym
       when :file
         BloodContracts::Storages::FileBackend
       when :postgres

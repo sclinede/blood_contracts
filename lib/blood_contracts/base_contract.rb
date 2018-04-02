@@ -15,9 +15,15 @@ module BloodContracts
       Thread.current[to_s.pathize] = false
     end
 
+    def reset!
+      Thread.current[to_s.pathize] = nil
+    end
+
     def enabled?
       if Thread.current[to_s.pathize].nil?
-        Thread.current[to_s.pathize] = BloodContracts.config.enabled
+        enabled = storage.contract_enabled?
+        enabled = BloodContracts.config.enabled if enabled.nil?
+        Thread.current[to_s.pathize] = enabled
       end
       !!Thread.current[to_s.pathize]
     end

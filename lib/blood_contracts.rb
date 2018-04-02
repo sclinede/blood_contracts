@@ -29,15 +29,40 @@ module BloodContracts
   end
   module_function :config
 
-  def storage
+  def enabled?
+    config.enabled || default_storage.backend.contract_enabled?
+  end
+  module_function :enabled?
+
+  def enable!
+    default_storage.enable_contracts_global!
+  end
+  module_function :enable!
+
+  def disable!
+    default_storage.disable_contracts_global!
+  end
+  module_function :disable!
+
+  def default_storage
+    @default_storage = Storage.new(contract_name: :__default__)
+  end
+  module_function :default_storage
+
+  def shared_storage?
+    storage_config[:type].to_sym == :postgres
+  end
+  module_function :shared_storage?
+
+  def storage_config
     @storage ||= Hashie::Hash[BloodContracts.config.storage].symbolize_keys!
   end
-  module_function :storage
+  module_function :storage_config
 
-  def sampling
+  def sampling_config
     @sampling ||= Hashie::Hash[BloodContracts.config.sampling].symbolize_keys!
   end
-  module_function :sampling
+  module_function :sampling_config
 
   if defined?(RSpec) && RSpec.respond_to?(:configure)
     require_relative "rspec/meet_contract_matcher"

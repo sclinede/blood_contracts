@@ -12,8 +12,9 @@ module BloodContracts
       ]
     end
 
-    def build_storage(name)
-      s = Storage.new(contract_name: name)
+    def storage
+      return @storage if defined? @storage
+      s = Storage.new(contract_name: self.class.to_s.pathize)
 
       s.input_writer  = method(:input_writer)    if defined? input_writer
       s.input_writer  = method(:request_writer)  if defined? request_writer
@@ -26,11 +27,11 @@ module BloodContracts
       s.output_serializer = response_serializer if defined? response_serializer
 
       s.meta_serializer   = meta_serializer if defined? meta_serializer
-      s
+      @storage = s
     end
 
-    def to_contract_suite(name: self.class.to_s.pathize)
-      Suite.new(storage: build_storage(name), contract: contract)
+    def to_contract_suite
+      Suite.new(storage: storage, contract: contract)
     end
   end
 end

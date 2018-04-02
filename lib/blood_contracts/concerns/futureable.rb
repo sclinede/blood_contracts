@@ -1,6 +1,7 @@
 if defined?(Concurrent::Future)
   require "concurrent"
 
+  # FIXME: doesn't work in Testing. Runner should have statistics
   module BloodContracts
     module Concerns
       module Futureable
@@ -19,6 +20,10 @@ if defined?(Concurrent::Future)
 
           def call(**kwargs)
             Concurrent::Future.execute { @runner.call(**kwargs) }
+          end
+
+          def statistics
+            @runner.statistics
           end
         end
       end

@@ -14,10 +14,16 @@ module BloodContracts
                 },
                 storage: {
                   type: :file, # or :postgres
-                  # database_url: ENV["DATABASE_URL"], # when :postgres storage
-                  # table_name: "samples",             # when :postgres storage
+                  # database_url: ENV["DATABASE_URL"], # when :postgres
+                  samples_table_name: "blood_samples", # when :postgres
+                  config_table_name: "blood_config",   # when :postgres
                 },
                 tags: {},
                 debug_file: ".bcontracts_debug"
+
+
+    def contract_enabled?(contract_name)
+
+    end
   end
 end
