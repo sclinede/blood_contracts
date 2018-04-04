@@ -20,13 +20,15 @@ module BloodContracts
     # FIXME: block argument is missing.
     def call(args:, kwargs:, output: "", meta: {}, error: nil)
       (output, meta, error = yield(meta)) if block_given?
-      data = [{ args: args, kwargs: kwargs }, output, meta, error]
-
-      matcher.call(*data, statistics: statistics) do |rules, round|
+      round = Contracts::Round.new(
+        input: { args: args, kwargs: kwargs },
+        output: output,
+        error: error,
+        meta: meta
+      )
+      matcher.call(round: round, statistics: statistics) do |rules|
         storage.store(round: round, rules: rules, context: context)
       end
-
-      data
     end
 
     def valid?

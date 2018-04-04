@@ -16,7 +16,7 @@ module BloodContracts
       private
 
       def limits
-        BloodContracts.sampling[:limit_per_tag].to_h
+        BloodContracts.sampling_config[:limit_per_tag].to_h
       end
     end
   end

@@ -3,6 +3,10 @@ require_relative "./samples/name_generator.rb"
 module BloodContracts
   module Storages
     class FileBackend < BaseBackend
+      def init
+        FileUtils.mkdir_p(name_generator.path)
+      end
+
       def name_generator
         @name_generator ||= Samples::NameGenerator.new(
           name,
@@ -39,7 +43,7 @@ module BloodContracts
       end
 
       def load_sample_chunk(dump_type, sample_name)
-        name = name_generator.extract_name_from(sample_name)
+        name = find_sample(sample_name)
         send("#{dump_type}_serializer")[:load].call(
           File.read("#{name}/#{dump_type}.dump")
         )

@@ -25,7 +25,21 @@ module BloodContracts
       end
 
       def initialize(**kwargs)
+        kwargs[:error] = wrap_error(kwargs[:error])
         @data = ::Hashie::Hash[kwargs].stringify_keys
+      end
+
+      private
+
+      def wrap_error(exception)
+        return {} if exception.to_s.empty?
+        return exception.to_h if exception.respond_to?(:to_hash)
+        {
+          exception.class.to_s => {
+            message: exception.message,
+            backtrace: exception.backtrace
+          }
+        }
       end
     end
   end

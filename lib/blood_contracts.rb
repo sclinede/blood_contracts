@@ -45,7 +45,7 @@ module BloodContracts
   module_function :disable!
 
   def default_storage
-    @default_storage = Storage.new(contract_name: :__default__)
+    @default_storage = Storage.new(contract_name: :__default__).tap(&:init)
   end
   module_function :default_storage
 

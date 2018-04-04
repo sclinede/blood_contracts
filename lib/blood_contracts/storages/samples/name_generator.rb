@@ -25,7 +25,8 @@ module BloodContracts
         end
 
         def current_period
-          period || Time.now.to_i / (BloodContracts.sampling[:period] || 1)
+          period ||
+            Time.now.to_i / (BloodContracts.sampling_config[:period] || 1)
         end
 
         def current_round
@@ -60,21 +61,21 @@ module BloodContracts
 
         def parse(sample_name)
           path_items = sample_name.to_s.split("/")
-          period, tag, sample = path_items.pop(3)
+          period, tag, round = path_items.pop(3)
           run_n_example_str = path_items.join("/").sub(default_path, "")
           if run_n_example_str.end_with?("*")
             [
               run_n_example_str.chomp("*"),
               period,
               tag,
-              sample
+              round
             ]
           elsif run_n_example_str.end_with?(example_name)
             [
               run_n_example_str.chomp(example_name),
               period,
               tag,
-              sample
+              round
             ]
           else
             %w(__no_match__) * 4

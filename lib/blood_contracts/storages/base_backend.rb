@@ -15,6 +15,8 @@ module BloodContracts
                      :input_serializer, :output_serializer, :meta_serializer,
                      :error_serializer
 
+      def init; end
+
       def disable_contract!(*)
         false
       end
@@ -54,13 +56,16 @@ module BloodContracts
         raise NotImplementedError
       end
 
-      def load_sample(sample_name)
-        %i(input output meta error).map do |type|
-          load_sample_chunk(type, sample_name)
-        end
+      def load_sample(sample_name = nil, **kwargs)
+        Contracts::Round.new(
+          input:  load_sample_chunk(:input, sample_name, **kwargs),
+          output: load_sample_chunk(:output, sample_name, **kwargs),
+          meta:   load_sample_chunk(:meta, sample_name, **kwargs),
+          error:  load_sample_chunk(:error, sample_name, **kwargs),
+        )
       end
 
-      def load_sample_chunk(_dump_type, _sample_name)
+      def load_sample_chunk(_dump_type, _sample_name, **kwargs)
         raise NotImplementedError
       end
 

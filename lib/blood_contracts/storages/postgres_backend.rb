@@ -67,6 +67,7 @@ module BloodContracts
           );
         SQL
       end
+      alias :init :create_table!
 
       def_delegators :"self.class", :connection, :table_name, :config_table_name
       def_delegators :name_generator,
@@ -127,10 +128,11 @@ module BloodContracts
         "Postgres(#{table_name}):#{path}/#{Storage::UNDEFINED_RULE}/*"
       end
 
-      def find_all_samples(sample_name)
-        match = parse(sample_name)
+      def find_all_samples(path = nil, session: '*', period: '*', rule: '*', round: '*')
+        path ||= [session, contract, period, rule, round].join('/')
+        match = parse(path)
         session, period, rule, round = match.map { |v| v.sub("*", ".*") }
-        connection.exec <<-SQL
+        connection.exec(<<-SQL).to_a.map { |row| row["name"] }
           SELECT session || '/' || contract || '/' || period || '/' ||
                  rule || '/' || round as name
           FROM #{table_name}
@@ -151,8 +153,9 @@ module BloodContracts
         SQL
       end
 
-      def find_sample(sample_name)
-        match = parse(sample_name)
+      def find_sample(path = nil, session: '*', period: '*', rule: '*', round: '*')
+        path ||= [session, contract, period, rule, round].join('/')
+        match = parse(path)
         session, period, rule, round = match.map { |v| v.sub("*", ".*") }
         connection.exec(<<-SQL).first.to_h["name"]
           SELECT session || '/' || contract || '/' || period || '/' ||
@@ -162,25 +165,20 @@ module BloodContracts
           AND session ~ '#{connection.escape_string(session)}'
           AND period::text ~ '#{period}'
           AND round::text ~ '#{round}'
-          AND rule ~ '#{connection.escape_string(rule)}';
+          AND rule ~ '#{connection.escape_string(rule)}'
+          LIMIT 1;
         SQL
       end
 
-      def sample_exists?(sample_name)
-        match = parse(sample_name)
-        session, period, rule, round = match.map { |v| v.sub("*", ".*") }
-        connection.exec(<<-SQL).first["count"].to_i.positive?
-          SELECT COUNT(1) FROM #{table_name}
-          WHERE contract ~ '#{contract}'
-          AND session ~ '#{connection.escape_string(session)}'
-          AND period::text ~ '#{period}'
-          AND round::text ~ '#{round}'
-          AND rule ~ '#{connection.escape_string(rule)}';
-        SQL
+      def sample_exists?(path = nil, **kwargs)
+        find_sample(path, **kwargs).present?
       end
 
-      def load_sample_chunk(dump_type, sample_name)
-        session, period, rule, round = parse(sample_name)
+      class SampleNotFound < StandardError; end
+
+      def load_sample_chunk(dump_type, path = nil, **kwargs)
+        raise SampleNotFound unless (found_sample = find_sample(path, **kwargs))
+        session, period, rule, round = parse(found_sample)
         send("#{dump_type}_serializer")[:load].call(
           connection.exec(<<-SQL).first.to_h.fetch("dump")
             SELECT #{dump_type}_dump as dump FROM #{table_name}
