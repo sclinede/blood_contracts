@@ -8,7 +8,7 @@ module BloodContracts
       def call(round:, statistics:)
         rule_names = select_matched_rules!(round).keys
         if rule_names.empty?
-          rule_names = if error.present?
+          rule_names = if round.error.present?
                          [Storage::EXCEPTION_CAUGHT]
                        else
                          [Storage::UNDEFINED_RULE]

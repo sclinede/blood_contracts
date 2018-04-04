@@ -39,7 +39,6 @@ module BloodContracts
           DROP TABLE IF EXISTS #{config_table_name};
           DROP TABLE IF EXISTS #{table_name};
         SQL
-
       end
 
       def create_table!
@@ -147,7 +146,7 @@ module BloodContracts
       def samples_count(rule)
         connection.exec(<<-SQL).first["count"].to_i
           SELECT COUNT(1) FROM #{table_name}
-          WHERE contract = '#{example_name}'
+          WHERE contract ~ '#{contract}'
           AND period::text ~ '#{current_period}'
           AND rule = '#{connection.escape_string(rule)}';
         SQL
@@ -182,7 +181,7 @@ module BloodContracts
         send("#{dump_type}_serializer")[:load].call(
           connection.exec(<<-SQL).first.to_h.fetch("dump")
             SELECT #{dump_type}_dump as dump FROM #{table_name}
-            WHERE contract = '#{contract}'
+            WHERE contract ~ '#{contract}'
             AND session = '#{connection.escape_string(session)}'
             AND period = '#{period}'
             AND round = '#{round}'

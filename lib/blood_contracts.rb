@@ -30,24 +30,24 @@ module BloodContracts
   module_function :config
 
   def enabled?
-    config.enabled || default_storage.backend.contract_enabled?
+    config.enabled || storage.backend.contract_enabled?
   end
   module_function :enabled?
 
   def enable!
-    default_storage.enable_contracts_global!
+    storage.enable_contracts_global!
   end
   module_function :enable!
 
   def disable!
-    default_storage.disable_contracts_global!
+    storage.disable_contracts_global!
   end
   module_function :disable!
 
-  def default_storage
-    @default_storage = Storage.new(contract_name: :__default__).tap(&:init)
+  def storage
+    @storage = Storage.new(contract_name: '.*').tap(&:init)
   end
-  module_function :default_storage
+  module_function :storage
 
   def shared_storage?
     storage_config[:type].to_sym == :postgres
@@ -55,7 +55,8 @@ module BloodContracts
   module_function :shared_storage?
 
   def storage_config
-    @storage ||= Hashie::Hash[BloodContracts.config.storage].symbolize_keys!
+    @storage_config ||=
+      Hashie::Hash[BloodContracts.config.storage].symbolize_keys!
   end
   module_function :storage_config
 
