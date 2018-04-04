@@ -3,7 +3,6 @@ module BloodContracts
     module Samples
       class NameGenerator
         extend Dry::Initializer
-        extend Forwardable
 
         param :run_name
         param :example_name
@@ -60,9 +59,9 @@ module BloodContracts
         end
 
         def parse(sample_name)
-          path_items = sample_name.to_s.split("/")
+          path_items = sample_name.to_s.sub(default_path, "").split("/")
           period, tag, round = path_items.pop(3)
-          run_n_example_str = path_items.join("/").sub(default_path, "")
+          run_n_example_str = path_items.join("/")
           if run_n_example_str.end_with?("*") || run_n_example_str.match?(example_name)
             [
               # run_n_example_str.chomp("*"),

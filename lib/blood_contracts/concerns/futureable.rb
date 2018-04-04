@@ -1,7 +1,6 @@
 if defined?(Concurrent::Future)
   require "concurrent"
 
-  # FIXME: doesn't work in Testing. Runner should have statistics
   module BloodContracts
     module Concerns
       module Futureable
@@ -10,20 +9,13 @@ if defined?(Concurrent::Future)
         end
 
         def runner
-          @runner ||= RunnerFuture.new(_runner)
+          @runner ||=
+            respond_to?(:testing?) ? _runner : RunnerFuture.new(_runner)
         end
 
-        class RunnerFuture
-          def initialize(runner)
-            @runner = runner
-          end
-
+        class RunnerFuture < SimpleDelegator
           def call(**kwargs)
-            Concurrent::Future.execute { @runner.call(**kwargs) }
-          end
-
-          def statistics
-            @runner.statistics
+            Concurrent::Future.execute { __get_obj__.call(**kwargs) }
           end
         end
       end

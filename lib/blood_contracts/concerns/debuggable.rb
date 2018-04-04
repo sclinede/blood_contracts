@@ -43,9 +43,8 @@ module BloodContracts
         debugger.statistics.iterations_count = iterator.count
 
         iterator.next do
-          data = debugger.call
-          error = data.last
-          warn_about_reraise_on(error)
+          round = debugger.call
+          warn_about_reraise_on(round.error)
         end
         output
       end

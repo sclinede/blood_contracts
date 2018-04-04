@@ -11,7 +11,7 @@ module BloodContracts
     end
 
     def call(args: nil, kwargs: nil, output: "", meta: {}, error: nil)
-      return [] unless debugging_samples?
+      return Contracts::Round.new unless debugging_samples?
 
       matcher.call(
         round: storage.load_sample(runs.next), statistics: statistics,

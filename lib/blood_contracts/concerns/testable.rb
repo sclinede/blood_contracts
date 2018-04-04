@@ -1,6 +1,10 @@
 module BloodContracts
   module Concerns
     module Testable
+      def testing?
+        true
+      end
+
       def call(*args, **kwargs)
         output = nil
         error = nil
