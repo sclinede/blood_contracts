@@ -6,8 +6,8 @@ module BloodContracts
       @runner ||= Runner.new(context: self, suite: to_contract_suite)
     end
 
-    def contract
-      @contract ||= Hash[
+    def _contract
+      @_contract ||= Hash[
         self.class.rules.map { |name| [name, { check: method("_#{name}") }] }
       ]
     end
@@ -31,7 +31,7 @@ module BloodContracts
     end
 
     def to_contract_suite
-      Suite.new(storage: storage, contract: contract)
+      Suite.new(storage: storage, contract: _contract)
     end
   end
 end
