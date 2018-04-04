@@ -30,7 +30,7 @@ module BloodContracts
 
     def apply_to(klass:, methods:, override: false)
       contract_accessor = to_s.downcase.gsub(/\W/, '_')
-      if klass.instance_methods.include?(contract_accessor) && !override
+      if klass.instance_methods.include?(contract_accessor.to_sym) && !override
         return warn <<~WARNING
           WARNING! Class #{klass} already has a contract assigned.
           Skipping #{self}#apply_to(...) at #{caller[0]}.\n
