@@ -22,11 +22,17 @@ module BloodContracts
       end
 
       def enable_contracts_global!
-        raise ArgumentError, "Global enable for contracts is not supported"
+        raise ArgumentError, <<~MESSAGE
+          Global "hot" enable for contracts is not supported.
+          Please, use configuration setting or another storage backend.
+        MESSAGE
       end
 
       def disable_contracts_global!
-        raise ArgumentError, "Global enable for contracts is not supported"
+        raise ArgumentError, <<~MESSAGE
+          Global "hot" disable for contracts is not supported.
+          Please, use configuration setting or another storage backend.
+        MESSAGE
       end
 
       def enable_contract!(*)

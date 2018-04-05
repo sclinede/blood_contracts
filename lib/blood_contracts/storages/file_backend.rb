@@ -3,14 +3,16 @@ require_relative "./samples/name_generator.rb"
 module BloodContracts
   module Storages
     class FileBackend < BaseBackend
+      alias :contract :example_name
+      alias :session :name
       def init
-        FileUtils.mkdir_p(name_generator.path)
+        FileUtils.mkdir_p(File.join("./tmp/blood_contracts/", session))
       end
 
       def name_generator
         @name_generator ||= Samples::NameGenerator.new(
-          name,
-          example_name,
+          session,
+          contract,
           "./tmp/blood_contracts/"
         )
       end

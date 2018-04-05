@@ -8,8 +8,12 @@ module BloodContracts
       alias :session :name
 
       class << self
+        def reset_connection!
+          @connection = nil
+        end
+
         def connection
-          return @connection if defined? @connection
+          return @connection unless @connection.nil?
           raise "'pg' gem was not required" unless defined?(PG)
 
           if (connection = BloodContracts.storage_config[:connection])
@@ -68,7 +72,9 @@ module BloodContracts
       end
       alias :init :create_table!
 
-      def_delegators :"self.class", :connection, :table_name, :config_table_name
+      def_delegators :"self.class",
+                     :connection, :table_name, :config_table_name,
+                     :reset_connection!
       def_delegators :name_generator,
                      :extract_name_from, :path, :parse, :current_period,
                      :current_round
@@ -196,6 +202,7 @@ module BloodContracts
 
       def describe_sample(rule, round_data, context)
         name_generator.reset_timestamp!
+        reset_connection!
         connection.exec(<<-SQL)
           INSERT INTO #{table_name}
             (contract, session, period, round, rule, input, output)
@@ -207,13 +214,14 @@ module BloodContracts
             '#{rule}',
             '#{write(input_writer, context, round_data)}',
             '#{write(output_writer, context, round_data)}'
-          )
+          );
         SQL
       end
 
       def serialize_sample_chunk(chunk, rule, round_data, context)
         return unless (dump_proc = send("#{chunk}_serializer")[:dump])
         data = round_data.send(chunk)
+        reset_connection!
         connection.exec(<<-SQL)
           UPDATE #{table_name}
           SET #{chunk}_dump = '#{write(dump_proc, context, data)}'

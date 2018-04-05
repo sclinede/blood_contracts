@@ -44,8 +44,10 @@ module BloodContracts
   end
   module_function :disable!
 
+  ALL_CONTRACTS_ACCESS = '.*'.freeze
+
   def storage
-    @storage = Storage.new(contract_name: '.*').tap(&:init)
+    @storage = Storage.new(contract_name: ALL_CONTRACTS_ACCESS).tap(&:init)
   end
   module_function :storage
 
