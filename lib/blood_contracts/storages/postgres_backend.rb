@@ -132,7 +132,7 @@ module BloodContracts
         match = parse(path)
         session, period, rule, round = match.map { |v| v.sub("*", ".*") }
         connection.exec(<<-SQL).to_a.map { |row| row["name"] }
-          SELECT session || '/' || contract || '/' || period || '/' ||
+          SELECT '/' || session || '/' || contract || '/' || period || '/' ||
                  rule || '/' || round as name
           FROM #{table_name}
           WHERE contract ~ '#{contract}'
@@ -157,7 +157,7 @@ module BloodContracts
         match = parse(path)
         session, period, rule, round = match.map { |v| v.sub("*", ".*") }
         connection.exec(<<-SQL).first.to_h["name"]
-          SELECT session || '/' || contract || '/' || period || '/' ||
+          SELECT '/' || session || '/' || contract || '/' || period || '/' ||
                  rule || '/' || round as name
           FROM #{table_name}
           WHERE contract ~ '#{contract}'

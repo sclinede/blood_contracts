@@ -15,7 +15,7 @@ if defined?(Concurrent::Future)
 
         class RunnerFuture < SimpleDelegator
           def call(**kwargs)
-            Concurrent::Future.execute { __get_obj__.call(**kwargs) }
+            Concurrent::Future.execute { __getobj__.call(**kwargs) }
           end
         end
       end
