@@ -30,24 +30,24 @@ module BloodContracts
         find_all_samples("*/*/#{name_generator.current_period}/#{tag}/*").count
       end
 
-      def find_all_samples(sample_name)
-        files = name_generator.find_all(sample_name)
+      def find_all_samples(path = nil, **kwargs)
+        files = name_generator.find_all(path, **kwargs)
         files.select { |f| f.end_with?("/output") }
              .map { |f| f.chomp("/output") }
       end
 
-      def find_sample(sample_name)
-        find_all_samples(sample_name).first
+      def find_sample(path = nil, **kwargs)
+        find_all_samples(path, **kwargs).first
       end
 
       def sample_exists?(sample_name)
         name_generator.exists?(sample_name)
       end
 
-      def load_sample_chunk(dump_type, sample_name)
-        name = find_sample(sample_name)
-        send("#{dump_type}_serializer")[:load].call(
-          File.read("#{name}/#{dump_type}.dump")
+      def load_sample_chunk(chunk_name, path = nil, **kwargs)
+        sample_path = find_sample(path, **kwargs)
+        send("#{chunk_name}_serializer")[:load].call(
+          File.read("#{sample_path}/#{chunk_name}.dump")
         )
       end
 

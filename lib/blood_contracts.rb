@@ -1,7 +1,7 @@
 require "blood_contracts/version"
 
 require "dry-initializer"
-require "hashie/mash"
+require "hashie"
 
 require_relative "blood_contracts/ext/string_pathize"
 require_relative "blood_contracts/config"
@@ -44,7 +44,7 @@ module BloodContracts
   end
   module_function :disable!
 
-  ALL_CONTRACTS_ACCESS = '.*'.freeze
+  ALL_CONTRACTS_ACCESS = ".*".freeze
 
   def storage
     @storage = Storage.new(contract_name: ALL_CONTRACTS_ACCESS).tap(&:init)
@@ -57,13 +57,12 @@ module BloodContracts
   module_function :shared_storage?
 
   def storage_config
-    @storage_config ||=
-      Hashie::Hash[BloodContracts.config.storage].symbolize_keys!
+    @storage_config ||= Hashie.symbolize_keys!(BloodContracts.config.storage)
   end
   module_function :storage_config
 
   def sampling_config
-    @sampling ||= Hashie::Hash[BloodContracts.config.sampling].symbolize_keys!
+    @sampling_config ||= Hashie.symbolize_keys!(BloodContracts.config.sampling)
   end
   module_function :sampling_config
 

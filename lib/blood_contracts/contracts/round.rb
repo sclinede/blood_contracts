@@ -26,7 +26,7 @@ module BloodContracts
 
       def initialize(**kwargs)
         kwargs[:error] = wrap_error(kwargs[:error])
-        @data = ::Hashie::Hash[kwargs].stringify_keys
+        @data = Hashie.stringify_keys!(kwargs)
       end
 
       private

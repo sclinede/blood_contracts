@@ -28,40 +28,58 @@ module BloodContracts
       BloodContracts.config.tags[to_s.pathize] = tags
     end
 
+    def warn_about_contract_duplication(klass, kaller)
+      warn <<~WARNING
+        WARNING! Class #{klass} already has a contract assigned.
+        Skipping #{self}#apply_to(...) at #{kaller}.\n
+      WARNING
+    end
+
     def apply_to(klass:, methods:, override: false)
-      contract_accessor = to_s.downcase.gsub(/\W/, '_')
+      contract_accessor = to_s.downcase.gsub(/\W/, "_")
+      methods = Array(methods).join(",")
+
       if klass.instance_methods.include?(contract_accessor.to_sym) && !override
-        return warn <<~WARNING
-          WARNING! Class #{klass} already has a contract assigned.
-          Skipping #{self}#apply_to(...) at #{caller[0]}.\n
-        WARNING
+        return warn_about_contract_duplication(klass, caller(1..1).first)
       end
 
+      klass.prepend contract_patch_module(contract_accessor, methods)
+    end
+
+    private
+
+    # rubocop:disable Metrics/MethodLength
+    def contract_patch_module(accessor, methods)
       patch = Module.new do
         def find_contract(klass)
-          send(klass.to_s.downcase.gsub(/\W/, '_'))
+          send(klass.to_s.downcase.gsub(/\W/, "_"))
         end
       end
+      patch.module_eval(
+        format(
+          PATCH_TEMPLATE, accessor: accessor, contract: to_s, methods: methods
+        ), __FILE__, __LINE__ + 1
+      )
+      patch
+    end
+    # rubocop:enable Metrics/MethodLength
 
-      patch.module_eval <<~CODE
-        def #{contract_accessor}
-          @#{contract_accessor} ||= #{self}.new
-        end
+    PATCH_TEMPLATE = <<~CODE.freeze
+      def %<accessor>
+        @%<accessor> ||= %<contract>.new
+      end
 
-        %i(#{Array(methods).join(',')}).each do |method_name|
-          define_method(method_name) do |*args, **kwargs|
-            #{contract_accessor}.call(*args, **kwargs) do
-              if kwargs.empty?
-                super(*args)
-              else
-                super(*args, **kwargs)
-              end
+      %i(%<methods>).each do |method_name|
+        define_method(method_name) do |*args, **kwargs|
+          %<accessor>.call(*args, **kwargs) do
+            if kwargs.empty?
+              super(*args)
+            else
+              super(*args, **kwargs)
             end
           end
         end
-      CODE
-
-      klass.prepend patch
-    end
+      end
+    CODE
   end
 end

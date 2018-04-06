@@ -5,6 +5,7 @@ module BloodContracts
         true
       end
 
+      # rubocop:disable Metrics/MethodLength
       def call(*args, **kwargs)
         output = nil
         error = nil
@@ -25,6 +26,7 @@ module BloodContracts
         raise error if error
         output
       end
+      # rubocop:enable Metrics/MethodLength
     end
   end
 end

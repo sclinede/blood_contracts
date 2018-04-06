@@ -16,11 +16,7 @@ module BloodContracts
       end
 
       def to_s
-        rule_stats = to_h.map do |name, occasions|
-          " - '#{name}' happened #{occasions.times} time(s) "\
-          "(#{(occasions.percent * 100).round(2)}% of the time)"
-        end.join("; \n")
-
+        rule_stats = to_h.map(&method(:rule_stats_description)).join("; \n")
         return "Nothing captured.\n\n" if rule_stats.empty?
 
         if found_unexpected_behavior?
@@ -35,7 +31,17 @@ module BloodContracts
         storage.key?(Storage::UNDEFINED_RULE)
       end
 
+      def caught_exception?
+        storage.key?(Storage::EXCEPTION_CAUGHT)
+      end
+
       private
+
+      def rule_stats_description(stats)
+        name, occasions = stats
+        " - '#{name}' happened #{occasions.times} time(s) "\
+        "(#{(occasions.percent * 100).round(2)}% of the time)"
+      end
 
       def rule_stats(times)
         Hashie::Mash.new(times: times, percent: (times.to_f / iterations_count))

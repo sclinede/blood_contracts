@@ -20,14 +20,11 @@ module BloodContracts
       def expectations
         Hash[
           contract_hash.map do |name, rule|
-            if rule.threshold
-              [rule.merge(name: name), method(:threshold_check)]
-            elsif rule.limit
-              [rule.merge(name: name), method(:limit_check)]
-            else
-              [rule.merge(name: name), method(:anyway)]
-            end
-          end.compact
+            threshold = rule.threshold
+            next [rule.merge(name: name), method(:threshold_check)] if threshold
+            next [rule.merge(name: name), method(:limit_check)] if rule.limit
+            [rule.merge(name: name), method(:anyway)]
+          end
         ]
       end
 

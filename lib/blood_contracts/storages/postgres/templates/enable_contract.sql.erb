@@ -1,0 +1,2 @@
+UPDATE <%= config_table_name %>
+SET enabled_contracts = enabled_contracts || '<%= connection.escape_string(contract_name) %>'::text;

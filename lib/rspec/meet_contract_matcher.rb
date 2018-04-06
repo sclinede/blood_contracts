@@ -3,8 +3,6 @@ require_relative "../blood_contracts/concerns/testable.rb"
 module RSpec
   module MeetContractMatcher
     extend RSpec::Matchers::DSL
-    # Runner = ::BloodContracts::Runner
-    # Debugger = ::BloodContracts::Debugger
     Testable = ::BloodContracts::Concerns::Testable
     Iterator = ::BloodContracts::Contracts::Iterator
 

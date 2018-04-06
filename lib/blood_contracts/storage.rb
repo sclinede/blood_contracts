@@ -1,3 +1,4 @@
+require "oj"
 require_relative "./storages/base_backend.rb"
 require_relative "./storages/file_backend.rb"
 require_relative "./storages/postgres_backend.rb"

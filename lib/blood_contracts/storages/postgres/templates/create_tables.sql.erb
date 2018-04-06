@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS <%= config_table_name %>
+AS SELECT false as enabled, ARRAY[]::text[] as enabled_contracts;
+
+CREATE TABLE IF NOT EXISTS <%= samples_table_name %> (
+  created_at timestamp DEFAULT current_timestamp,
+
+  contract text,
+  session text,
+  rule text,
+  round bigint,
+  period bigint,
+
+  input text,
+  output text,
+  input_dump text,
+  output_dump text,
+  meta_dump text,
+  error_dump text,
+  CONSTRAINT uniq_<%= config_table_name %>_name
+  UNIQUE(contract, session, period, rule, round)
+);

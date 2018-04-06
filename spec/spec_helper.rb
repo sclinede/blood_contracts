@@ -1,5 +1,7 @@
 require "bundler/setup"
 require "blood_contracts"
+require "dotenv"
+Dotenv.load(".env.test")
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

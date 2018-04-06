@@ -40,7 +40,7 @@ module BloodContracts
       end
 
       def contract_enabled?(*)
-        false
+        BloodContracts.config.enabled
       end
 
       def write(writer, cntxt, round_data)
@@ -67,11 +67,11 @@ module BloodContracts
           input:  load_sample_chunk(:input, sample_name, **kwargs),
           output: load_sample_chunk(:output, sample_name, **kwargs),
           meta:   load_sample_chunk(:meta, sample_name, **kwargs),
-          error:  load_sample_chunk(:error, sample_name, **kwargs),
+          error:  load_sample_chunk(:error, sample_name, **kwargs)
         )
       end
 
-      def load_sample_chunk(_dump_type, _sample_name, **kwargs)
+      def load_sample_chunk(_dump_type, _sample_name, **_kwargs)
         raise NotImplementedError
       end
 

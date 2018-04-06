@@ -1,37 +1,36 @@
 require_relative "./dsl.rb"
-require_relative "./run_builder.rb"
+require_relative "./storage_builder.rb"
 
 module BloodContracts
   class BaseContract
     using StringPathize
     extend DSL
-    include RunBuilder
+    include StorageBuilder
 
     def enable!
-      Thread.current[to_s.pathize] = true
+      Thread.current[name] = true
     end
 
     def disable!
-      Thread.current[to_s.pathize] = false
+      Thread.current[name] = false
     end
 
     def reset!
-      Thread.current[to_s.pathize] = nil
+      Thread.current[name] = nil
     end
 
     def enabled?
-      if Thread.current[to_s.pathize].nil?
-        enabled = storage.contract_enabled?
-        enabled = BloodContracts.config.enabled if enabled.nil?
-        Thread.current[to_s.pathize] = enabled
+      if Thread.current[name].nil?
+        Thread.current[name] = storage.contract_enabled?
       end
-      !!Thread.current[to_s.pathize]
+      !!Thread.current[name]
     end
 
-    def before_runner(args:, kwargs:, output:, error:, meta:); end
+    def to_contract_suite
+      Suite.new(storage: storage, contract: _contract)
+    end
 
-    def before_call(args:, kwargs:, meta:); end
-
+    # rubocop:disable Metrics/MethodLength
     def call(*args, **kwargs)
       return yield unless enabled?
 
@@ -53,6 +52,30 @@ module BloodContracts
           args: args, kwargs: kwargs, output: output, meta: meta, error: error
         )
       end
+    end
+    # rubocop:enable Metrics/MethodLength
+
+    protected
+
+    def before_call(args:, kwargs:, meta:); end
+
+    def before_runner(args:, kwargs:, output:, error:, meta:); end
+    alias :after_call :before_runner
+
+    private
+
+    def runner
+      @runner ||= Runner.new(context: self, suite: to_contract_suite)
+    end
+
+    def _contract
+      @_contract ||= Hash[
+        self.class.rules.map { |name| [name, { check: method("_#{name}") }] }
+      ]
+    end
+
+    def name
+      to_s.pathize
     end
   end
 end

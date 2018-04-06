@@ -1,7 +1,14 @@
 #!/usr/bin/env ruby
 
 require "bundler/setup"
+require 'dotenv'
+Dotenv.load('.env.development')
+
 require "blood_contracts"
+
+BloodContracts.config do |config|
+  config.storage["type"] = :postgres
+end
 
 # You can add fixtures and/or initialization code here to make experimenting
 # with your gem easier. You can also use a different console, if you like.

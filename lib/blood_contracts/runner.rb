@@ -22,11 +22,10 @@ module BloodContracts
       (output, meta, error = yield(meta)) if block_given?
       round = Contracts::Round.new(
         input: { args: args, kwargs: kwargs },
-        output: output,
-        error: error,
-        meta: meta
+        output: output, error: error, meta: meta
       )
-      matcher.call(round: round, statistics: statistics) do |rules|
+      matcher.call(round) do |rules|
+        Array(rules).each(&statistics.method(:store))
         storage.store(round: round, rules: rules, context: context)
       end
     end

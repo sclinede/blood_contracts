@@ -37,7 +37,7 @@ if defined?(Sniffer)
       meta["requested_http"] = requested_api
       return unless requested_api
       meta["last_http_session"] = sniffer_buffer.map do |session|
-        ::Hashie::Hash[session.to_h].stringify_keys
+        Hashie.stringify_keys!(session.to_h)
       end
     end
 

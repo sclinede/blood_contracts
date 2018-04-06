@@ -1,0 +1,7 @@
+UPDATE <%= samples_table_name %>
+SET <%= @chunk_name %>_dump = '<%= @data %>'
+WHERE contract = '<%= connection.escape_string(contract_name) %>'
+AND session = '<%= connection.escape_string(session_name) %>'
+AND period = '<%= period_name %>'
+AND round = '<%= round_name %>'
+AND rule = '<%= connection.escape_string(@rule_name) %>';

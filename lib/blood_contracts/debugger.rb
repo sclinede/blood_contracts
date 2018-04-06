@@ -10,12 +10,12 @@ module BloodContracts
       runs.size
     end
 
-    def call(args: nil, kwargs: nil, output: "", meta: {}, error: nil)
+    def call(*)
       return Contracts::Round.new unless debugging_samples?
 
-      matcher.call(
-        round: storage.load_sample(runs.next), statistics: statistics,
-      )
+      matcher.call(storage.load_sample(runs.next)) do |rules|
+        Array(rules).each(&statistics.method(:store))
+      end
     end
 
     def description

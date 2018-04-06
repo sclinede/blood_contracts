@@ -5,16 +5,15 @@ module BloodContracts
 
       param :contract_hash, ->(v) { Hashie::Mash.new(v) }
 
-      def call(round:, statistics:)
+      def call(round)
         rule_names = select_matched_rules!(round).keys
         if rule_names.empty?
-          rule_names = if round.error.present?
+          rule_names = if !round.error.empty?
                          [Storage::EXCEPTION_CAUGHT]
                        else
                          [Storage::UNDEFINED_RULE]
                        end
         end
-        Array(rule_names).each(&statistics.method(:store))
 
         yield rule_names, round if block_given?
 
@@ -22,6 +21,11 @@ module BloodContracts
       end
 
       private
+
+      def add_exception_caught_rule!(rule_names, round)
+        return unless rule_names.empty?
+        return unless round.error.present?
+      end
 
       def select_matched_rules!(round)
         contract_hash.select do |_name, rule|
