@@ -3,8 +3,6 @@ require_relative "./samples/name_generator.rb"
 module BloodContracts
   module Storages
     class FileBackend < BaseBackend
-      alias :contract :example_name
-      alias :session :name
       def init
         FileUtils.mkdir_p(File.join("./tmp/blood_contracts/", session))
       end
@@ -12,22 +10,35 @@ module BloodContracts
       def name_generator
         @name_generator ||= Samples::NameGenerator.new(
           session,
-          contract,
+          contract_name,
           "./tmp/blood_contracts/"
         )
       end
 
       def suggestion
-        "#{name_generator.path}/*/*"
+        "#{path}/*/*"
       end
 
       def unexpected_suggestion
-        "#{name_generator.path}/#{name_generator.current_period}"\
+        "#{path}/#{current_period}"\
         "/#{Storage::UNDEFINED_RULE}/*"
       end
 
-      def samples_count(tag)
-        find_all_samples("*/*/#{name_generator.current_period}/#{tag}/*").count
+      def statistics_per_rule(*rules)
+        Hash[
+          Array(rules).map do |rule|
+            next [rule.to_s, 0] unless File.exists?(stats_path)
+
+            [rule.to_s, samples_count(rule)]
+          end
+        ]
+      end
+
+      def samples_count(rule)
+        find_all_samples(
+          period: current_period,
+          rule: rule
+        ).count
       end
 
       def find_all_samples(path = nil, **kwargs)
@@ -52,7 +63,6 @@ module BloodContracts
       end
 
       def describe_sample(tag, round, context)
-        name_generator.reset_timestamp!
         name = name_generator.call(tag)
         FileUtils.mkdir_p(name)
         File.open("#{name}/input", "w+") do |f|
@@ -69,6 +79,13 @@ module BloodContracts
         data = round.send(chunk)
         File.open("#{name}/#{chunk}.dump", "w+") do |f|
           f << write(dump_proc, context, data)
+        end
+      end
+
+      def collect_stats(tag)
+        stats_file = File.join(stats_path, tag)
+        File.open("#{stats_path}/input", "a") do |f|
+          f << "#{name = name_generator.call(tag)}\r\n"
         end
       end
     end

@@ -5,22 +5,13 @@ require_relative "./postgres/query.rb"
 module BloodContracts
   module Storages
     class PostgresBackend < BaseBackend
-      option :root, default: -> { name }
-      alias :contract :example_name
-      alias :session :name
+      option :root, default: -> { session }
 
       include Postgres::ContractSwitcher
 
       def query
         @query ||= Postgres::Query.build(self)
       end
-
-      def name_generator
-        @name_generator ||= Samples::NameGenerator.new(name, example_name, "/")
-      end
-      def_delegators :name_generator,
-                     :extract_name_from, :path, :parse, :current_period,
-                     :current_round
 
       def suggestion
         "Postgres(#{table_name}):#{path}/*/*"
@@ -43,7 +34,7 @@ module BloodContracts
 
       def find_sample(path = nil, **kwargs)
         session, period, rule, round = parse(path, **kwargs).map do |v|
-          v.sub("*", ".*")
+          v.to_s.sub("*", ".*")
         end
         query.find_sample(session, period, rule, round)
       end
@@ -57,11 +48,12 @@ module BloodContracts
       def load_sample_chunk(chunk, path = nil, **kwargs)
         raise SampleNotFound unless (found_sample = find_sample(path, **kwargs))
         session, period, rule, round = parse(found_sample)
-        query.load_sample_chunk(session, period, rule, round, chunk)
+        send("#{chunk}_serializer")[:load].call(
+          query.load_sample_chunk(session, period, rule, round, chunk)
+        )
       end
 
       def describe_sample(rule, round_data, context)
-        name_generator.reset_timestamp!
         query.execute(
           :insert_sample,
           period_name: current_period,

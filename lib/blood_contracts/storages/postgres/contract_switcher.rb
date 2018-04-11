@@ -11,12 +11,12 @@ module BloodContracts
         end
         alias :init :create_tables!
 
-        def disable_contract!(contract_name = contract)
-          query.execute(:disable_contract, contract_name: contract_name)
+        def disable_contract!(a_contract_name = contract_name)
+          query.execute(:disable_contract, contract_name: a_contract_name)
         end
 
-        def enable_contract!(contract_name = contract)
-          query.execute(:enable_contract, contract_name: contract_name)
+        def enable_contract!(a_contract_name = contract_name)
+          query.execute(:enable_contract, contract_name: a_contract_name)
         end
 
         def enable_contracts_global!
@@ -27,8 +27,8 @@ module BloodContracts
           query.execute(:disable_contracts_global)
         end
 
-        def contract_enabled?(contract_name = contract)
-          enabled = query.contract_enabled(contract_name)
+        def contract_enabled?(a_contract_name = contract_name)
+          enabled = query.contract_enabled(a_contract_name)
           return enabled unless enabled.nil?
           BloodContracts.config.enabled
         end

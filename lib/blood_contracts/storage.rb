@@ -98,7 +98,9 @@ module BloodContracts
       return unless BloodContracts.config.store
       Array(rules).each do |rule_name|
         next if sampler.limit_reached?(rule_name)
+        backend.new_probe!
         describe_sample(rule_name, round, context)
+        serialize_sample(rule_name, round, context)
         serialize_sample(rule_name, round, context)
       end
     end

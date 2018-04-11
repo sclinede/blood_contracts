@@ -1,34 +1,15 @@
 require_relative "./dsl.rb"
+require_relative "./patching.rb"
+require_relative "./switching.rb"
 require_relative "./storage_builder.rb"
 
 module BloodContracts
   class BaseContract
-    using StringPathize
     extend DSL
+    extend Patching
     include StorageBuilder
+    include Switching
 
-    def enable!
-      Thread.current[name] = true
-    end
-
-    def disable!
-      Thread.current[name] = false
-    end
-
-    def reset!
-      Thread.current[name] = nil
-    end
-
-    def enabled?
-      if Thread.current[name].nil?
-        Thread.current[name] = storage.contract_enabled?
-      end
-      !!Thread.current[name]
-    end
-
-    def to_contract_suite
-      Suite.new(storage: storage, contract: _contract)
-    end
 
     # rubocop:disable Metrics/MethodLength
     def call(*args, **kwargs)
@@ -65,17 +46,18 @@ module BloodContracts
     private
 
     def runner
-      @runner ||= Runner.new(context: self, suite: to_contract_suite)
+      @runner ||= Runner.new(
+        context: self, contract: _contract, storage: storage
+      )
     end
 
     def _contract
       @_contract ||= Hash[
-        self.class.rules.map { |name| [name, { check: method("_#{name}") }] }
+        self.class.rules.map do |name|
+          stats_requirements = self.class.statistics_rules[name].to_h
+          [name, stats_requirements.merge(check: method("_#{name}"))]
+        end
       ]
-    end
-
-    def name
-      to_s.pathize
     end
   end
 end

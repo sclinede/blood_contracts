@@ -6,7 +6,7 @@ module BloodContracts
       param :contract_hash, ->(v) { Hashie::Mash.new(v) }
 
       def valid?(statistics)
-        return if statistics.found_unexpected_behavior?
+        return false if statistics.found_unexpected_behavior?
 
         last_run_stats = statistics.to_h
         expectations.all? do |rule, check|
@@ -20,12 +20,17 @@ module BloodContracts
       def expectations
         Hash[
           contract_hash.map do |name, rule|
-            threshold = rule.threshold
-            next [rule.merge(name: name), method(:threshold_check)] if threshold
-            next [rule.merge(name: name), method(:limit_check)] if rule.limit
-            [rule.merge(name: name), method(:anyway)]
+            rule = rule.merge(name: name)
+            next [rule, method(:between_check)] if rule.threshold && rule.limit
+            next [rule, method(:threshold_check)] if rule.threshold
+            next [rule, method(:limit_check)] if rule.limit
+            [rule, method(:anyway)]
           end
         ]
+      end
+
+      def between_check(value, rule)
+        value > rule.threshold && value <= rule.limit
       end
 
       def threshold_check(value, rule)

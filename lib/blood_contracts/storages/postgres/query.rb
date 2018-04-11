@@ -8,12 +8,13 @@ module BloodContracts
         option :contract_name, optional: true
         option :session_name, optional: true
         option :period_name, optional: true
+        option :round_name, optional: true
 
         class << self
           def build(backend)
             pg_loaded?
             new(
-              contract_name: backend.contract,
+              contract_name: backend.contract_name,
               session_name: backend.session,
               period_name: backend.current_period,
               round_name: backend.current_round

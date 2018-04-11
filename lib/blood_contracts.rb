@@ -5,22 +5,21 @@ require "hashie"
 
 require_relative "blood_contracts/ext/string_pathize"
 require_relative "blood_contracts/config"
-require_relative "blood_contracts/suite"
 require_relative "blood_contracts/storage"
 require_relative "blood_contracts/runner"
 require_relative "blood_contracts/debugger"
 require_relative "blood_contracts/base_contract"
 
 module BloodContracts
-  def run_name
-    @__contracts_run_name
+  def session_name
+    @__contracts_session_name
   end
-  module_function :run_name
+  module_function :session_name
 
-  def run_name=(run_name)
-    @__contracts_run_name = run_name
+  def session_name=(run_name)
+    @__contracts_session_name = run_name
   end
-  module_function :run_name=
+  module_function :session_name=
 
   def config
     @config ||= Config.new

@@ -5,81 +5,52 @@ module BloodContracts
     using StringPathize
     DEFAULT_TAG = :default
 
-    attr_reader :rules
+    attr_reader :rules, :statistics_rules
     def inherited(child_klass)
       child_klass.instance_variable_set(:@rules, Set.new)
+      child_klass.instance_variable_set(:@statistics_rules, Hash.new)
       child_klass.prepend Concerns::Debuggable
     end
 
     def tag(config)
-      tags = BloodContracts.config.tags[to_s.pathize] || {}
+      tags = BloodContracts.config.tags[name.pathize] || {}
       config.each_pair do |tag, rules|
         rules.each { |rule| tags[rule.to_s] ||= tag.to_s }
       end
-      BloodContracts.config.tags[to_s.pathize] = tags
+      BloodContracts.config.tags[name.pathize] = tags
     end
 
     def contract_rule(name, tag: DEFAULT_TAG, &block)
       define_method("_#{name}", &block)
       rules << name
 
-      tags = BloodContracts.config.tags[to_s.pathize] || {}
+      tags = BloodContracts.config.tags[self.name.pathize] || {}
       tags[name.to_s] = tag
-      BloodContracts.config.tags[to_s.pathize] = tags
+      BloodContracts.config.tags[self.name.pathize] = tags
     end
 
-    def warn_about_contract_duplication(klass, kaller)
-      warn <<~WARNING
-        WARNING! Class #{klass} already has a contract assigned.
-        Skipping #{self}#apply_to(...) at #{kaller}.\n
-      WARNING
+    class UselessStatisticsRule < ArgumentError; end
+
+    def statistics(rule_name, limit: nil, threshold: nil)
+      raise UselessStatisticsRule unless limit || threshold
+      statistics_rules[rule_name] = {limit: limit, threshold: threshold}.compact
     end
-
-    def apply_to(klass:, methods:, override: false)
-      contract_accessor = to_s.downcase.gsub(/\W/, "_")
-      methods = Array(methods).join(",")
-
-      if klass.instance_methods.include?(contract_accessor.to_sym) && !override
-        return warn_about_contract_duplication(klass, caller(1..1).first)
-      end
-
-      klass.prepend contract_patch_module(contract_accessor, methods)
-    end
-
-    private
-
-    # rubocop:disable Metrics/MethodLength
-    def contract_patch_module(accessor, methods)
-      patch = Module.new do
-        def find_contract(klass)
-          send(klass.to_s.downcase.gsub(/\W/, "_"))
-        end
-      end
-      patch.module_eval(
-        format(
-          PATCH_TEMPLATE, accessor: accessor, contract: to_s, methods: methods
-        ), __FILE__, __LINE__ + 1
-      )
-      patch
-    end
-    # rubocop:enable Metrics/MethodLength
-
-    PATCH_TEMPLATE = <<~CODE.freeze
-      def %<accessor>
-        @%<accessor> ||= %<contract>.new
-      end
-
-      %i(%<methods>).each do |method_name|
-        define_method(method_name) do |*args, **kwargs|
-          %<accessor>.call(*args, **kwargs) do
-            if kwargs.empty?
-              super(*args)
-            else
-              super(*args, **kwargs)
-            end
-          end
-        end
-      end
-    CODE
   end
 end
+#
+# @example
+#   class APIContract < BaseContract
+#     contract_rule :success do |api_call|
+#       api_call.response.success?
+#     end
+#
+#     contract_rule :failure do |api_call|
+#       api_call.response.failure?
+#     end
+#
+#     statistics :failure, limit: "10%" # of sampling batch
+#   end
+#
+#
+#
+#

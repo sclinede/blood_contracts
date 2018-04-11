@@ -8,7 +8,8 @@ module BloodContracts
     attr_config store: true,
                 enabled: false,
                 sampling: {
-                  period: nil,
+                  statistics_period: nil,
+                  storage_period: nil,
                   limit_per_tag: {}
                 },
                 storage: {

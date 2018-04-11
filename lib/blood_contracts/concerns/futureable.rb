@@ -5,7 +5,9 @@ if defined?(Concurrent::Future)
     module Concerns
       module Futureable
         def _runner
-          @_runner ||= Runner.new(context: self, suite: to_contract_suite)
+          @_runner ||= Runner.new(
+            context: self, contract: _contract, storage: storage
+          )
         end
 
         def runner

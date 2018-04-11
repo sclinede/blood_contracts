@@ -1,5 +1,5 @@
 UPDATE <%= samples_table_name %>
-SET <%= @chunk_name %>_dump = '<%= @data %>'
+SET <%= @chunk_name %>_dump = '<%= connection.escape_string(@data) %>'
 WHERE contract = '<%= connection.escape_string(contract_name) %>'
 AND session = '<%= connection.escape_string(session_name) %>'
 AND period = '<%= period_name %>'

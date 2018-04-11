@@ -1,11 +1,19 @@
 module BloodContracts
   module Contracts
     class Statistics
-      extend Dry::Initializer
-      param :iterations_count, ->(v) { v.to_i }, default: -> { 1 }
-      attr_writer :iterations_count
+      attr_accessor :iterations_count
+      attr_reader :storage, :trackable_rules
 
-      option :storage, default: -> { Hash.new(0) }
+      def initialize(storage, iterations_count = nil)
+        @storage = Hash.new(0)
+        @iterations_count = (iterations_count || 1).to_i
+        @trackable_rules = Set.new
+      end
+
+      def counts
+        return {} if trackable_rules.empty?
+        storage.samples_count_per_rule(*trackable_rules)
+      end
 
       def store(rule)
         storage[rule] += 1

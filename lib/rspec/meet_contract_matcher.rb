@@ -62,7 +62,7 @@ RSpec.configure do |config|
   config.include ::RSpec::MeetContractMatcher
   config.filter_run_excluding contract: true
   config.before(:suite) do
-    BloodContracts.run_name = ::Nanoid.generate(size: 10)
+    BloodContracts.session_name = ::Nanoid.generate(size: 10)
   end
   config.define_derived_metadata(file_path: %r{/spec/contracts/}) do |meta|
     meta[:contract] = true

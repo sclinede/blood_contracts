@@ -21,7 +21,8 @@ module BloodContracts
       def runner
         return super unless debug_enabled?
         return @runner if @runner.is_a?(Debugger)
-        @runner = Debugger.new(context: self, suite: to_contract_suite)
+        @runner =
+          Debugger.new(context: self, contract: _contract, storage: storage)
       end
       alias :debug_runner :runner
 

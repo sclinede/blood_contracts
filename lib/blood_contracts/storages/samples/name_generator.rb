@@ -26,6 +26,7 @@ module BloodContracts
         def reset_timestamp!
           @timestamp = nil
         end
+        alias :new_probe! :reset_timestamp!
 
         def current_period
           period ||
@@ -40,8 +41,8 @@ module BloodContracts
           File.join(default_path, session, contract_name.to_s)
         end
 
-        def find_all(path = nil, **_kwargs)
-          Dir.glob("#{extract_name_from(path)}/*")
+        def find_all(path = nil, **kwargs)
+          Dir.glob("#{extract_name_from(path, **kwargs)}/*")
         end
 
         def exists?(path = nil, **kwargs)
@@ -77,7 +78,9 @@ module BloodContracts
         private
 
         def split_path_by_parts!(path)
-          path_items = path.to_s.sub(default_path, "").split("/")
+          path = path.to_s
+          path.sub!(default_path, "") if path.start_with?(default_path)
+          path_items = path.split("/")
           period, tag, round = path_items.pop(3)
           session = path_items.shift
           contract = path_items.join("/")
