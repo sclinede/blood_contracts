@@ -23,12 +23,12 @@ require_relative "blood_contracts/base_contract"
 
 module BloodContracts
   module_function
+
   extend GlobalConfig
 
   GUARANTEE_FAILURE     = :__guarantee_failure__
   UNEXPECTED_BEHAVIOR   = :__unexpected_behavior__
   UNEXPECTED_EXCEPTION  = :__unexpected_exception__
-
 
   class GuaranteesFailure < StandardError; end
   class ExpectationsFailure < StandardError; end

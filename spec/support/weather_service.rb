@@ -3,7 +3,7 @@ class WeatherService
     case template
     when :timeout
       sleep(1)
-      fail Timeout::Error
+      raise Timeout::Error
     else
       Response.new(load_response(template))
     end

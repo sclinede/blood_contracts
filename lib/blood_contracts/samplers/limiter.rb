@@ -7,14 +7,17 @@ module BloodContracts
       param :storage
 
       def limit_reached?(rule)
-        tags = Hashie.symbolize_keys!(BloodContracts.tags[contract_name])
-        rule = rule.to_sym
-        rules_or_tags = Array(tags[rule] || rule).map(&:to_sym)
+        rules_or_tags = Array(contract_tags[rule.to_sym] || rule).map(&:to_sym)
         return unless (limit = limits.values_at(*rules_or_tags).compact.min)
         storage.samples_count(rule) >= limit
       end
 
       private
+
+      def contract_tags
+        @contract_tags ||=
+          Hashie.symbolize_keys!(BloodContracts.tags[contract_name])
+      end
 
       def limits
         Hashie.symbolize_keys!(

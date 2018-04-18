@@ -42,16 +42,15 @@ module BloodContracts
           connection.exec(sql(query_name))
         end
 
-      def initialize(redis)
-        @redis_proc = build_redis_proc(redis)
-      end
+        def initialize(redis)
+          @redis_proc = build_redis_proc(redis)
+        end
 
-      def exec(&block)
-        @redis_proc.call(&block)
-      end
+        def exec(&block)
+          @redis_proc.call(&block)
+        end
 
-      private
-
+        private
 
         def contract_enabled(contract_name)
           result = execute(:is_contract_enabled, contract_name: contract_name)
@@ -91,8 +90,6 @@ module BloodContracts
           execute(:count_samples, rule_name: rule_name).first["count"].to_i
         end
 
-        private
-
         def sql(query_name)
           ERB.new(File.read(file_path(query_name))).result(binding)
         end
@@ -117,14 +114,6 @@ module BloodContracts
 
         def connection
           return @connection unless @connection.nil?
-          return @connection = pg_connection_proc.call if pg_connection_proc
-          return @connection = ::PG.connect(database_url) if database_url
-
-          raise ArgumentError, "Postgres connection not configured!"
-        end
-
-        def connection
-          return @connection unless @connection.nil?
           return @connection = redis_connection_proc.call if redis_connection_proc
           return @connection = ::Redis.new(redis) if redis_connection_proc
 
@@ -144,7 +133,7 @@ module BloodContracts
             redis
           else
             raise ArgumentError, \
-              "Redis, ConnectionPool, Hash or Proc is required"
+                  "Redis, ConnectionPool, Hash or Proc is required"
           end
         end
         # rubocop: enable Metrics/MethodLength

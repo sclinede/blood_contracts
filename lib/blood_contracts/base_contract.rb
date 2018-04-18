@@ -54,7 +54,7 @@ module BloodContracts
     def _contract
       return @_contract if defined? @_contract
       guarantees = self.class.guarantees_rules.map do |name|
-        [name, {check: method("guarantee_#{name}")}]
+        [name, { check: method("guarantee_#{name}") }]
       end
       expectations = self.class.expectations_rules.map do |name|
         stats_requirements = self.class.statistics_rules[name].to_h

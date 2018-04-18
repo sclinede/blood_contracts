@@ -26,7 +26,8 @@ module BloodContracts
       alias :store :track
 
       def to_h
-        # Hash[storage.map { |rule_name, times| [rule_name, rule_stats(times)] }]
+        # Hash[storage.map { |rule_name, times|
+        # [rule_name, rule_stats(times)] }]
         Hash[counts.map { |rule_name, times| [rule_name, rule_stats(times)] }]
       end
 

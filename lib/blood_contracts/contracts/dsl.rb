@@ -27,7 +27,7 @@ module BloodContracts
       def inherited(child_klass)
         child_klass.instance_variable_set(:@expectations_rules, Set.new)
         child_klass.instance_variable_set(:@guarantees_rules, Set.new)
-        child_klass.instance_variable_set(:@statistics_rules, Hash.new)
+        child_klass.instance_variable_set(:@statistics_rules, {})
         # TODO: add helper to include Debugger, but no need to run it all the
         # time
         # child_klass.prepend Debuggable
@@ -36,26 +36,20 @@ module BloodContracts
       def expectation_rule(name, tag: DEFAULT_TAG, inherit: nil, &block)
         if inherit
           define_method("expectation_#{name}") do |round|
-            send("expectation_#{inherit}", round) && block.call(round)
+            send("expectation_#{inherit}", round) && yield(round)
           end
         else
           define_method("expectation_#{name}", &block)
         end
         expectations_rules << name
-
-        tags = BloodContracts.tags[self.name.pathize] || {}
-        tags[name.to_s] = Array(tag)
-        BloodContracts.tags[self.name.pathize] = tags
+        update_tags(name, tag)
       end
       alias :expect :expectation_rule
 
       def guarantee_rule(name, tag: DEFAULT_TAG, &block)
         define_method("guarantee_#{name}", &block)
         guarantees_rules << name
-
-        tags = BloodContracts.tags[self.name.pathize] || {}
-        tags[name.to_s] = Array(tag)
-        BloodContracts.tags[self.name.pathize] = tags
+        update_tags(name, tag)
       end
       alias :guarantee :guarantee_rule
 
@@ -63,9 +57,19 @@ module BloodContracts
 
       def statistics_rule(rule_name, limit: nil, threshold: nil)
         raise UselessStatisticsRule unless limit || threshold
-        statistics_rules[rule_name] = {limit: limit, threshold: threshold}.compact
+        statistics_rules[rule_name] = {
+          limit: limit, threshold: threshold
+        }.compact
       end
       alias :expect_statistics :statistics_rule
+
+      private
+
+      def update_tags(rule_name, tag)
+        tags = BloodContracts.tags[name.pathize] || {}
+        tags[rule_name.to_s] = Array(tag)
+        BloodContracts.tags[name.pathize] = tags
+      end
     end
   end
 end

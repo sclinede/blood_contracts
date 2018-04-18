@@ -4,8 +4,10 @@ module BloodContracts
       def apply_to(klass:, methods:, override: false)
         contract_accessor = to_s.downcase.gsub(/\W/, "_")
         methods = Array(methods).join(",")
+        contract_accessor_exists =
+          klass.instance_methods.include?(contract_accessor.to_sym)
 
-        if klass.instance_methods.include?(contract_accessor.to_sym) && !override
+        if contract_accessor_exists && !override
           return warn_about_contract_duplication(klass, caller(1..1).first)
         end
 
@@ -37,6 +39,7 @@ module BloodContracts
       end
       # rubocop:enable Metrics/MethodLength
 
+      # rubocop:disable Style/FormatStringToken
       PATCH_TEMPLATE = <<~CODE.freeze
         def %{accessor}
           @%{accessor} ||= %{contract}.new
@@ -54,6 +57,7 @@ module BloodContracts
           end
         end
       CODE
+      # rubocop:enable Style/FormatStringToken
     end
   end
 end

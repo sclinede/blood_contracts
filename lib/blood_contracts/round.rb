@@ -23,6 +23,7 @@ module BloodContracts
 
     def initialize(**kwargs)
       kwargs[:error] = wrap_error(kwargs[:error])
+      kwargs[:input] = prepare_input(kwargs[:input])
       @data = Hashie.stringify_keys!(kwargs)
     end
 
@@ -35,6 +36,11 @@ module BloodContracts
     end
 
     private
+
+    def prepare_input(input)
+      return input.inspect unless input.respond_to?(:to_h)
+      input.to_h.transform_values(&:inspect)
+    end
 
     def wrap_error(exception)
       return {} if exception.to_s.empty?

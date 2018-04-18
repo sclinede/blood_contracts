@@ -85,6 +85,5 @@ module BloodContracts
         storage.serialize_sample(rule_name, round, context)
       end
     end
-
   end
 end

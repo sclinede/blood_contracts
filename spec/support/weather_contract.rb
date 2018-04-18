@@ -1,5 +1,5 @@
-require 'timeout'
-require 'json'
+require "timeout"
+require "json"
 
 class WeatherContract < BloodContracts::BaseContract
   def output_writer(round)
@@ -42,11 +42,11 @@ class WeatherContract < BloodContracts::BaseContract
   end
 
   expect :saint_p_weather, tag: :critical_data, inherit: :usual do |round|
-    round.response.city.downcase.eql?("saint-petersburg")
+    round.response.city.casecmp("saint-petersburg").zero?
   end
 
   expect :london_weather, tag: :critical_data, inherit: :usual do |round|
-    round.response.city.downcase.eql?("london")
+    round.response.city.casecmp("london").zero?
   end
 
   expect_statistics :usual, threshold: "90%"

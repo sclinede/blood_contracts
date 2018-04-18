@@ -1,7 +1,7 @@
 module BloodContracts::GlobalConfig
   class << self
     def extended(klass)
-      klass.instance_variable_set(:@tags, Hash.new)
+      klass.instance_variable_set(:@tags, {})
     end
   end
 

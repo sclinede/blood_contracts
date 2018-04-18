@@ -27,7 +27,7 @@ module BloodContracts
           Debugger.new(
             context: self, contract: _contract,
             storage: storage, statistics: statistics
-        )
+          )
       end
       alias :debug_runner :runner
 

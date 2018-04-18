@@ -26,22 +26,17 @@ RSpec.describe BloodContracts do
   end
 
   describe ".enabled?" do
-
   end
 
   describe ".enable!" do
-
   end
 
   describe ".disable!" do
-
   end
 
   describe ".shared_storage?" do
-
   end
 
   describe ".shared_storage?" do
-
   end
 end

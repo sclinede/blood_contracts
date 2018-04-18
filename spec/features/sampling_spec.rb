@@ -9,7 +9,7 @@ RSpec.describe "Contract Sampling" do
       config.sampling["period"] = 3600
       config.sampling["limit_per_tag"] = {
         default: 3,
-        critical_data: 5,
+        critical_data: 5
       }
     end
   end
@@ -42,20 +42,15 @@ RSpec.describe "Contract Sampling" do
     end
 
     it "loads :usual sample correctly" do
-
-
     end
 
     it "loads :client_error sample correctly" do
-
     end
 
     it "loads :parsing_exception sample correctly" do
-
     end
 
     it "loads :__unexpected_behavior__ sample correctly" do
-
     end
   end
 
@@ -69,7 +64,7 @@ RSpec.describe "Contract Sampling" do
       weather_service.update(:parsing_exception) rescue nil
       weather_service.update(:unexpected) rescue nil
       weather_service.update(:timeout) rescue nil
-      contract.call { Hash.new } rescue nil
+      contract.call { {} } rescue nil
     end
 
     it "creates one sample per rule" do
@@ -102,7 +97,7 @@ RSpec.describe "Contract Sampling" do
         weather_service.update("Errno::ENOENT, please") rescue nil
         weather_service.update(:parsing_exception) rescue nil
         weather_service.update(:unexpected) rescue nil
-        contract.call { Hash.new } rescue nil
+        contract.call { {} } rescue nil
       end
     end
 
@@ -135,7 +130,7 @@ RSpec.describe "Contract Sampling" do
         weather_service.update("Errno::ENOENT, please") rescue nil
         weather_service.update(:parsing_exception) rescue nil
         weather_service.update(:unexpected) rescue nil
-        contract.call { Hash.new } rescue nil
+        contract.call { {} } rescue nil
       end
     end
 

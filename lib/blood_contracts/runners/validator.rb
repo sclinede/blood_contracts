@@ -11,7 +11,7 @@ module BloodContracts
         BloodContracts::GUARANTEE_FAILURE,
         BloodContracts::UNEXPECTED_BEHAVIOR,
         BloodContracts::UNEXPECTED_EXCEPTION
-      ]
+      ].freeze
 
       def valid?
         (rules & ALL_INVALID_RULES).empty?

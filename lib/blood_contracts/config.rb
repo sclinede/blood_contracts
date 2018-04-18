@@ -32,13 +32,13 @@ module BloodContracts
                     # connection: -> { ... }
                     database_url: ENV["DATABASE_URL"],
                     samples_table_name: "blood_samples",
-                    config_table_name: "blood_config",
+                    config_table_name: "blood_config"
                   },
                   redis: {
                     # connection: -> { ... } # when :redis
                     redis_url: ENV["REDIS_URL"],
                     root_key: "blood_redis"
-                  },
+                  }
                 },
                 tags: {},
                 debug_file: ".bcontracts_debug"

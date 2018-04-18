@@ -18,7 +18,7 @@ module BloodContracts
       def statistics_per_rule(*rules)
         Hash[
           Array(rules).map do |rule|
-            next [rule.to_s, 0] unless File.exists?(stats_path)
+            next [rule.to_s, 0] unless File.exist?(stats_path)
 
             [rule.to_s, samples_count(rule)]
           end

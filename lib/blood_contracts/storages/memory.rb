@@ -5,7 +5,7 @@ module BloodContracts
 
       attr_reader :storage
       def init
-        return unless storage.nil?
+        return unless @storage.nil?
         if global_store.nil?
           BloodContracts.instance_variable_set(
             :@memory_store, storage_klass.new
@@ -53,10 +53,6 @@ module BloodContracts
 
       def global_store
         BloodContracts.instance_variable_get(:@memory_store)
-      end
-
-      def storage
-        @storage ||= global_store.to_h[contract_name]
       end
 
       def prepare_statistics_storage(period)
