@@ -15,7 +15,7 @@ module BloodContracts
     def call(*)
       return Contracts::Round.new unless debugging_samples?
 
-      matcher.call(storage.load_sample(runs.next)) do |rules|
+      matcher.call(sampler.load_sample(runs.next)) do |rules|
         Array(rules).each(&statistics.method(:store))
       end
     end
@@ -28,7 +28,7 @@ module BloodContracts
     private
 
     def debug_runs
-      return storage.find_all_samples(ENV["debug"]).each if ENV["debug"]
+      return sampler.find_all_samples(ENV["debug"]).each if ENV["debug"]
       raise "Nothing to debug!" unless File.exist?(config.debug_file)
       found_samples.each
     end
@@ -37,7 +37,7 @@ module BloodContracts
       @found_samples ||= File.foreach(config.debug_file)
                              .map { |s| s.delete("\n") }
                              .flat_map do |sample|
-        storage.find_all_samples(sample)
+        sampler.find_all_samples(sample)
       end.compact
     end
 
@@ -45,12 +45,8 @@ module BloodContracts
       BloodContracts.config
     end
 
-    def unexpected_suggestion
-      ENV["debug"] || "\n - #{found_samples.join("\n - ")}"
-    end
-
     def suggestion
-      ENV["debug"] || "\n - #{found_samples.join("\n - ")}"
+      "\n - #{found_samples.join("\n - ")}"
     end
 
     def debugging_samples?

@@ -40,4 +40,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "pg", "~> 1.0"
   spec.add_development_dependency "dotenv", "~> 2.0"
   spec.add_development_dependency "rubocop", "~> 0.52"
+  spec.add_development_dependency "concurrent-ruby", "~> 1.0"
 end

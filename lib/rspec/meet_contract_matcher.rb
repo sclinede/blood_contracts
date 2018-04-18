@@ -1,10 +1,10 @@
-require_relative "../blood_contracts/concerns/testable.rb"
+require_relative "../blood_contracts/contracts/testable.rb"
 
 module RSpec
   module MeetContractMatcher
     extend RSpec::Matchers::DSL
-    Testable = ::BloodContracts::Concerns::Testable
-    Iterator = ::BloodContracts::Contracts::Iterator
+    Testable = ::BloodContracts::Contracts::Testable
+    Iterator = ::BloodContracts::Runners::Iterator
 
     matcher :meet_contract_rules_of do |contract|
       match do |block|

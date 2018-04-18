@@ -1,15 +1,14 @@
-require_relative "./dsl.rb"
-require_relative "./patching.rb"
-require_relative "./switching.rb"
-require_relative "./storage_builder.rb"
+require_relative "contracts/dsl.rb"
+require_relative "contracts/patching.rb"
+require_relative "contracts/switching.rb"
+require_relative "contracts/toolbox.rb"
 
 module BloodContracts
   class BaseContract
-    extend DSL
-    extend Patching
-    include StorageBuilder
-    include Switching
-
+    extend Contracts::DSL
+    extend Contracts::Patching
+    include Contracts::Toolbox
+    include Contracts::Switching
 
     # rubocop:disable Metrics/MethodLength
     def call(*args, **kwargs)
@@ -47,17 +46,21 @@ module BloodContracts
 
     def runner
       @runner ||= Runner.new(
-        context: self, contract: _contract, storage: storage
+        context: self, contract: _contract,
+        sampler: sampler, statistics: statistics
       )
     end
 
     def _contract
-      @_contract ||= Hash[
-        self.class.rules.map do |name|
-          stats_requirements = self.class.statistics_rules[name].to_h
-          [name, stats_requirements.merge(check: method("_#{name}"))]
-        end
-      ]
+      return @_contract if defined? @_contract
+      guarantees = self.class.guarantees_rules.map do |name|
+        [name, {check: method("guarantee_#{name}")}]
+      end
+      expectations = self.class.expectations_rules.map do |name|
+        stats_requirements = self.class.statistics_rules[name].to_h
+        [name, stats_requirements.merge(check: method("expectation_#{name}"))]
+      end
+      @_contract = { guarantees: guarantees, expectations: expectations }
     end
   end
 end

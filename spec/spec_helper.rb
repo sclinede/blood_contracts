@@ -3,6 +3,11 @@ require "blood_contracts"
 require "dotenv"
 Dotenv.load(".env.test")
 
+require_relative "support/weather_contract"
+require_relative "support/weather_service"
+
+WeatherContract.apply_to(klass: WeatherService, methods: :update)
+
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
   config.example_status_persistence_file_path = ".rspec_status"

@@ -1,8 +1,8 @@
 RSpec.describe BloodContracts do
-  describe ".run_name" do
-    before { BloodContracts.run_name = "External run name" }
+  describe ".session_name" do
+    before { BloodContracts.session_name = "External session name" }
 
-    it { expect(BloodContracts.run_name).to eq("External run name") }
+    it { expect(BloodContracts.session_name).to eq("External session name") }
   end
 
   describe ".storage" do
@@ -25,12 +25,23 @@ RSpec.describe BloodContracts do
     end
   end
 
-  context "when custom storage configured" do
+  describe ".enabled?" do
+
   end
 
-  context "when custom sampling configured" do
+  describe ".enable!" do
+
   end
 
-  context "when RSpec is defined" do
+  describe ".disable!" do
+
+  end
+
+  describe ".shared_storage?" do
+
+  end
+
+  describe ".shared_storage?" do
+
   end
 end

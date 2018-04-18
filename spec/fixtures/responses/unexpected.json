@@ -1,0 +1,54 @@
+{
+    "coord": {
+        "lon": -0.13,
+        "lat": 51.51
+    },
+    "weather": [
+        {
+            "id": 721,
+            "main": "Haze",
+            "description": "haze",
+            "icon": "50d"
+        },
+        {
+            "id": 701,
+            "main": "Mist",
+            "description": "mist",
+            "icon": "50d"
+        },
+        {
+            "id": 741,
+            "main": "Fog",
+            "description": "fog",
+            "icon": "50d"
+        }
+    ],
+    "base": "stations",
+    "main": {
+        "temp": 100.65,
+        "pressure": 1002,
+        "humidity": 87,
+        "temp_min": 279.15,
+        "temp_max": 283.15
+    },
+    "visibility": 3800,
+    "wind": {
+        "speed": 2.6,
+        "deg": 360
+    },
+    "clouds": {
+        "all": 90
+    },
+    "dt": 1523550420,
+    "sys": {
+        "type": 1,
+        "id": 5091,
+        "message": 0.0043,
+        "country": "GB",
+        "sunrise": 1523509807,
+        "sunset": 1523559193
+    },
+    "id": 2643743,
+    "name": "London",
+    "cod": 200
+}

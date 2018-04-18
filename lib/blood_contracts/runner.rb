@@ -1,73 +1,78 @@
-require_relative "contracts/validator"
-require_relative "contracts/round"
-require_relative "contracts/matcher"
+require_relative "round"
+require_relative "runners/validator"
+require_relative "runners/matcher"
+require_relative "runners/statistics"
 require_relative "contracts/description"
-require_relative "contracts/iterator"
-require_relative "contracts/statistics"
 
 module BloodContracts
   class Runner
     extend Dry::Initializer
 
     option :contract
-    option :storage
-
+    option :sampler
+    option :statistics
     option :context, optional: true
-
-    option :statistics, default: -> { Contracts::Statistics.new(storage) }
-    option :matcher, default: -> { Contracts::Matcher.new(contract) }
+    option :matcher, default: -> { Runners::Matcher.new(contract) }
 
     # FIXME: block argument is missing.
     def call(args:, kwargs:, output: "", meta: {}, error: nil)
       (output, meta, error = yield(meta)) if block_given?
-      round = Contracts::Round.new(
-        input: { args: args, kwargs: kwargs },
+      round = Round.new(
+        input: {
+          args: args.map(&:to_s),
+          kwargs: kwargs.transform_values(&:to_s)
+        },
         output: output, error: error, meta: meta
       )
       matcher.call(round) do |rules|
         Array(rules).each(&statistics.method(:store))
-        storage.store(round: round, rules: rules, context: context)
+        sampler.store(round: round, rules: rules, context: context)
+        raise_exception(round) unless valid?(rules)
       end
     end
 
-    def valid?
-      Contracts::Validator.new(contract).valid?(statistics)
+    def valid?(rules)
+      Runners::Validator.new(contract, rules, statistics).valid?
     end
 
     # FIXME: Move to locales
     def failure_message
       intro = "expected that given Proc would meet the contract:"
-
-      if statistics.found_unexpected_behavior?
-        "#{intro}\n#{contract_description}\n#{statistics}"\
-        "For further investigations check: #{unexpected_suggestion}"
-      else
-        "#{intro}\n#{contract_description}\n#{statistics}"\
-          "For further investigations check: #{suggestion}"
-      end
+      "#{intro}\n#{contract_description}\n#{statistics}"\
+      "For further investigations check storage (#{sampler.storage.class}): "\
+      "#{suggestion}"
     end
 
     # FIXME: Move to locales
     def description
       "meet the contract:\n#{contract_description} \n#{statistics}"\
-      "For further investigations check: #{suggestion}\n"
+      "For further investigations check storage (#{sampler.storage.class}): "\
+      "#{suggestion}\n"
     end
     alias :to_s :description
 
     protected
 
+    def raise_exception(round)
+      return unless BloodContracts.config.raise_on_failure
+      if statistics.guarantees_failed?
+        raise BloodContracts::GuaranteesFailure, round.to_h
+      elsif statistics.found_unexpected_behavior?
+        raise BloodContracts::ExpectationsFailure, round.to_h
+      end
+    end
+
     def contract_description
       @contract_description ||= Contracts::Description.call(contract)
     end
 
-    def unexpected_suggestion
-      storage.unexpected_suggestion
-    end
-
     def suggestion
-      storage.suggestion
+      if statistics.found_unexpected_behavior?
+        "[session_name=#{sampler.session},"\
+        "rule=#{BloodContracts::UNEXPECTED_BEHAVIOR}]"
+      else
+        "[session_name=#{sampler.session}}]"
+      end
     end
-
-    def match_rules?; end
   end
 end
