@@ -10,6 +10,7 @@ module BloodContracts
                 enabled: false,
                 raise_on_failure: true,
                 statistics: {
+                  enabled: false,
                   period: 3600,
                   storage: :memory
                 },

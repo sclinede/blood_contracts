@@ -23,12 +23,12 @@ module BloodContracts
       matcher.call(round) do |rules|
         Array(rules).each(&statistics.method(:store))
         sampler.store(round: round, rules: rules, context: context)
-        raise_exception(round, rules) unless valid?(rules)
+        validate!(round, rules)
       end
     end
 
-    def valid?(rules)
-      Runners::Validator.new(contract, rules, statistics).valid?
+    def validate!(round, rules)
+      Runners::Validator.new(contract, rules, round).validate!
     end
 
     # FIXME: Move to locales
@@ -51,17 +51,6 @@ module BloodContracts
 
     def matcher
       Runners::Matcher.new(contract)
-    end
-
-    RULE_2_EXCEPTION_MAP = {
-      BloodContracts::GUARANTEE_FAILURE => BloodContracts::GuaranteesFailure,
-      BloodContracts::UNEXPECTED_BEHAVIOR => BloodContracts::ExpectationsFailure
-    }.freeze
-
-    def raise_exception(round, rules)
-      return unless BloodContracts.config.raise_on_failure
-      exception = rules.reduce(nil) { |a, e| a || RULE_2_EXCEPTION_MAP[e] }
-      raise exception, round.to_h if exception
     end
 
     def contract_description

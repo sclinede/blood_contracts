@@ -1,6 +1,8 @@
 require "spec_helper"
 
 RSpec.describe "Contract Sampling" do
+  apply_contract
+
   before do
     BloodContracts.config do |config|
       config.enabled = true
@@ -13,44 +15,189 @@ RSpec.describe "Contract Sampling" do
       }
     end
   end
-  after do
-    contract.sampler.delete_all_samples(
-      session: contract.sampler.utils.session,
-      contract: contract.sampler.utils.contract_name
-    )
-  end
+  after { contract.sampler.delete_all }
+  after { contract.statistics.clear_all! }
 
   let(:default_tag_limit) { 3 }
-
   let(:weather_service) { WeatherService.new }
-  let(:contract) { WeatherContract.new }
+  let(:contract) { WeatherUpdateContract.new }
 
   describe "Sample contents" do
     before do
       weather_service.update(:london)
+      weather_service.update(:saint_p)
       weather_service.update(:code_404)
       weather_service.update(:parsing_exception) rescue nil
       weather_service.update(:unexpected) rescue nil
+      weather_service.update("Errno::ENOENT, please") rescue nil
+      contract.call { {} } rescue nil
     end
+
+    let(:response) { kind_of(::WeatherService::Response) }
+    let(:meta) { hash_including("checked_rules" => kind_of(Array)) }
 
     def load_sample(rule)
-      contract.sampler.load_sample(
-        rule: rule,
-        session: contract.sampler.utils.session,
-        contract: contract.name
-      )
+      contract.sampler.load(rule: rule)
     end
 
-    it "loads :usual sample correctly" do
+    context "when sample is :usual" do
+      let(:input) do
+        hash_including(
+          "args" => [:saint_p].inspect.inspect,
+          "kwargs" => {}.inspect.inspect
+        )
+      end
+
+      it "loads sample correctly" do
+        round = contract.sampler.load(rule: :usual)
+        expect(round.input).to match(input)
+        expect(round.response).to match(response)
+        expect(round.response.temperature).to eq(8.5)
+        expect(round.response.city).to eq("Saint-Petersburg")
+        expect(round.meta).to match(meta)
+        expect(round.meta["checked_rules"].size).to eq(8)
+      end
     end
 
-    it "loads :client_error sample correctly" do
+    context "when sample is :client_error" do
+      let(:input) do
+        hash_including(
+          "args" => [:code_404].inspect.inspect,
+          "kwargs" => {}.inspect.inspect
+        )
+      end
+
+      it "loads sample correctly" do
+        round = contract.sampler.load(rule: :client_error)
+        expect(round.input).to match(input)
+        expect(round.response).to match(response)
+        expect(round.response.code).to eq("404")
+        expect(round.response.error).to eq("Internal error")
+        expect(round.meta).to match(meta)
+        expect(round.meta["checked_rules"].size).to eq(8)
+      end
     end
 
-    it "loads :parsing_exception sample correctly" do
+    context "when sample is :parsing_error" do
+      let(:input) do
+        hash_including(
+          "args" => [:parsing_exception].inspect.inspect,
+          "kwargs" => {}.inspect.inspect
+        )
+      end
+
+      it "loads sample correctly" do
+        round = contract.sampler.load(rule: :parsing_error)
+        expect(round.input).to match(input)
+        expect(round.response).to be_nil
+        expect(round.input_preview).to match(/args.*parsing_exception/)
+        expect(round.response_preview).to match(/xml/)
+        expect(round.error.keys).to include(JSON::ParserError.to_s)
+        expect(round.meta).to match(meta)
+        expect(round.meta["checked_rules"].size).to eq(8)
+        expect { JSON.parse(round.meta["raw_response"]) }
+          .to raise_error(JSON::ParserError)
+      end
     end
 
-    it "loads :__unexpected_behavior__ sample correctly" do
+    context "when sample is :__guarantee_failure__" do
+      let(:input) do
+        hash_including(
+          "args" => [].inspect.inspect,
+          "kwargs" => {}.inspect.inspect
+        )
+      end
+
+      it "loads sample correctly" do
+        round = contract.sampler.load(rule: BloodContracts::GUARANTEE_FAILURE)
+        expect(round.input).to match(input)
+        expect(round.response).to be_nil
+        expect(round.input_preview).to match(/args.*\[\]/)
+        expect(round.response_preview).to match(//)
+        expect(round.error).to be_empty
+        expect(round.meta).to match(meta)
+        expect(round.meta["checked_rules"].size).to eq(1)
+      end
+    end
+
+    context "when sample is :__unexpected_behavior__" do
+      let(:input) do
+        hash_including(
+          "args" => [:unexpected].inspect.inspect,
+          "kwargs" => {}.inspect.inspect
+        )
+      end
+
+      it "loads sample correctly" do
+        round = contract.sampler.load(rule: BloodContracts::UNEXPECTED_BEHAVIOR)
+        expect(round.input).to match(input)
+        expect(round.response).to match(response)
+        expect(round.input_preview).to match(/args.*unexpected/)
+        expect(round.response_preview).to match(//)
+        expect(round.error).to be_empty
+        expect(round.meta).to match(meta)
+        expect(round.meta["checked_rules"].size).to eq(8)
+      end
+    end
+
+    context "when sample is :__unexpected_exception__" do
+      let(:input) do
+        hash_including(
+          "args" => ["Errno::ENOENT, please"].inspect.inspect,
+          "kwargs" => {}.inspect.inspect
+        )
+      end
+
+      it "loads sample correctly" do
+        round = contract.sampler.load(
+          rule: BloodContracts::UNEXPECTED_EXCEPTION
+        )
+        expect(round.input).to match(input)
+        expect(round.response).to be_nil
+        expect(round.input_preview).to match(/args.*Errno::ENOENT, please/)
+        expect(round.response_preview).to match(//)
+        expect(round.error.keys).to include(Errno::ENOENT.to_s)
+        expect(round.meta).to match(meta)
+        expect(round.meta["checked_rules"].size).to eq(8)
+      end
+    end
+
+    context "when sample is :saint_p_weather" do
+      let(:input) do
+        hash_including(
+          "args" => [:saint_p].inspect.inspect,
+          "kwargs" => {}.inspect.inspect
+        )
+      end
+
+      it "loads sample correctly" do
+        round = contract.sampler.load(rule: :saint_p_weather)
+        expect(round.input).to match(input)
+        expect(round.response).to match(response)
+        expect(round.response.temperature).to eq(8.5)
+        expect(round.response.city).to eq("Saint-Petersburg")
+        expect(round.meta).to match(meta)
+        expect(round.meta["checked_rules"].size).to eq(8)
+      end
+    end
+
+    context "when sample is :london_weather" do
+      let(:input) do
+        hash_including(
+          "args" => [:london].inspect.inspect,
+          "kwargs" => {}.inspect.inspect
+        )
+      end
+
+      it "loads sample correctly" do
+        round = contract.sampler.load(rule: :london_weather)
+        expect(round.input).to match(input)
+        expect(round.response).to match(response)
+        expect(round.response.temperature).to eq(8.5)
+        expect(round.response.city).to eq("London")
+        expect(round.meta).to match(meta)
+        expect(round.meta["checked_rules"].size).to eq(8)
+      end
     end
   end
 

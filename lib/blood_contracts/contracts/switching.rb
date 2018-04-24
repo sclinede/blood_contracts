@@ -16,9 +16,7 @@ module BloodContracts
       end
 
       def enabled?
-        if Thread.current[name].nil?
-          Thread.current[name] = switcher.contract_enabled?
-        end
+        Thread.current[name] = switcher.enabled? if Thread.current[name].nil?
         !!Thread.current[name]
       end
 

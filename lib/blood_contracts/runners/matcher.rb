@@ -27,7 +27,7 @@ module BloodContracts
       end
 
       def match_guarantees!(round)
-        return if contract_hash[:guarantees].all? do |name, rule|
+        return if contract_hash.guarantees.all? do |name, rule|
           round.meta[:checked_rules] << name
           rule.check.call(round)
         end
@@ -36,7 +36,7 @@ module BloodContracts
 
       def match_expectations!(round)
         match = Hash[
-          contract_hash[:expectations].select do |name, rule|
+          contract_hash.expectations.select do |name, rule|
             round.meta[:checked_rules] << name
             rule.check.call(round)
           end

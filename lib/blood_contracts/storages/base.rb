@@ -52,7 +52,7 @@ module BloodContracts
 
       def write(writer, cntxt, round_data)
         writer = cntxt.method(writer) if cntxt && writer.respond_to?(:to_sym)
-        writer.call(round_data).encode(
+        writer.call(round_data).to_s.encode(
           "UTF-8", invalid: :replace, undef: :replace, replace: "?"
         )
       end
@@ -70,11 +70,13 @@ module BloodContracts
       end
 
       def load_sample(sample_name = nil, **kwargs)
-        Contracts::Round.new(
+        Round.new(
           input:  load_sample_chunk(:input,  sample_name, **kwargs),
           output: load_sample_chunk(:output, sample_name, **kwargs),
           meta:   load_sample_chunk(:meta,   sample_name, **kwargs),
-          error:  load_sample_chunk(:error,  sample_name, **kwargs)
+          error:  load_sample_chunk(:error,  sample_name, **kwargs),
+          input_preview:  load_sample_preview(:input, sample_name, **kwargs),
+          output_preview:  load_sample_preview(:output, sample_name, **kwargs)
         )
       end
 

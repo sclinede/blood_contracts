@@ -6,8 +6,10 @@ module BloodContracts
       WRITERS_4_SAMPLER = {
         input_writer: :input_writer=,
         request_writer: :input_writer=,
+        request_formatter: :input_writer=,
         output_writer: :output_writer=,
-        response_writer: :output_writer=
+        response_writer: :output_writer=,
+        response_formatter: :output_writer=
       }.freeze
 
       SERIALIZERS_4_SAMPLER = {
@@ -30,7 +32,7 @@ module BloodContracts
 
         SERIALIZERS_4_SAMPLER.each do |serializer_method, sampler_accessor|
           next unless respond_to?(serializer_method)
-          s.send(sampler_accessor, serializer_method)
+          s.send(sampler_accessor, send(serializer_method))
         end
 
         @sampler = s.tap(&:init)

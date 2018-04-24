@@ -40,12 +40,6 @@ module BloodContracts
     @sampler ||= Sampler.new(contract_name: ALL_CONTRACTS_ACCESS).tap(&:init)
   end
 
-  # TODO: do we need global statistics ?
-  def statistics
-    @statistics ||=
-      Statistics.new(contract_name: ALL_CONTRACTS_ACCESS).tap(&:init)
-  end
-
   def switcher
     @switcher ||= Switcher.new(contract_name: ALL_CONTRACTS_ACCESS).tap(&:init)
   end

@@ -23,22 +23,25 @@ module BloodContracts
       end
     end
 
-    def_delegators :storage, :init, :total_statistics, :filtered_statistics,
-                   :increment_statistics, :period_statistics
+    def_delegator :storage, :init
 
     # def period_just_closed?(time = Time.now)
     #   # FIXME: need better way to close periods
-    #   period = time.to_i / configured_period
+    #   period = time.to_i / period_size
     #   previous_period = period - 1
     #   !storage.statistics_period_closed?(period) &&
     #     !storage.statistics_period_closed?(previous_period)
     # end
 
-    def current_period(time = Time.now)
-      time.to_i / configured_period
+    def current(period = current_period)
+      storage.period_statistics(period)
     end
 
-    def configured_period
+    def current_period(time = Time.now)
+      time.to_i / period_size
+    end
+
+    def period_size
       BloodContracts.statistics_config[:period] || 1
     end
 
@@ -46,24 +49,39 @@ module BloodContracts
       storage.total_statistics
     end
 
+    def clear_all!
+      storage.clear_all_statistics!
+    end
+
+    def clear!(period)
+      storage.clear_statistics(period)
+    end
+
     def filtered(time: Time.now, period: nil)
-      period ||= time.to_i / configured_period
+      period ||= time.to_i / period_size
       storage.filtered_statistics(period)
     end
 
     def guarantees_failed?(period = current_period)
-      period_statistics(period).key?(BloodContracts::GUARANTEE_FAILURE)
+      storage.period_statistics(period).key?(
+        BloodContracts::GUARANTEE_FAILURE
+      )
     end
 
     def found_unexpected_behavior?(period = current_period)
-      period_statistics(period).key?(BloodContracts::UNEXPECTED_BEHAVIOR)
+      storage.period_statistics(period).key?(
+        BloodContracts::UNEXPECTED_BEHAVIOR
+      )
     end
 
     def found_unexpected_exception?(period = current_period)
-      period_statistics(period).key?(BloodContracts::UNEXPECTED_EXCEPTION)
+      storage.period_statistics(period).key?(
+        BloodContracts::UNEXPECTED_EXCEPTION
+      )
     end
 
     def store(rule)
+      return unless BloodContracts.statistics_config[:enabled]
       storage.increment_statistics(rule)
     end
   end

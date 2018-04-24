@@ -12,10 +12,10 @@ if defined?(Concurrent::Future)
         end
 
         def runner
-          @runner ||=
-            respond_to?(:testing?) ? _runner : RunnerFuture.new(_runner)
+          @runner ||= RunnerFuture.new(_runner)
         end
 
+        # FIXME: track errors in the execution
         class RunnerFuture < SimpleDelegator
           def call(**kwargs)
             Concurrent::Future.execute { __getobj__.call(**kwargs) }

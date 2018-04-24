@@ -2,7 +2,7 @@ require "oj"
 
 module BloodContracts
   class Sampler
-    module Serializers
+    module SerializersWriters
       def input_serializer=(serializer)
         @input_serializer = Serializer.call(serializer)
       end

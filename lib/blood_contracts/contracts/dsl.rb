@@ -15,7 +15,11 @@ require_relative "debuggable"
 #       api_call.response.failure?
 #     end
 #
-#     expect_statistics :failure, limit: "30%" # of stats period batch
+#     expect_error :timeout do |api_call|
+#       api_call.error.key?(Timout::Error)
+#     end
+#
+#     statistics_guarantee :failure, limit: "30%" # of stats period batch
 #   end
 module BloodContracts
   module Contracts
@@ -28,26 +32,35 @@ module BloodContracts
         child_klass.instance_variable_set(:@expectations_rules, Set.new)
         child_klass.instance_variable_set(:@guarantees_rules, Set.new)
         child_klass.instance_variable_set(:@statistics_rules, {})
-        # TODO: add helper to include Debugger, but no need to run it all the
-        # time
-        # child_klass.prepend Debuggable
       end
 
-      def expectation_rule(name, tag: DEFAULT_TAG, inherit: nil, &block)
-        if inherit
-          define_method("expectation_#{name}") do |round|
-            send("expectation_#{inherit}", round) && yield(round)
-          end
-        else
-          define_method("expectation_#{name}", &block)
+      def expectation_rule(name, tag: DEFAULT_TAG, inherit: nil)
+        define_method("expectation_#{name}") do |round|
+          next if round.error?
+          next(yield(round)) unless !!inherit
+          send("expectation_#{inherit}", round) && yield(round)
         end
         expectations_rules << name
         update_tags(name, tag)
       end
       alias :expect :expectation_rule
 
-      def guarantee_rule(name, tag: DEFAULT_TAG, &block)
-        define_method("guarantee_#{name}", &block)
+      def expectation_error_rule(name, tag: DEFAULT_TAG, inherit: nil)
+        define_method("expectation_#{name}") do |round|
+          next unless round.error?
+          next(yield(round)) unless !!inherit
+          send("expectation_#{inherit}", round) && yield(round)
+        end
+        expectations_rules << name
+        update_tags(name, tag)
+      end
+      alias :expect_error :expectation_error_rule
+
+      def guarantee_rule(name, tag: DEFAULT_TAG, skip_on_error: true)
+        define_method("guarantee_#{name}") do |round|
+          next(true) if skip_on_error && round.error?
+          yield(round)
+        end
         guarantees_rules << name
         update_tags(name, tag)
       end
@@ -61,7 +74,7 @@ module BloodContracts
           limit: limit, threshold: threshold
         }.compact
       end
-      alias :expect_statistics :statistics_rule
+      alias :statistics_guarantee :statistics_rule
 
       private
 

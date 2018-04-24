@@ -44,6 +44,15 @@ module BloodContracts
           execute(:load_sample_chunk, options).first.to_h.fetch("dump")
         end
 
+        def load_sample_preview(*args)
+          raise ArgumentError unless args.size.eql?(5)
+          options = %i(
+            session_name period_name rule_name round_name chunk_name
+          ).zip(args)
+
+          execute(:load_sample_preview, options).first.to_h.fetch("preview")
+        end
+
         def find_sample(session_name, period_name, rule_name, round_name)
           execute(
             :find_all_samples,

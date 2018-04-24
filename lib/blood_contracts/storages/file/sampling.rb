@@ -30,6 +30,11 @@ module BloodContracts
           sampler.utils.exists?(sample_name)
         end
 
+        def load_sample_preview(chunk_name, path = nil, **kwargs)
+          sample_path = find_sample(path, **kwargs)
+          ::File.read("#{sample_path}/#{chunk_name}")
+        end
+
         def load_sample_chunk(chunk_name, path = nil, **kwargs)
           sample_path = find_sample(path, **kwargs)
           send("#{chunk_name}_serializer")[:load].call(
@@ -48,10 +53,10 @@ module BloodContracts
           end
         end
 
-        def serialize_sample_chunk(chunk, rule, round, context)
+        def serialize_sample_chunk(chunk, rule, round_data, context)
           return unless (dump_proc = send("#{chunk}_serializer")[:dump])
           name = sampler.sample.name(rule)
-          data = round.send(chunk)
+          data = round_data.send(chunk)
           ::File.open("#{name}/#{chunk}.dump", "w+") do |f|
             f << write(dump_proc, context, data)
           end

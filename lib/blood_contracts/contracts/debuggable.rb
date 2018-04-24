@@ -1,5 +1,3 @@
-require_relative "../runners/iterator.rb"
-
 module BloodContracts
   module Contracts
     module Debuggable
@@ -11,8 +9,6 @@ module BloodContracts
 
       def disable_debug!
         Thread.current["#{to_s.pathize}_debug"] = false
-        @runner = nil
-        runner
         debug_enabled?
       end
 
@@ -20,16 +16,13 @@ module BloodContracts
         !!Thread.current["#{to_s.pathize}_debug"] || !!ENV["DEBUG_CONTRACTS"]
       end
 
-      def runner
+      def debugger
         return super unless debug_enabled?
-        return @runner if @runner.is_a?(Debugger)
-        @runner =
-          Debugger.new(
-            context: self, contract: _contract,
-            storage: storage, statistics: statistics
-          )
+        @debugger ||= Debugger.new(
+          context: self, contract: _contract,
+          storage: storage, statistics: statistics
+        )
       end
-      alias :debug_runner :runner
 
       def warn_about_reraise_on(error)
         error ||= {}
@@ -39,19 +32,18 @@ module BloodContracts
         TEXT
       end
 
-      Iterator = ::BloodContracts::Runners::Iterator
-
+      # rubocop:disable Lint/Debugger
       def call(*args, **kwargs)
         return super unless debug_enabled?
 
         output = nil
-        iterator = Iterator.new(debug_runner.iterations)
-        iterator.next do
-          round = debug_runner.call
+        debugger.iterations.times do
+          round = debugger.call
           warn_about_reraise_on(round.error)
         end
         output
       end
+      # rubocop:enable Lint/Debugger
     end
   end
 end

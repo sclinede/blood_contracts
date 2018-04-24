@@ -5,14 +5,21 @@ module BloodContracts
 
       attr_reader :storage
       def init
-        return unless @storage.nil?
-        if global_store.nil?
-          BloodContracts.instance_variable_set(
-            :@memory_store, storage_klass.new
-          )
-        end
+        init_global_store
+        @storage = global_store[statistics_root]
+        return @storage unless @storage.nil?
         global_store[statistics_root] = storage_klass.new
         @storage = global_store[statistics_root]
+      end
+
+      def clear_all_statistics!
+        global_store[statistics_root] = nil
+        @storage = global_store[statistics_root]
+      end
+
+      def clear_statistics!(period)
+        storage.fetch(period)
+        storage[period] = nil
       end
 
       def increment_statistics(rule, period = statistics.current_period)
@@ -28,17 +35,17 @@ module BloodContracts
       def filtered_statistics(*periods)
         stats = storage.values_at(*periods)
         periods.map! do |period_int|
-          Time.at(period_int * statistics.configured_period)
+          Time.at(period_int * statistics.period_size)
         end
         Hash[periods.zip(stats)]
       end
 
       def total_statistics
         Hash[
-          storage.sort_by { |(period_int, _)| -period_int }
-        ].transform_keys do |period_int|
-          Time.at(period_int * statistics.configured_period)
-        end
+          storage.sort_by { |(period_int, _)| -period_int }.map do |k, v|
+            [Time.at(k * statistics.period_size), v]
+          end
+        ]
       end
 
       private
@@ -49,6 +56,11 @@ module BloodContracts
                            else
                              ::Hash
                            end
+      end
+
+      def init_global_store
+        return unless global_store.nil?
+        BloodContracts.instance_variable_set(:@memory_store, storage_klass.new)
       end
 
       def global_store

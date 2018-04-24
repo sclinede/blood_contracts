@@ -1,15 +1,18 @@
 require "spec_helper"
 
 RSpec.describe "Contract Rules Matching" do
+  apply_contract
+
   before do
     BloodContracts.config do |config|
       config.enabled = true
       config.raise_on_failure = true
     end
   end
+  after { contract.sampler.delete_all }
 
   let(:weather_service) { WeatherService.new }
-  let(:contract) { WeatherContract.new }
+  let(:contract) { WeatherUpdateContract.new }
 
   describe "Usual behavior" do
     it "do not fail the behavior" do

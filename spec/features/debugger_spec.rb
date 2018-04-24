@@ -1,6 +1,6 @@
 require "spec_helper"
 
-RSpec.feature "Contract Debugging", type: :feature do
+RSpec.describe "Contract Debugging", type: :feature do
   describe "No samples" do
   end
 

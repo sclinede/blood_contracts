@@ -1,10 +1,6 @@
 module BloodContracts
   module Contracts
     module Testable
-      def testing?
-        true
-      end
-
       # rubocop:disable Metrics/MethodLength
       def call(*args, **kwargs)
         output = nil

@@ -1,9 +1,5 @@
 module BloodContracts
   class Debugger < Runner
-    option :statistics, default: -> do
-      Contracts::Statistics.new(storage, iterations)
-    end
-
     def runs
       @runs ||= debug_runs # storage.find_all_samples(ENV["debug"]).each
     end
@@ -13,7 +9,7 @@ module BloodContracts
     end
 
     def call(*)
-      return Contracts::Round.new unless debugging_samples?
+      return Contracts::Round.new unless debugging_samples_available?
 
       matcher.call(sampler.load_sample(runs.next)) do |rules|
         Array(rules).each(&statistics.method(:store))
@@ -21,8 +17,8 @@ module BloodContracts
     end
 
     def description
-      return super if debugging_samples?
-      "be skipped in current debugging session"
+      return super if debugging_samples_available?
+      " skipped in current debugging session"
     end
 
     private
@@ -49,7 +45,7 @@ module BloodContracts
       "\n - #{found_samples.join("\n - ")}"
     end
 
-    def debugging_samples?
+    def debugging_samples_available?
       runs.size.positive?
     end
   end

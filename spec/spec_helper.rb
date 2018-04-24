@@ -3,10 +3,8 @@ require "blood_contracts"
 require "dotenv"
 Dotenv.load(".env.test")
 
-require_relative "support/weather_contract"
 require_relative "support/weather_service"
-
-WeatherContract.apply_to(klass: WeatherService, methods: :update)
+require_relative "support/weather_update_contract"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

@@ -18,8 +18,27 @@ module BloodContracts
         BloodContracts::Storages::Dummy
       end
     end
-    def_delegators :storage, :init,
-                   :contract_enabled?, :enable_contract!, :disable_contract!,
-                   :enable_contracts_global!, :disable_contracts_global!
+
+    def enabled?
+      storage.contract_enabled?(contract_name)
+    end
+
+    def enable!
+      storage.enable_contract!(contract_name)
+    end
+
+    def enable_global!
+      storage.enable_contracts_global!
+    end
+
+    def disable!
+      storage.disable_contract!(contract_name)
+    end
+
+    def disable_global!
+      storage.disable_contracts_global!
+    end
+
+    def_delegator :storage, :init
   end
 end

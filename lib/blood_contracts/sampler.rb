@@ -1,5 +1,5 @@
 require_relative "./samplers/serializer.rb"
-require_relative "./samplers/serializers.rb"
+require_relative "./samplers/serializers_writers.rb"
 require_relative "./samplers/limiter.rb"
 
 module BloodContracts
@@ -45,9 +45,33 @@ module BloodContracts
     end
 
     def_delegators :storage, :init, :sample_exists?,
-                   :load_sample, :find_all_samples, :find_sample,
-                   :serialize_sample, :describe_sample, :samples_count,
-                   :delete_all_samples
+                   :find_sample, :serialize_sample, :describe_sample,
+                   :samples_count
+
+    def load(path = nil, **kwargs)
+      kwargs[:session] = kwargs.fetch(:session) { utils.session }
+      kwargs[:contract] = kwargs.fetch(:contract) { utils.contract_name }
+      storage.load_sample(path, **kwargs)
+    end
+
+    def find(path = nil, **kwargs)
+      kwargs[:session] = kwargs.fetch(:session) { utils.session }
+      kwargs[:contract] = kwargs.fetch(:contract) { utils.contract_name }
+      storage.find_sample(path, **kwargs)
+    end
+
+    def find_all(path = nil, **kwargs)
+      kwargs[:session] = kwargs.fetch(:session) { utils.session }
+      kwargs[:contract] = kwargs.fetch(:contract) { utils.contract_name }
+      storage.find_all_samples(path, **kwargs)
+    end
+
+    def delete_all(path = nil, **kwargs)
+      kwargs[:session] = kwargs.fetch(:session) { utils.session }
+      kwargs[:contract] = kwargs.fetch(:contract) { utils.contract_name }
+      storage.delete_all_samples(path, **kwargs)
+    end
+
     def limiter
       Samplers::Limiter.new(contract_name, storage)
     end
@@ -57,22 +81,22 @@ module BloodContracts
       raise ArgumentError
     end
 
-    include Serializers
+    include SerializersWriters
 
     def utils
       @utils ||= Samplers::Utils.new(storage.session, contract_name)
     end
 
     attr_reader :sample
-    def new_probe!
+    def create_sample!
       @sample = Samplers::Sample.new(utils.path, contract_name)
     end
 
     def current_period(time = Time.now)
-      time.to_i / configured_period
+      time.to_i / period_size
     end
 
-    def configured_period
+    def period_size
       BloodContracts.sampling_config[:period] || 1
     end
 
@@ -80,7 +104,7 @@ module BloodContracts
       return unless BloodContracts.sampling_config[:enabled]
       Array(rules).each do |rule_name|
         next if limiter.limit_reached?(rule_name)
-        new_probe!
+        create_sample!
         storage.describe_sample(rule_name, round, context)
         storage.serialize_sample(rule_name, round, context)
       end

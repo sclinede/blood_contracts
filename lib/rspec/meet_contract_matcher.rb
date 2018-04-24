@@ -1,4 +1,5 @@
 require_relative "../blood_contracts/contracts/testable.rb"
+require_relative "../blood_contracts/runners/iterator.rb"
 
 module RSpec
   module MeetContractMatcher

@@ -21,8 +21,23 @@ module BloodContracts
       @data["error"]
     end
 
+    def raw_error
+      @data["raw_error"]
+    end
+
+    def input_preview
+      @data["input_preview"]
+    end
+    alias :request_preview :input_preview
+
+    def output_preview
+      @data["output_preview"]
+    end
+    alias :response_preview :output_preview
+
     def initialize(**kwargs)
-      kwargs[:error] = wrap_error(kwargs[:error])
+      kwargs[:raw_error] = kwargs[:error]
+      kwargs[:error] = wrap_error(kwargs[:raw_error])
       kwargs[:input] = prepare_input(kwargs[:input])
       @data = Hashie.stringify_keys!(kwargs)
     end

@@ -31,11 +31,17 @@ module BloodContracts
         class SampleNotFound < StandardError; end
 
         def load_sample_chunk(chunk, path = nil, **kwargs)
-          raise SampleNotFound unless (found = find_sample(path, **kwargs))
-          session, period, rule, round = parse(found)
+          raise SampleNotFound unless (name = find_sample(path, **kwargs))
+          session, period, rule, round = parse(name)
           send("#{chunk}_serializer")[:load].call(
             query.load_sample_chunk(session, period, rule, round, chunk)
           )
+        end
+
+        def load_sample_preview(_chunk_name, path = nil, **kwargs)
+          raise SampleNotFound unless (name = find_sample(path, **kwargs))
+          session, period, rule, round = parse(name)
+          query.load_sample_preview(session, period, rule, round, chunk)
         end
 
         def describe_sample(rule, round_data, context)

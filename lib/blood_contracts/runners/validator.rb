@@ -5,54 +5,32 @@ module BloodContracts
 
       param :contract_hash, ->(v) { Hashie::Mash.new(v) }
       param :rules, method(:Array)
-      param :statistics
-
-      ALL_INVALID_RULES = [
-        BloodContracts::GUARANTEE_FAILURE,
-        BloodContracts::UNEXPECTED_BEHAVIOR,
-        BloodContracts::UNEXPECTED_EXCEPTION
-      ].freeze
+      param :round
 
       def valid?
         (rules & ALL_INVALID_RULES).empty?
-        # return true unless statistics.period_just_closed?
-        #
-        # last_run_stats = statistics.to_h
-        # statistics_expectations.all? do |rule, check|
-        #   percent = last_run_stats[rule.name]&.percent || 0.0
-        #   check.call(percent, rule)
-        # end
       end
 
-      private
+      # rubocop:disable Metrics/LineLength, Metrics/AbcSize
+      def validate!
+        return true if valid?
+        return false unless BloodContracts.config.raise_on_failure
 
-      def statistics_expectations
-        Hash[
-          contract_hash.map do |name, rule|
-            rule = rule.merge(name: name)
-            next [rule, method(:between_check)] if rule.threshold && rule.limit
-            next [rule, method(:threshold_check)] if rule.threshold
-            next [rule, method(:limit_check)] if rule.limit
-            [rule, method(:anyway)]
-          end
-        ]
+        raise GuaranteesFailure, round.to_h if rules.include?(GUARANTEE_FAILURE)
+        raise ExpectationsFailure, round.to_h if rules.include?(UNEXPECTED_BEHAVIOR)
+        # FIXME: we have to output the `round` for the case, somewhere...
+        raise round.raw_error if rules.include?(UNEXPECTED_EXCEPTION)
       end
+      # rubocop:enable Metrics/LineLength, Metrics/AbcSize
 
-      def between_check(value, rule)
-        value > rule.threshold && value <= rule.limit
-      end
+      GUARANTEE_FAILURE = BloodContracts::GUARANTEE_FAILURE
+      UNEXPECTED_BEHAVIOR = BloodContracts::UNEXPECTED_BEHAVIOR
+      GuaranteesFailure = BloodContracts::GuaranteesFailure
+      ExpectationsFailure = BloodContracts::ExpectationsFailure
 
-      def threshold_check(value, rule)
-        value > rule.threshold
-      end
-
-      def limit_check(value, rule)
-        value <= rule.limit
-      end
-
-      def anyway(_value, _rule)
-        true
-      end
+      ALL_INVALID_RULES = [
+        GUARANTEE_FAILURE, UNEXPECTED_BEHAVIOR, UNEXPECTED_EXCEPTION
+      ].freeze
     end
   end
 end

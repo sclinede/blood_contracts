@@ -1,6 +1,12 @@
+require_relative "debuggable"
+
 module BloodContracts
   module Contracts
     module Patching
+      def use_debugger
+        self.class.prepend BloodContracts::Debuggable
+      end
+
       def apply_to(klass:, methods:, override: false)
         contract_accessor = to_s.downcase.gsub(/\W/, "_")
         methods = Array(methods).join(",")
