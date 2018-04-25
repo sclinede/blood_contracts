@@ -2,15 +2,6 @@ module BloodContracts
   module Storages
     class Postgres < Base
       module ContractSwitcher
-        def drop_table!
-          query.execute(:drop_tables)
-        end
-
-        def create_tables!
-          query.execute(:create_tables)
-        end
-        alias :init :create_tables!
-
         def disable_contract!(a_contract_name = contract_name)
           query.execute(:disable_contract, contract_name: a_contract_name)
         end

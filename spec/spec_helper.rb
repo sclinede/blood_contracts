@@ -1,7 +1,8 @@
 require "bundler/setup"
-require "blood_contracts"
+
 require "dotenv"
 Dotenv.load(".env.test")
+require "blood_contracts"
 
 require_relative "support/weather_service"
 require_relative "support/weather_update_contract"

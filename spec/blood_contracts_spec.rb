@@ -5,22 +5,29 @@ RSpec.describe BloodContracts do
     it { expect(BloodContracts.session_name).to eq("External session name") }
   end
 
-  describe ".storage" do
+  describe ".sampler" do
     context "when default configuration" do
-      let(:expected_backend) { BloodContracts::Storages::FileBackend }
+      let(:expected_backend) { BloodContracts::Storages::File }
       it "has assigned storage" do
-        expect(BloodContracts.storage.backend).to be_kind_of(expected_backend)
+        expect(BloodContracts.sampler.storage).to be_kind_of(expected_backend)
       end
     end
 
     context "when custom storage configured" do
       before do
-        BloodContracts.config { |config| config.storage[:type] = :postgres }
+        BloodContracts.config do |config|
+          config.sampling["storage"] = :postgres
+        end
       end
-      let(:expected_backend) { BloodContracts::Storages::PostgresBackend }
+      after do
+        BloodContracts.config do |config|
+          config.sampling["storage"] = :file
+        end
+      end
+      let(:expected_backend) { BloodContracts::Storages::Postgres }
 
-      it "has assigned custom storage" do
-        expect(BloodContracts.storage.backend).to be_kind_of(expected_backend)
+      it "has assigned storage" do
+        expect(BloodContracts.sampler.storage).to be_kind_of(expected_backend)
       end
     end
   end

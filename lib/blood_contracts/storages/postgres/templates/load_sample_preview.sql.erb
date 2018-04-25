@@ -2,7 +2,7 @@ SELECT <%= @chunk_name %> as preview
 FROM <%= samples_table_name %>
 WHERE contract ~ '<%= connection.escape_string(contract_name) %>'
 AND session = '<%= connection.escape_string(session_name) %>'
-AND period = '<%= period_name %>'
+AND period = '<%= sampling_period_name %>'
 AND round = '<%= round_name %>'
 AND rule = '<%= connection.escape_string(@rule_name) %>'
 ORDER BY created_at DESC

@@ -20,10 +20,6 @@ module BloodContracts
 
       def init; end
 
-      def new_probe!
-        @sample = nil
-      end
-
       def enable_contracts_global!
         raise ArgumentError, <<~MESSAGE
           Global "hot" enable for contracts is not supported.

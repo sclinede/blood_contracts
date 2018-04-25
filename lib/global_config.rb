@@ -2,6 +2,7 @@ module BloodContracts::GlobalConfig
   class << self
     def extended(klass)
       klass.instance_variable_set(:@tags, {})
+      klass.apply_config!
     end
   end
 
@@ -19,8 +20,10 @@ module BloodContracts::GlobalConfig
   def apply_config!(config = BloodContracts.config)
     @storage_config = Hashie.symbolize_keys!(config.storage)
     @sampling_config = prepare_tool_config(config.sampling, config)
+    @sampler = nil
     @statistics_config = prepare_tool_config(config.statistics, config)
     @switcher_config = prepare_tool_config(config.switching, config)
+    @switcher = nil
   end
 
   def prepare_tool_config(source, config)

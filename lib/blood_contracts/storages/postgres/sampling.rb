@@ -2,10 +2,6 @@ module BloodContracts
   module Storages
     class Postgres < Base
       module Sampling
-        def parse(*args, **kwargs)
-          sampler.utils.parse(*args, **kwargs)
-        end
-
         def find_all_samples(path = nil, **kwargs)
           session, period, rule, round = parse(path, **kwargs).map do |v|
             v.sub("*", ".*")
@@ -47,8 +43,8 @@ module BloodContracts
         def describe_sample(rule, round_data, context)
           query.execute(
             :insert_sample,
-            period_name: sample.current_period,
-            round_name: sample.current_round,
+            sampling_period_name: sampler.current_period,
+            round_name: sampler.current_round,
             rule_name: rule,
             input: write(input_writer, context, round_data),
             output: write(output_writer, context, round_data)
@@ -60,12 +56,18 @@ module BloodContracts
           data = round_data.send(chunk)
           query.execute(
             :serialize_sample_chunk,
-            period_name: sample.current_period,
-            round_name: sample.current_round,
+            sampling_period_name: sampler.current_period,
+            round_name: sampler.sample.current_round,
             rule_name: rule,
             chunk_name: chunk,
             data: write(dump_proc, context, data)
           )
+        end
+
+        private
+
+        def parse(*args, **kwargs)
+          sampler.utils.parse(*args, **kwargs)
         end
       end
     end

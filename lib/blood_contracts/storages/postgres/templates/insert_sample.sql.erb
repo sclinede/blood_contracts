@@ -3,7 +3,7 @@ INSERT INTO <%= samples_table_name %>
 VALUES (
   '<%= connection.escape_string(contract_name) %>',
   '<%= connection.escape_string(session_name) %>',
-  '<%= period_name %>',
+  '<%= sampling_period_name %>',
   '<%= round_name %>',
   '<%= connection.escape_string(@rule_name) %>',
   '<%= connection.escape_string(@input) %>',

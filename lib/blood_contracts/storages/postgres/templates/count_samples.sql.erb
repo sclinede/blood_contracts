@@ -1,5 +1,5 @@
 SELECT COUNT(1)
 FROM <%= samples_table_name %>
 WHERE contract ~ '<%= contract_name %>'
-AND period::text ~ '<%= period_name %>'
+AND period::text ~ '<%= sampling_period_name %>'
 AND rule = '<%= connection.escape_string(@rule_name) %>';

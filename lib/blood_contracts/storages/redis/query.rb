@@ -10,30 +10,9 @@ module BloodContracts
         option :period_name, optional: true
         option :round_name, optional: true
 
-        class << self
-          def build(backend)
-            redis_loaded?
-            new(
-              contract_name: backend.contract_name,
-              session_name: backend.session,
-              period_name: backend.current_period,
-              round_name: backend.current_round
-            )
-          end
-
-          def redis_loaded?
-            return true if defined?(::Redis)
-
-            begin
-              require "redis"
-            rescue LoadError
-              warn(
-                "Please, install and configure 'pg' to send notifications:\n" \
-                "# Gemfile\n" \
-                "gem 'pg', '~> 1.0', require: false"
-              )
-            end
-          end
+        def initialize(*)
+          super
+          redis_loaded?
         end
 
         def execute(query_name, options = {})
@@ -42,13 +21,13 @@ module BloodContracts
           connection.exec(sql(query_name))
         end
 
-        def initialize(redis)
-          @redis_proc = build_redis_proc(redis)
-        end
-
-        def exec(&block)
-          @redis_proc.call(&block)
-        end
+        # def initialize(redis)
+        #   @redis_proc = build_redis_proc(redis)
+        # end
+        #
+        # def exec(&block)
+        #   @redis_proc.call(&block)
+        # end
 
         private
 
@@ -98,48 +77,8 @@ module BloodContracts
           File.join(__dir__, "templates", "#{query_name}.sql.erb")
         end
 
-        def samples_table_name
-          @samples_table_name ||=
-            BloodContracts.storage_config.fetch(:samples_table_name)
-        end
-
-        def config_table_name
-          @config_table_name ||=
-            BloodContracts.storage_config.fetch(:config_table_name)
-        end
-
         def reset_connection!
           @connection = nil
-        end
-
-        def connection
-          return @connection unless @connection.nil?
-          return @connection = redis_connection_proc.call if redis_connection_proc
-          return @connection = ::Redis.new(redis) if redis_connection_proc
-
-          raise ArgumentError, "Postgres connection not configured!"
-        end
-
-        # rubocop: disable Metrics/MethodLength
-        def redis_connection_proc
-          case BloodContracts.storage_config[:redis_connection]
-          when ::Redis
-            proc { |&b| b.call(redis) }
-          when ConnectionPool
-            proc { |&b| redis.with { |r| b.call(r) } }
-          when Hash
-            build_redis_proc(::Redis.new(redis))
-          when Proc
-            redis
-          else
-            raise ArgumentError, \
-                  "Redis, ConnectionPool, Hash or Proc is required"
-          end
-        end
-        # rubocop: enable Metrics/MethodLength
-
-        def redis_url
-          @redis_url ||= BloodContracts.storage_config[:redis_url]
         end
 
         def prepare_variables(options)

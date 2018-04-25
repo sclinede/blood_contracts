@@ -4,7 +4,7 @@ require_relative "./redis/query.rb"
 
 module BloodContracts
   module Storages
-    class Postgres < Base
+    class Redis < Base
       option :root, default: -> { session }
 
       include Redis::ContractSwitcher

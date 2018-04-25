@@ -36,12 +36,15 @@ module BloodContracts
 
   ALL_CONTRACTS_ACCESS = "*".freeze
 
+  # TODO: when should we init the Storage for Sampler/Switcher/Statistics?
+  # manually? generator?
+
   def sampler
-    @sampler ||= Sampler.new(contract_name: ALL_CONTRACTS_ACCESS).tap(&:init)
+    @sampler ||= Sampler.new(contract_name: ALL_CONTRACTS_ACCESS)
   end
 
   def switcher
-    @switcher ||= Switcher.new(contract_name: ALL_CONTRACTS_ACCESS).tap(&:init)
+    @switcher ||= Switcher.new(contract_name: ALL_CONTRACTS_ACCESS)
   end
 
   extend GlobalSwitching

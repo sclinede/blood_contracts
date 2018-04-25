@@ -7,12 +7,24 @@ module BloodContracts
     class Postgres < Base
       option :root, default: -> { session }
 
-      def query
-        @query ||= Query.build(self)
-      end
-
       include ContractSwitcher
       include Sampling
+
+      def drop_table!
+        query.execute(:drop_tables)
+      end
+
+      def create_tables!
+        query.execute(:create_tables)
+      end
+      alias :init :create_tables!
+
+      def query
+        @query ||= Query.new(
+          contract_name: contract_name,
+          session_name: session
+        )
+      end
     end
   end
 end

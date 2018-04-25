@@ -5,23 +5,17 @@ module BloodContracts
     class Postgres < Base
       class Query
         module Connection
-          def self.included(klass)
-            klass.extend ClassMethods
-          end
+          def pg_loaded?
+            return true if defined?(::PG)
 
-          module ClassMethods
-            def pg_loaded?
-              return true if defined?(::PG)
-
-              begin
-                require "pg"
-              rescue LoadError
-                warn(
-                  "Please, install and configure 'pg' to use Postgres DB:\n" \
-                  "# Gemfile\n" \
-                  "gem 'pg', '~> 1.0', require: false"
-                )
-              end
+            begin
+              require "pg"
+            rescue LoadError
+              warn(
+                "Please, install and configure 'pg' to use Postgres DB:\n" \
+                "# Gemfile\n" \
+                "gem 'pg', '~> 1.0', require: false"
+              )
             end
           end
 
