@@ -25,15 +25,15 @@ module BloodContracts
       @data["raw_error"]
     end
 
-    def input_preview
-      @data["input_preview"]
+    def input_description
+      @data["input_description"]
     end
-    alias :request_preview :input_preview
+    alias :request_description :input_description
 
-    def output_preview
-      @data["output_preview"]
+    def output_description
+      @data["output_description"]
     end
-    alias :response_preview :output_preview
+    alias :response_description :output_description
 
     def initialize(**kwargs)
       kwargs[:raw_error] = kwargs[:error]

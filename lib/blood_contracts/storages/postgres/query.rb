@@ -38,13 +38,14 @@ module BloodContracts
           execute(:load_sample_chunk, options).first.to_h.fetch("dump")
         end
 
-        def load_sample_preview(*args)
+        def load_sample_description(*args)
           raise ArgumentError unless args.size.eql?(5)
           options = %i(
             session_name sampling_period_name rule_name round_name chunk_name
           ).zip(args)
 
-          execute(:load_sample_preview, options).first.to_h.fetch("preview")
+          execute(:load_sample_description, options)
+            .first.to_h.fetch("description")
         end
 
         def find_sample(*args)

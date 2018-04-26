@@ -5,7 +5,6 @@ require "hashie"
 
 require_relative "blood_contracts/storages/base.rb"
 require_relative "blood_contracts/storages/file.rb"
-require_relative "blood_contracts/storages/dummy.rb"
 require_relative "blood_contracts/storages/memory.rb"
 require_relative "blood_contracts/storages/postgres.rb"
 # require_relative "blood_contracts/storages/redis.rb"

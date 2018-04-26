@@ -37,7 +37,7 @@ module BloodContracts
           sampler.utils.exists?(sample_name)
         end
 
-        def load_preview(chunk_name, path = nil, **kwargs)
+        def load_description(chunk_name, path = nil, **kwargs)
           sample_path = find(path, **kwargs)
           ::File.read("#{sample_path}/#{chunk_name}")
         end

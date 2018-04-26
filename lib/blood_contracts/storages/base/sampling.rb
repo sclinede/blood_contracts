@@ -41,8 +41,8 @@ module BloodContracts
             output: load_chunk(:output, sample_name, **kwargs),
             meta:   load_chunk(:meta,   sample_name, **kwargs),
             error:  load_chunk(:error,  sample_name, **kwargs),
-            input_preview:  load_preview(:input, sample_name, **kwargs),
-            output_preview:  load_preview(:output, sample_name, **kwargs)
+            input_description: load_description(:input, sample_name, **kwargs),
+            output_description: load_description(:output, sample_name, **kwargs)
           )
         end
 

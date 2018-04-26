@@ -90,8 +90,8 @@ RSpec.describe "Contract Sampling" do
         round = contract.sampler.load(rule: :parsing_error)
         expect(round.input).to match(input)
         expect(round.response).to be_nil
-        expect(round.input_preview).to match(/args.*parsing_exception/)
-        expect(round.response_preview).to match(/xml/)
+        expect(round.input_description).to match(/args.*parsing_exception/)
+        expect(round.response_description).to match(/xml/)
         expect(round.error.keys).to include(JSON::ParserError.to_s)
         expect(round.meta).to match(meta)
         expect(round.meta["checked_rules"].size).to eq(8)
@@ -112,8 +112,8 @@ RSpec.describe "Contract Sampling" do
         round = contract.sampler.load(rule: BloodContracts::GUARANTEE_FAILURE)
         expect(round.input).to match(input)
         expect(round.response).to be_nil
-        expect(round.input_preview).to match(/args.*\[\]/)
-        expect(round.response_preview).to match(//)
+        expect(round.input_description).to match(/args.*\[\]/)
+        expect(round.response_description).to match(//)
         expect(round.error).to be_empty
         expect(round.meta).to match(meta)
         expect(round.meta["checked_rules"].size).to eq(1)
@@ -132,8 +132,8 @@ RSpec.describe "Contract Sampling" do
         round = contract.sampler.load(rule: BloodContracts::UNEXPECTED_BEHAVIOR)
         expect(round.input).to match(input)
         expect(round.response).to match(response)
-        expect(round.input_preview).to match(/args.*unexpected/)
-        expect(round.response_preview).to match(//)
+        expect(round.input_description).to match(/args.*unexpected/)
+        expect(round.response_description).to match(//)
         expect(round.error).to be_empty
         expect(round.meta).to match(meta)
         expect(round.meta["checked_rules"].size).to eq(8)
@@ -154,8 +154,8 @@ RSpec.describe "Contract Sampling" do
         )
         expect(round.input).to match(input)
         expect(round.response).to be_nil
-        expect(round.input_preview).to match(/args.*Errno::ENOENT, please/)
-        expect(round.response_preview).to match(//)
+        expect(round.input_description).to match(/args.*Errno::ENOENT, please/)
+        expect(round.response_description).to match(//)
         expect(round.error.keys).to include(Errno::ENOENT.to_s)
         expect(round.meta).to match(meta)
         expect(round.meta["checked_rules"].size).to eq(8)
