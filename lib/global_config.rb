@@ -20,15 +20,15 @@ module BloodContracts::GlobalConfig
   def apply_config!(config = BloodContracts.config)
     @storage_config = Hashie.symbolize_keys!(config.storage)
     @sampling_config = prepare_tool_config(config.sampling, config)
-    @sampler = nil
     @statistics_config = prepare_tool_config(config.statistics, config)
     @switcher_config = prepare_tool_config(config.switching, config)
-    @switcher = nil
+    reset_sampler!
+    reset_switcher!
   end
 
   def prepare_tool_config(source, config)
     base_config = Hashie.symbolize_keys!(source)
-    return base_config unless (storage_type = base_config[:storage])
+    return base_config if (storage_type = base_config[:storage]).nil?
     base_config.merge(
       storage_type: storage_type,
       storage: Hashie.symbolize_keys!(

@@ -12,7 +12,7 @@ module BloodContracts
       end
 
       # rubocop:disable Metrics/LineLength, Metrics/AbcSize
-      def validate!
+      def call
         return true if valid?
         return false unless BloodContracts.config.raise_on_failure
 

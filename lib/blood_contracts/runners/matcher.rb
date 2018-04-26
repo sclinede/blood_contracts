@@ -9,7 +9,7 @@ module BloodContracts
         round.meta[:checked_rules] = []
         rule_names = match_guarantees!(round)
         rule_names ||= match_expectations!(round)
-        rule_names ||= fallback_rules(round)
+        rule_names ||= fallback_rule(round)
 
         yield rule_names, round if block_given?
 
@@ -18,7 +18,7 @@ module BloodContracts
 
       private
 
-      def fallback_rules(round)
+      def fallback_rule(round)
         if round.error.empty?
           [BloodContracts::UNEXPECTED_BEHAVIOR]
         else

@@ -7,7 +7,8 @@ module BloodContracts
         extend Dry::Initializer
         option :contract_name, optional: true
         option :session_name, optional: true
-        option :period_name, optional: true
+        option :sampling_period_name, optional: true
+        option :stats_period_name, optional: true
         option :round_name, optional: true
 
         def initialize(*)

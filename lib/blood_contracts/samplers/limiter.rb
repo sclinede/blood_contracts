@@ -9,7 +9,7 @@ module BloodContracts
       def limit_reached?(rule)
         rules_or_tags = Array(contract_tags[rule.to_sym] || rule).map(&:to_sym)
         return unless (limit = limits.values_at(*rules_or_tags).compact.min)
-        storage.samples_count(rule) >= limit
+        storage.count(rule) >= limit
       end
 
       private

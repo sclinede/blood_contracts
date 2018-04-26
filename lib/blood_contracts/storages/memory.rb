@@ -1,80 +1,41 @@
+require_relative "memory/statistics"
+
 module BloodContracts
   module Storages
     class Memory < Base
-      STATISTICS_ROOT_KEY = "blood_statistics".freeze
-
       attr_reader :storage
+
       def init
-        init_global_store
-        @storage = global_store[statistics_root]
-        return @storage unless @storage.nil?
-        global_store[statistics_root] = storage_klass.new
-        @storage = global_store[statistics_root]
-      end
-
-      def clear_all_statistics!
-        global_store[statistics_root] = nil
-        @storage = global_store[statistics_root]
-      end
-
-      def clear_statistics!(period)
-        storage.fetch(period)
-        storage[period] = nil
-      end
-
-      def increment_statistics(rule, period = statistics.current_period)
-        prepare_statistics_storage(period)
-        # FIXME: Concurrency - Lock! Lock! Lock!
-        storage[period][rule] += 1
-      end
-
-      def period_statistics(period)
-        storage.fetch(period)
-      end
-
-      def filtered_statistics(*periods)
-        stats = storage.values_at(*periods)
-        periods.map! do |period_int|
-          Time.at(period_int * statistics.period_size)
-        end
-        Hash[periods.zip(stats)]
-      end
-
-      def total_statistics
-        Hash[
-          storage.sort_by { |(period_int, _)| -period_int }.map do |k, v|
-            [Time.at(k * statistics.period_size), v]
-          end
-        ]
-      end
-
-      private
-
-      def storage_klass
-        @storage_klass ||= if defined?(::Concurrent::Map)
-                             ::Concurrent::Map
-                           else
-                             ::Hash
-                           end
-      end
-
-      def init_global_store
         return unless global_store.nil?
         BloodContracts.instance_variable_set(:@memory_store, storage_klass.new)
+      end
+
+      def statistics(statistics)
+        Statistics.new(self, statistics).tap(&:init)
+      end
+
+      def sampling(*)
+        raise NotImplementedError
+      end
+
+      def switching(*)
+        raise NotImplementedError
       end
 
       def global_store
         BloodContracts.instance_variable_get(:@memory_store)
       end
 
-      def prepare_statistics_storage(period)
-        return unless storage[period].nil?
-        storage[period] = storage_klass.new { 0 }
+      def root
+        "#{ROOT_KEY}-#{base_storage.contract_name}"
       end
 
-      # TODO: do we need `session` here?
-      def statistics_root
-        "#{STATISTICS_ROOT_KEY}-#{contract_name}"
+      def storage_klass
+        if defined?(::Concurrent::Map)
+          ::Concurrent::Map
+        else
+          ::Hash
+        end
       end
     end
   end

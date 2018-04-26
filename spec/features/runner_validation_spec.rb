@@ -10,7 +10,7 @@ RSpec.describe "Contract Runner Validation", type: :feature do
       config.statistics["enabled"] = true
     end
   end
-  after { contract.statistics.clear_all! }
+  after { contract.statistics.delete_all }
 
   let(:weather_service) { WeatherService.new }
   let(:contract) { WeatherUpdateContract.new }

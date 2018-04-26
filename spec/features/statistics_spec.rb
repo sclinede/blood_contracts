@@ -11,7 +11,7 @@ RSpec.describe "Contract Statistics", type: :feature do
       config.statistics["enabled"] = true
     end
   end
-  after { contract.statistics.clear_all! }
+  after { contract.statistics.delete_all }
 
   let(:weather_service) { WeatherService.new }
   let(:contract) { WeatherUpdateContract.new }
@@ -68,8 +68,7 @@ RSpec.describe "Contract Statistics", type: :feature do
     after { Timecop.return }
 
     let(:previous_period_statistics) do
-      contract.statistics.filtered(time: Time.new(2018, 0o1, 0o1, 13, 24))
-              .values.first
+      contract.statistics.current(Time.new(2018, 0o1, 0o1, 13, 24))
     end
 
     it "returns valid statistics" do

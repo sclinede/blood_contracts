@@ -25,7 +25,7 @@ module BloodContracts
                 },
                 storage: {
                   file: {
-                    root: defined?(Rails) ? Rails.root : Dir.tmpdir,
+                    root: defined?(::Rails) ? ::Rails.root : Dir.tmpdir,
                     samples_folder: "blood_samples"
                   },
                   memory: {},
@@ -42,6 +42,6 @@ module BloodContracts
                   }
                 },
                 tags: {},
-                debug_file: ".bcontracts_debug"
+                debug_file: ".blood_debug"
   end
 end

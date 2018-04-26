@@ -1,13 +1,13 @@
 module BloodContracts::GlobalSwitching
   def enabled?
-    config.enabled || switcher.contract_enabled?
+    config.enabled || switcher.enabled?
   end
 
   def enable!
-    switcher.enable_contracts_global!
+    switcher.enable_all!
   end
 
   def disable!
-    switcher.disable_contracts_global!
+    switcher.disable_all!
   end
 end

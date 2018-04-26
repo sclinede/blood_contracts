@@ -27,11 +27,11 @@ module BloodContracts
       using StringPathize
       DEFAULT_TAG = :default
 
-      attr_reader :expectations_rules, :guarantees_rules, :statistics_rules
+      attr_reader :expectations_rules, :guarantees_rules, :statistics_guarantees
       def inherited(child_klass)
         child_klass.instance_variable_set(:@expectations_rules, Set.new)
         child_klass.instance_variable_set(:@guarantees_rules, Set.new)
-        child_klass.instance_variable_set(:@statistics_rules, {})
+        child_klass.instance_variable_set(:@statistics_guarantees, {})
       end
 
       def expectation_rule(name, tag: DEFAULT_TAG, inherit: nil)
@@ -68,13 +68,13 @@ module BloodContracts
 
       class UselessStatisticsRule < ArgumentError; end
 
-      def statistics_rule(rule_name, limit: nil, threshold: nil)
+      def statistics_guarantee(rule_name, limit: nil, threshold: nil)
         raise UselessStatisticsRule unless limit || threshold
-        statistics_rules[rule_name] = {
+        statistics_guarantees[rule_name] = {
           limit: limit, threshold: threshold
         }.compact
       end
-      alias :statistics_guarantee :statistics_rule
+      alias :statistics_rule :statistics_guarantee
 
       private
 

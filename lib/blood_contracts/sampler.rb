@@ -1,4 +1,4 @@
-require_relative "./samplers/serializer.rb"
+require_relative "./samplers/utils.rb"
 require_relative "./samplers/serializers_writers.rb"
 require_relative "./samplers/limiter.rb"
 
@@ -7,107 +7,88 @@ module BloodContracts
     extend Dry::Initializer
     extend Forwardable
 
-    Serializer = BloodContracts::Samplers::Serializer
+    include SerializersWriters
 
     option :contract_name
+    option :session, optional: true
 
-    DEFAULT_WRITER = ->(round) do
-      "INPUT:\n#{round.input}\n\n#{'=' * 90}\n\nOUTPUT:\n#{round.output}"
-    end
-
+    DEFAULT_INPUT_WRITER = ->(round) { "INPUT:\n#{round.input}" }
     option :input_writer,
-           ->(v) { valid_writer(v) }, default: -> { DEFAULT_WRITER }
+           ->(v) { valid_writer(v) }, default: -> { DEFAULT_INPUT_WRITER }
+
+    DEFAULT_OUTPUT_WRITER = ->(round) { "OUTPUT:\n#{round.output}" }
     option :output_writer,
-           ->(v) { valid_writer(v) }, default: -> { DEFAULT_WRITER }
-
-    option :input_serializer,
-           ->(v) { Serializer.call(v) }, default: -> { default_serializer }
-    option :output_serializer,
-           ->(v) { Serializer.call(v) }, default: -> { default_serializer }
-    option :meta_serializer,
-           ->(v) { Serializer.call(v) }, default: -> { default_serializer }
-    option :error_serializer,
-           ->(v) { Serializer.call(v) }, default: -> { default_serializer }
-
-    option :storage, default: -> do
-      default_storage_klass.new(contract_name, sampler: self)
-    end
-
-    def default_storage_klass
-      case BloodContracts.sampling_config[:storage_type].to_s.downcase.to_sym
-      when :file
-        BloodContracts::Storages::File
-      when :postgres
-        BloodContracts::Storages::Postgres
-      else
-        raise "Unknown storage type configured!"
-      end
-    end
-
-    def_delegators :storage, :init, :sample_exists?,
-                   :find_sample, :serialize_sample, :describe_sample,
-                   :samples_count
-
-    def load(path = nil, **kwargs)
-      kwargs[:session] = kwargs.fetch(:session) { utils.session }
-      kwargs[:contract] = kwargs.fetch(:contract) { utils.contract_name }
-      storage.load_sample(path, **kwargs)
-    end
-
-    def find(path = nil, **kwargs)
-      kwargs[:session] = kwargs.fetch(:session) { utils.session }
-      kwargs[:contract] = kwargs.fetch(:contract) { utils.contract_name }
-      storage.find_sample(path, **kwargs)
-    end
-
-    def find_all(path = nil, **kwargs)
-      kwargs[:session] = kwargs.fetch(:session) { utils.session }
-      kwargs[:contract] = kwargs.fetch(:contract) { utils.contract_name }
-      storage.find_all_samples(path, **kwargs)
-    end
-
-    def delete_all(path = nil, **kwargs)
-      kwargs[:session] = kwargs.fetch(:session) { utils.session }
-      kwargs[:contract] = kwargs.fetch(:contract) { utils.contract_name }
-      storage.delete_all_samples(path, **kwargs)
-    end
-
-    def limiter
-      Samplers::Limiter.new(contract_name, storage)
-    end
+           ->(v) { valid_writer(v) }, default: -> { DEFAULT_OUTPUT_WRITER }
 
     def self.valid_writer(writer)
       return writer if writer.respond_to?(:call) || writer.respond_to?(:to_sym)
       raise ArgumentError
     end
 
-    include SerializersWriters
+    def initialize(*)
+      super
+      reset_utils!
+      reset_storage!
+    end
 
-    def utils
-      @utils ||= Samplers::Utils.new(storage.session, contract_name)
+    attr_reader :storage
+    def reset_storage!
+      @storage =
+        default_storage_klass.new(contract_name).tap(&:init).sampling(self)
+    end
+    def_delegators :storage, :exists?, :load, :find, :find_all,
+                   :delete_all, :count
+
+    attr_reader :utils
+    def reset_utils!
+      @utils = Samplers::Utils.new(current_session, contract_name)
     end
 
     attr_reader :sample
-    def create_sample!
+    def reset_sample!
       @sample = Samplers::Sample.new(utils.path, contract_name)
     end
 
-    def current_period(time = Time.now)
-      time.to_i / period_size
+    def store(round:, rules:, context:)
+      return unless BloodContracts.sampling_config[:enabled]
+      Array(rules).each do |rule_name|
+        reset_sample!
+        next if limiter.limit_reached?(rule_name)
+        storage.describe(rule_name, round, context)
+        storage.serialize(rule_name, round, context)
+      end
+    end
+
+    private
+
+    def current_session
+      session || BloodContracts.session_name || ::Nanoid.generate(size: 10)
+    end
+
+    def default_storage_klass
+      case storage_type
+      when :file
+        BloodContracts::Storages::File
+      when :postgres
+        BloodContracts::Storages::Postgres
+      # when :redis
+      #   BloodContracts::Storages::Redis
+      else
+        warn "Unsupported storage type (#{storage_type}) configured!"
+        BloodContracts::Storages::Base
+      end
+    end
+
+    def storage_type
+      BloodContracts.sampling_config[:storage_type].to_s.downcase.to_sym
     end
 
     def period_size
       BloodContracts.sampling_config[:period] || 1
     end
 
-    def store(round:, rules:, context:)
-      return unless BloodContracts.sampling_config[:enabled]
-      Array(rules).each do |rule_name|
-        next if limiter.limit_reached?(rule_name)
-        create_sample!
-        storage.describe_sample(rule_name, round, context)
-        storage.serialize_sample(rule_name, round, context)
-      end
+    def limiter
+      Samplers::Limiter.new(contract_name, storage)
     end
   end
 end

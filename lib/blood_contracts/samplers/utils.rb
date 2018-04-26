@@ -1,4 +1,5 @@
-# FIXME: replace with Sample class
+require_relative "sample"
+
 module BloodContracts
   module Samplers
     class Utils
@@ -72,7 +73,9 @@ module BloodContracts
 
       def build_sample(session, period, round)
         path = File.join(default_path, session.to_s, contract_name.to_s)
-        Samplers::Sample.new(path, contract_name, period: period, round: round)
+        BloodContracts::Samplers::Sample.new(
+          path, contract_name, period: period, round: round
+        )
       end
     end
   end

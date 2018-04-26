@@ -1,4 +1,4 @@
-require_relative "postgres/contract_switcher.rb"
+require_relative "postgres/switching.rb"
 require_relative "postgres/query.rb"
 require_relative "postgres/sampling.rb"
 
@@ -7,8 +7,13 @@ module BloodContracts
     class Postgres < Base
       option :root, default: -> { session }
 
-      include ContractSwitcher
-      include Sampling
+      def switching(_switcher)
+        Switching.new(query)
+      end
+
+      def sampling(sampler)
+        Sampling.new(query, sampler)
+      end
 
       def drop_table!
         query.execute(:drop_tables)

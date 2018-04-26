@@ -18,18 +18,6 @@ module BloodContracts
           pg_loaded?
         end
 
-        # class << self
-        #   def build(storage)
-        #     pg_loaded?
-        #     new(
-        #       contract_name: storage.contract_name,
-        #       session_name: storage.session,
-        #       sampler_period_name: storage.current_period,
-        #       round_name: storage.current_round
-        #     )
-        #   end
-        # end
-
         def execute(query_name, options = {})
           reset_connection!
           prepare_variables(options)

@@ -3,8 +3,6 @@ require_relative "file/sampling"
 module BloodContracts
   module Storages
     class File < Base
-      include Sampling
-
       def init
         FileUtils.mkdir_p(
           ::File.join(
@@ -15,22 +13,17 @@ module BloodContracts
         )
       end
 
-      def statistics_per_rule(*rules)
-        Hash[
-          Array(rules).map do |rule|
-            next [rule.to_s, 0] unless File.exist?(stats_path)
-
-            [rule.to_s, samples_count(rule)]
-          end
-        ]
+      def sampling(sampler)
+        Sampling.new(session, contract_name, sampler)
       end
 
-      # def collect_stats(tag)
-      #   stats_file = File.join(stats_path, tag)
-      #   File.open("#{stats_path}/input", "a") do |f|
-      #     f << "#{name = sample.name(tag)}\r\n"
-      #   end
-      # end
+      def statistics(*)
+        raise NotImplementedError
+      end
+
+      def switching(*)
+        raise NotImplementedError
+      end
     end
   end
 end

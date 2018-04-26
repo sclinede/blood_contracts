@@ -22,8 +22,18 @@ require_relative "blood_contracts/switcher"
 require_relative "blood_contracts/base_contract"
 
 module BloodContracts
-  module_function
+  ALL_CONTRACTS_ACCESS = "*".freeze
+  class << self
+    attr_reader :sampler
+    def reset_sampler!
+      @sampler = Sampler.new(contract_name: ALL_CONTRACTS_ACCESS)
+    end
 
+    attr_reader :switcher
+    def reset_switcher!
+      @switcher = Switcher.new(contract_name: ALL_CONTRACTS_ACCESS)
+    end
+  end
   extend GlobalConfig
 
   GUARANTEE_FAILURE     = :__guarantee_failure__
@@ -34,18 +44,8 @@ module BloodContracts
   class ExpectationsFailure < StandardError; end
   class UnexpectedException < StandardError; end
 
-  ALL_CONTRACTS_ACCESS = "*".freeze
-
   # TODO: when should we init the Storage for Sampler/Switcher/Statistics?
   # manually? generator?
-
-  def sampler
-    @sampler ||= Sampler.new(contract_name: ALL_CONTRACTS_ACCESS)
-  end
-
-  def switcher
-    @switcher ||= Switcher.new(contract_name: ALL_CONTRACTS_ACCESS)
-  end
 
   extend GlobalSwitching
 

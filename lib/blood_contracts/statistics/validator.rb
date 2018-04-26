@@ -1,5 +1,5 @@
 module BloodContracts
-  module Statistics
+  class Statistics
     class Validator
       extend Dry::Initializer
 

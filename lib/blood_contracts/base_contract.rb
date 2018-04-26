@@ -10,6 +10,11 @@ module BloodContracts
     include Contracts::Toolbox
     include Contracts::Switching
 
+    def initialize
+      reset_contract_hash!
+      reset_runner!
+    end
+
     # rubocop:disable Metrics/MethodLength
     def call(*args, **kwargs)
       return yield unless enabled?
@@ -44,23 +49,24 @@ module BloodContracts
 
     private
 
-    def runner
-      @runner ||= Runner.new(
-        context: self, contract: _contract,
+    attr_reader :runner
+    def reset_runner!
+      @runner = Runner.new(
+        context: self, contract_hash: _contract_hash,
         sampler: sampler, statistics: statistics
       )
     end
 
-    def _contract
-      return @_contract if defined? @_contract
+    attr_reader :_contract_hash
+    def reset_contract_hash!
       guarantees = self.class.guarantees_rules.map do |name|
         [name, { check: method("guarantee_#{name}") }]
       end
       expectations = self.class.expectations_rules.map do |name|
-        stats_requirements = self.class.statistics_rules[name].to_h
+        stats_requirements = self.class.statistics_guarantees[name].to_h
         [name, stats_requirements.merge(check: method("expectation_#{name}"))]
       end
-      @_contract = { guarantees: guarantees, expectations: expectations }
+      @_contract_hash = { guarantees: guarantees, expectations: expectations }
     end
   end
 end

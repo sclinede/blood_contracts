@@ -1,27 +1,17 @@
 module BloodContracts
   module Storages
-    class Memory < Base
-      class Statistics
-        ROOT_KEY = "blood_stats".freeze
-
-        attr_reader :global_store, :contract_name, :storage_klass, :statistics
+    class Redis < Base
+      class Statistics < Base::Statistics
+        attr_reader :base_storage, :statistics
         def initialize(base_storage, statistics)
-          @global_store = base_storage.global_store
-          @contract_name = base_storage.contract_name
-          @storage_klass = base_storage.storage_klass
+          @base_storage = base_storage
           @statistics = statistics
         end
 
-        attr_reader :storage
-        def init
-          @storage = global_store[root]
-          return @storage unless @storage.nil?
-          global_store[root] = storage_klass.new
-          @storage = global_store[root]
-        end
+        ROOT_KEY = "blood_statistics".freeze
 
         def delete_all
-          @storage = (global_store[root] = nil)
+          base_storage.storage = (base_storage.global_store[root] = nil)
         end
 
         def delete(period)
@@ -52,6 +42,14 @@ module BloodContracts
         end
 
         private
+
+        def storage
+          base_storage.storage
+        end
+
+        def global_store
+          base_storage.global_store
+        end
 
         def prepare_storage(period)
           return unless storage[period].nil?

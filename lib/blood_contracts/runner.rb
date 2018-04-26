@@ -8,12 +8,12 @@ module BloodContracts
   class Runner
     extend Dry::Initializer
 
-    option :contract
+    option :contract_hash
     option :sampler
     option :statistics
     option :context, optional: true
 
-    # FIXME: block argument is missing.
+    # FIXME: block argument is not under tracking.
     def call(args:, kwargs:, output: "", meta: {}, error: nil)
       (output, meta, error = yield(meta)) if block_given?
       round = Round.new(
@@ -21,14 +21,14 @@ module BloodContracts
         output: output, error: error, meta: meta
       )
       matcher.call(round) do |rules|
-        Array(rules).each(&statistics.method(:store))
+        Array(rules).each(&statistics.method(:increment))
         sampler.store(round: round, rules: rules, context: context)
-        validate!(round, rules)
+        validate!(rules, round)
       end
     end
 
-    def validate!(round, rules)
-      Runners::Validator.new(contract, rules, round).validate!
+    def validate!(rules, round)
+      Runners::Validator.new(contract_hash, rules, round).call
     end
 
     # FIXME: Move to locales
@@ -50,11 +50,11 @@ module BloodContracts
     protected
 
     def matcher
-      Runners::Matcher.new(contract)
+      Runners::Matcher.new(contract_hash)
     end
 
     def contract_description
-      @contract_description ||= Contracts::Description.call(contract)
+      Contracts::Description.call(contract_hash)
     end
 
     def suggestion

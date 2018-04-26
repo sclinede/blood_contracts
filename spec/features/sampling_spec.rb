@@ -16,7 +16,7 @@ RSpec.describe "Contract Sampling" do
     end
   end
   after { contract.sampler.delete_all }
-  after { contract.statistics.clear_all! }
+  after { contract.statistics.delete_all }
 
   let(:default_tag_limit) { 3 }
   let(:weather_service) { WeatherService.new }
@@ -215,21 +215,21 @@ RSpec.describe "Contract Sampling" do
     end
 
     it "creates one sample per rule" do
-      expect(contract.sampler.samples_count(:client_error)).to eq(2)
-      expect(contract.sampler.samples_count(:server_error)).to eq(0)
-      expect(contract.sampler.samples_count(:parsing_error)).to eq(1)
-      expect(contract.sampler.samples_count(:timeout_error)).to eq(1)
-      expect(contract.sampler.samples_count(:saint_p_weather)).to eq(1)
-      expect(contract.sampler.samples_count(:london_weather)).to eq(1)
-      expect(contract.sampler.samples_count(:usual)).to eq(2)
+      expect(contract.sampler.count(:client_error)).to eq(2)
+      expect(contract.sampler.count(:server_error)).to eq(0)
+      expect(contract.sampler.count(:parsing_error)).to eq(1)
+      expect(contract.sampler.count(:timeout_error)).to eq(1)
+      expect(contract.sampler.count(:saint_p_weather)).to eq(1)
+      expect(contract.sampler.count(:london_weather)).to eq(1)
+      expect(contract.sampler.count(:usual)).to eq(2)
       expect(
-        contract.sampler.samples_count(BloodContracts::UNEXPECTED_BEHAVIOR)
+        contract.sampler.count(BloodContracts::UNEXPECTED_BEHAVIOR)
       ).to eq(1)
       expect(
-        contract.sampler.samples_count(BloodContracts::UNEXPECTED_EXCEPTION)
+        contract.sampler.count(BloodContracts::UNEXPECTED_EXCEPTION)
       ).to eq(1)
       expect(
-        contract.sampler.samples_count(BloodContracts::GUARANTEE_FAILURE)
+        contract.sampler.count(BloodContracts::GUARANTEE_FAILURE)
       ).to eq(1)
     end
   end
@@ -249,20 +249,20 @@ RSpec.describe "Contract Sampling" do
     end
 
     it "creates number of samples eq to limit" do
-      expect(contract.sampler.samples_count(:client_error)).to eq(10)
-      expect(contract.sampler.samples_count(:server_error)).to eq(0)
-      expect(contract.sampler.samples_count(:parsing_error)).to eq(5)
-      expect(contract.sampler.samples_count(:saint_p_weather)).to eq(5)
-      expect(contract.sampler.samples_count(:london_weather)).to eq(5)
-      expect(contract.sampler.samples_count(:usual)).to eq(3)
+      expect(contract.sampler.count(:client_error)).to eq(10)
+      expect(contract.sampler.count(:server_error)).to eq(0)
+      expect(contract.sampler.count(:parsing_error)).to eq(5)
+      expect(contract.sampler.count(:saint_p_weather)).to eq(5)
+      expect(contract.sampler.count(:london_weather)).to eq(5)
+      expect(contract.sampler.count(:usual)).to eq(3)
       expect(
-        contract.sampler.samples_count(BloodContracts::UNEXPECTED_BEHAVIOR)
+        contract.sampler.count(BloodContracts::UNEXPECTED_BEHAVIOR)
       ).to eq(5)
       expect(
-        contract.sampler.samples_count(BloodContracts::UNEXPECTED_EXCEPTION)
+        contract.sampler.count(BloodContracts::UNEXPECTED_EXCEPTION)
       ).to eq(5)
       expect(
-        contract.sampler.samples_count(BloodContracts::GUARANTEE_FAILURE)
+        contract.sampler.count(BloodContracts::GUARANTEE_FAILURE)
       ).to eq(5)
     end
   end
@@ -282,20 +282,20 @@ RSpec.describe "Contract Sampling" do
     end
 
     it "creates number of samples eq to limit" do
-      expect(contract.sampler.samples_count(:client_error)).to eq(30)
-      expect(contract.sampler.samples_count(:server_error)).to eq(0)
-      expect(contract.sampler.samples_count(:parsing_error)).to eq(15)
-      expect(contract.sampler.samples_count(:saint_p_weather)).to eq(5)
-      expect(contract.sampler.samples_count(:london_weather)).to eq(5)
-      expect(contract.sampler.samples_count(:usual)).to eq(3)
+      expect(contract.sampler.count(:client_error)).to eq(30)
+      expect(contract.sampler.count(:server_error)).to eq(0)
+      expect(contract.sampler.count(:parsing_error)).to eq(15)
+      expect(contract.sampler.count(:saint_p_weather)).to eq(5)
+      expect(contract.sampler.count(:london_weather)).to eq(5)
+      expect(contract.sampler.count(:usual)).to eq(3)
       expect(
-        contract.sampler.samples_count(BloodContracts::UNEXPECTED_BEHAVIOR)
+        contract.sampler.count(BloodContracts::UNEXPECTED_BEHAVIOR)
       ).to eq(15)
       expect(
-        contract.sampler.samples_count(BloodContracts::UNEXPECTED_EXCEPTION)
+        contract.sampler.count(BloodContracts::UNEXPECTED_EXCEPTION)
       ).to eq(15)
       expect(
-        contract.sampler.samples_count(BloodContracts::GUARANTEE_FAILURE)
+        contract.sampler.count(BloodContracts::GUARANTEE_FAILURE)
       ).to eq(15)
     end
   end
