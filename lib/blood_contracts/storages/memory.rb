@@ -1,4 +1,5 @@
 require_relative "memory/statistics"
+require_relative "memory/switching"
 
 module BloodContracts
   module Storages
@@ -11,15 +12,15 @@ module BloodContracts
       end
 
       def statistics(statistics)
-        Statistics.new(self, statistics).tap(&:init)
+        Memory::Statistics.new(self, statistics).tap(&:init)
       end
 
       def sampling(*)
         raise NotImplementedError
       end
 
-      def switching(*)
-        raise NotImplementedError
+      def switching(_switcher)
+        Memory::Switching.new(self).tap(&:init)
       end
 
       def global_store
