@@ -2,7 +2,12 @@ module BloodContracts::GlobalConfig
   class << self
     def extended(klass)
       klass.instance_variable_set(:@tags, {})
-      klass.apply_config!
+      klass.apply_config! if init_config?
+    end
+
+    def init_config?
+      return !Rails.root.nil? if defined?(::Rails)
+      true
     end
   end
 
@@ -18,7 +23,7 @@ module BloodContracts::GlobalConfig
   end
 
   def apply_config!(config = BloodContracts.config)
-    @storage_config = Hashie.symbolize_keys!(config.storage)
+    @storage_config = Hashie.symbolize_keys_recursively!(config.storage)
     @sampling_config = prepare_tool_config(config.sampling, config)
     @statistics_config = prepare_tool_config(config.statistics, config)
     @switcher_config = prepare_tool_config(config.switching, config)
@@ -27,11 +32,11 @@ module BloodContracts::GlobalConfig
   end
 
   def prepare_tool_config(source, config)
-    base_config = Hashie.symbolize_keys!(source)
+    base_config = Hashie.symbolize_keys_recursively!(source)
     return base_config if (storage_type = base_config[:storage]).nil?
     base_config.merge(
       storage_type: storage_type,
-      storage: Hashie.symbolize_keys!(
+      storage: Hashie.symbolize_keys_recursively!(
         config.storage.fetch(storage_type)
       )
     )

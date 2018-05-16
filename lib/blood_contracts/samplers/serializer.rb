@@ -10,6 +10,7 @@ module BloodContracts
       end
 
       def call
+        return default_serializer if serializer.nil?
         return object_serializer_to_hash if object_serializer?
         return serializer.to_hash if hash_serializer?
 
@@ -27,6 +28,10 @@ module BloodContracts
           load: serializer.method(:load),
           dump: serializer.method(:dump)
         }
+      end
+
+      def default_serializer
+        { load: Oj.method(:load), dump: Oj.method(:dump) }
       end
 
       def hash_serializer?

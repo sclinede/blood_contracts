@@ -48,7 +48,7 @@ module BloodContracts
           end
 
           def postgres_config
-            BloodContracts.storage_config[:postgres].to_h
+            BloodContracts.storage_config[:postgres]
           end
         end
       end

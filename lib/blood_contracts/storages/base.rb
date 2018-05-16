@@ -9,7 +9,7 @@ module BloodContracts
       extend Dry::Initializer
       extend Forwardable
 
-      param :contract_name
+      param :contract_name, optional: true
       option :session, default: -> do
         BloodContracts.session_name || ::Nanoid.generate(size: 10)
       end

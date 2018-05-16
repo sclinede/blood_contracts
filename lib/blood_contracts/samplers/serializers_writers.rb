@@ -48,7 +48,7 @@ module BloodContracts
       end
 
       def default_serializer
-        { load: Oj.method(:load), dump: Oj.method(:dump) }
+        Serializer.call(nil)
       end
     end
   end

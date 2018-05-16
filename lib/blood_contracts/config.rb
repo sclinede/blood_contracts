@@ -15,7 +15,7 @@ module BloodContracts
                   storage: :memory
                 },
                 switching: {
-                  # storage: :redis
+                  storage: :memory
                 },
                 sampling: {
                   enabled: false,

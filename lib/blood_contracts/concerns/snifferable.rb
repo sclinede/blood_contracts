@@ -1,5 +1,5 @@
 if defined?(Sniffer)
-  class BloodContracts::Sniffer
+  class ContractSniffer
     attr_reader :meta
     def initialize(http_round: nil, meta: nil)
       @meta = http_round&.meta || meta
@@ -48,22 +48,26 @@ if defined?(Sniffer)
     end
   end
 
-  module BloodContracts::Concerns::Snifferable
-    def sniffer(http_round: nil, meta: nil)
-      ContractSniffer.new(http_round: http_round, meta: meta)
-    end
+  module BloodContracts
+    module Concerns
+      module Snifferable
+        def sniffer(http_round: nil, meta: nil)
+          ContractSniffer.new(http_round: http_round, meta: meta)
+        end
 
-    def before_call(meta:, **kwargs)
-      super
-      @_sniffer = sniffer(meta: meta)
-      @_sniffer.enable!
-    end
+        def before_call(meta:, **kwargs)
+          super
+          @_sniffer = sniffer(meta: meta)
+          @_sniffer.enable!
+        end
 
-    def after_call(*)
-      super
-      @_sniffer.merge_buffer_to_meta!
-      @_sniffer.disable!
-      @_sniffer = nil
+        def after_call(*)
+          super
+          @_sniffer.merge_buffer_to_meta!
+          @_sniffer.disable!
+          @_sniffer = nil
+        end
+      end
     end
   end
 end

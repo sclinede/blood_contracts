@@ -74,7 +74,8 @@ module BloodContracts
       # when :redis
       #   BloodContracts::Storages::Redis
       else
-        warn "Unsupported storage type (#{storage_type}) configured!"
+        warn "[#{self.class}] Unsupported storage type"\
+             "(#{storage_type}) configured!"
         BloodContracts::Storages::Base
       end
     end
