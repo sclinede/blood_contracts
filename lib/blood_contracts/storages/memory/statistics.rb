@@ -36,7 +36,11 @@ module BloodContracts
         end
 
         def filter(*periods)
-          stats = storage.values_at(*periods)
+          # FIXME: #values_at not exist for Concurrent::Map
+          # stats = storage.values_at(*periods)
+          stats = periods.each_with_object([]) do |period, data|
+            data << storage[period]
+          end
           periods.map! do |period_int|
             Time.at(period_int * statistics.period_size)
           end

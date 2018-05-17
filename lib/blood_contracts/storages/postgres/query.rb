@@ -84,7 +84,7 @@ module BloodContracts
         def prepare_variables(options)
           return if options.empty?
           options.each do |k, v|
-            instance_variable_set("@#{k}", v)
+            instance_variable_set("@#{k}", v.to_s)
           end
         end
       end

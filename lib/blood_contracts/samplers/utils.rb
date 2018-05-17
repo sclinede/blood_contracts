@@ -64,7 +64,7 @@ module BloodContracts
       end
 
       def samples_folder
-        BloodContracts.sampling_config.dig(:storage, :samples_folder)
+        BloodContracts.sampling_config.dig(:storage, :samples_folder).to_s
       end
 
       def root
