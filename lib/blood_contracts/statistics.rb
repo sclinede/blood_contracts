@@ -22,7 +22,7 @@ module BloodContracts
     end
 
     def current(time = Time.now)
-      filter(current_period(time)).values.last
+      filter(current_period(time)).values.last.to_h
     end
 
     def current_period(time = Time.now)
