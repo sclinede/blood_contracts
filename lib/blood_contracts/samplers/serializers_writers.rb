@@ -1,4 +1,3 @@
-require "oj"
 require_relative "serializer"
 
 module BloodContracts

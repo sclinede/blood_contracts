@@ -37,9 +37,11 @@ class WeatherUpdateContract < BloodContracts::BaseContract
   def response_serializer
     {
       dump: ->(response) do
-        Oj.dump(JSON.pretty_generate(response.instance_variable_get(:@data)))
+        JSON.dump(JSON.pretty_generate(response.instance_variable_get(:@data)))
       end,
-      load: ->(dump) { WeatherService::Response.new(Oj.load(dump)) rescue nil }
+      load: ->(dump) do
+        WeatherService::Response.new(JSON.load(dump)) rescue nil
+      end
     }
   end
 

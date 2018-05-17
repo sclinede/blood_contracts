@@ -43,7 +43,7 @@ if defined?(Sniffer)
       meta["requested_http"] = requested_api
       return unless requested_api
       meta["last_http_session"] = sniffer_buffer.map do |session|
-        Hashie.stringify_keys!(session.to_h)
+        Hashie.stringify_keys_recursively!(session.to_h)
       end
     end
   end
@@ -61,7 +61,7 @@ if defined?(Sniffer)
           @_sniffer.enable!
         end
 
-        def after_call(*)
+        def before_runner(*)
           super
           @_sniffer.merge_buffer_to_meta!
           @_sniffer.disable!

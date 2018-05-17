@@ -34,32 +34,35 @@ module BloodContracts
         child_klass.instance_variable_set(:@statistics_guarantees, {})
       end
 
-      def expectation_rule(name, tag: DEFAULT_TAG, inherit: nil)
+      def expectation_rule(name, tag: DEFAULT_TAG, inherit: nil, &block)
+        define_method("raw_check_#{name}", &block)
         define_method("expectation_#{name}") do |round|
           next if round.error?
-          next(yield(round)) unless !!inherit
-          send("expectation_#{inherit}", round) && yield(round)
+          next(send("raw_check_#{name}", round)) unless !!inherit
+          send("expectation_#{inherit}", round) && send("raw_check_#{name}", round)
         end
         expectations_rules << name
         update_tags(name, tag)
       end
       alias :expect :expectation_rule
 
-      def expectation_error_rule(name, tag: DEFAULT_TAG, inherit: nil)
+      def expectation_error_rule(name, tag: DEFAULT_TAG, inherit: nil, &block)
+        define_method("raw_check_#{name}", &block)
         define_method("expectation_#{name}") do |round|
           next unless round.error?
-          next(yield(round)) unless !!inherit
-          send("expectation_#{inherit}", round) && yield(round)
+          next(send("raw_check_#{name}", round)) unless !!inherit
+          send("expectation_#{inherit}", round) && send("raw_check_#{name}", round)
         end
         expectations_rules << name
         update_tags(name, tag)
       end
       alias :expect_error :expectation_error_rule
 
-      def guarantee_rule(name, tag: DEFAULT_TAG, skip_on_error: true)
+      def guarantee_rule(name, tag: DEFAULT_TAG, skip_on_error: true, &block)
+        define_method("raw_check_#{name}", &block)
         define_method("guarantee_#{name}") do |round|
           next(true) if skip_on_error && round.error?
-          yield(round)
+          send("raw_check_#{name}", round)
         end
         guarantees_rules << name
         update_tags(name, tag)
