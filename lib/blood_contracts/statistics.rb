@@ -52,7 +52,6 @@ module BloodContracts
     end
 
     def store(rule)
-      return unless BloodContracts.statistics_config[:enabled]
       storage.increment(rule)
     end
     alias :increment :store
@@ -79,6 +78,13 @@ module BloodContracts
         warn "[#{self.class}] Unsupported storage type"\
              "(#{storage_type}) configured!"
         BloodContracts::Storages::Base
+      end
+    end
+
+    class Middleware
+      def call(contract, _round, rules, _context)
+        Array(rules).each(&contract.statistics.method(:increment))
+        yield
       end
     end
   end

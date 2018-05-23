@@ -10,7 +10,6 @@ module BloodContracts
                 enabled: false,
                 raise_on_failure: true,
                 statistics: {
-                  enabled: false,
                   period: 3600,
                   storage: :memory
                 },
@@ -18,7 +17,6 @@ module BloodContracts
                   storage: :memory
                 },
                 sampling: {
-                  enabled: false,
                   period: nil,
                   limit_per_tag: {},
                   storage: :file
@@ -43,5 +41,6 @@ module BloodContracts
                 },
                 tags: {},
                 debug_file: ".blood_debug"
+
   end
 end

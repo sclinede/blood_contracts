@@ -12,10 +12,12 @@ module BloodContracts
       return Contracts::Round.new unless debugging_samples_available?
 
       matcher.call(sampler.load_sample(runs.next)) do |rules|
+        # FIXME: replace with Middleware, rememeber to exclude Sampling
         Array(rules).each(&statistics.method(:store))
       end
     end
 
+    # FIXME: move to Decorator
     def description
       return super if debugging_samples_available?
       " skipped in current debugging session"
@@ -41,6 +43,7 @@ module BloodContracts
       BloodContracts.config
     end
 
+    # FIXME: move to Decorator
     def suggestion
       "\n - #{found_samples.join("\n - ")}"
     end

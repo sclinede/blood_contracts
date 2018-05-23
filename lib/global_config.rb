@@ -2,6 +2,7 @@ module BloodContracts::GlobalConfig
   class << self
     def extended(klass)
       klass.instance_variable_set(:@tags, {})
+      klass.instance_variable_set(:@chain, BloodContracts::Middleware::Chain.new)
       klass.apply_config! if init_config?
     end
 
@@ -22,11 +23,16 @@ module BloodContracts::GlobalConfig
     @config
   end
 
+  def middleware
+    yield @chain if block_given?
+    @chain
+  end
+
   def apply_config!(config = BloodContracts.config)
     @storage_config = Hashie.symbolize_keys_recursively!(config.storage)
     @sampling_config = prepare_tool_config(config.sampling, config)
     @statistics_config = prepare_tool_config(config.statistics, config)
-    @switcher_config = prepare_tool_config(config.switching, config)
+    @switcher_config   = prepare_tool_config(config.switching, config)
     reset_sampler!
     reset_switcher!
   end

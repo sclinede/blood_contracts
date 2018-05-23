@@ -50,7 +50,6 @@ module BloodContracts
     end
 
     def store(round:, rules:, context:)
-      return unless BloodContracts.sampling_config[:enabled]
       Array(rules).each do |rule_name|
         reset_sample!
         next if limiter.limit_reached?(rule_name)
@@ -90,6 +89,13 @@ module BloodContracts
 
     def limiter
       Samplers::Limiter.new(contract_name, storage)
+    end
+
+    class Middleware
+      def call(contract, round, rules, context)
+        contract.sampler.store(round: round, rules: rules, context: context)
+        yield
+      end
     end
   end
 end

@@ -18,9 +18,12 @@ require_relative "global_config"
 require_relative "blood_contracts/sampler"
 require_relative "blood_contracts/statistics"
 require_relative "blood_contracts/switcher"
+
 require_relative "blood_contracts/base_contract"
 
 module BloodContracts
+  require_relative "blood_contracts/middleware/chain"
+
   ALL_CONTRACTS_ACCESS = "*".freeze
   class << self
     attr_reader :sampler
@@ -33,6 +36,7 @@ module BloodContracts
       @switcher = Switcher.new(contract_name: ALL_CONTRACTS_ACCESS)
     end
   end
+
   extend GlobalConfig
 
   GUARANTEE_FAILURE     = :__guarantee_failure__
@@ -43,14 +47,14 @@ module BloodContracts
   class ExpectationsFailure < StandardError; end
   class UnexpectedException < StandardError; end
 
-  # TODO: when should we init the Storage for Sampler/Switcher/Statistics?
-  # manually? generator?
-
   extend GlobalSwitching
 
   if defined?(RSpec) && RSpec.respond_to?(:configure)
     require_relative "rspec/meet_contract_matcher"
   end
+
+  require_relative "blood_contracts/validator"
+  require_relative "default_middleware"
 end
 
 require_relative "blood_contracts/runner"

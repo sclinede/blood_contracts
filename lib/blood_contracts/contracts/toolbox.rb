@@ -13,6 +13,7 @@ module BloodContracts
           reset_switcher!
           reset_sampler!
           super
+          reset_status!
         end
       end
 
@@ -48,6 +49,11 @@ module BloodContracts
         end
 
         @sampler = sampler
+      end
+
+      attr_reader :status
+      def reset_status!
+        @status = Status.new(self)
       end
 
       attr_reader :statistics

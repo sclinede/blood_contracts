@@ -7,9 +7,9 @@ RSpec.describe BloodContracts do
 
   describe ".sampler" do
     context "when default configuration" do
-      let(:expected_backend) { BloodContracts::Storages::File::Sampling }
+      let(:expected_storage) { BloodContracts::Storages::File::Sampling }
       it "has assigned storage" do
-        expect(BloodContracts.sampler.storage).to be_kind_of(expected_backend)
+        expect(BloodContracts.sampler.storage).to be_kind_of(expected_storage)
       end
     end
 
@@ -24,10 +24,10 @@ RSpec.describe BloodContracts do
           config.sampling["storage"] = :file
         end
       end
-      let(:expected_backend) { BloodContracts::Storages::Postgres::Sampling }
+      let(:expected_storage) { BloodContracts::Storages::Postgres::Sampling }
 
       it "has assigned storage" do
-        expect(BloodContracts.sampler.storage).to be_kind_of(expected_backend)
+        expect(BloodContracts.sampler.storage).to be_kind_of(expected_storage)
       end
     end
   end

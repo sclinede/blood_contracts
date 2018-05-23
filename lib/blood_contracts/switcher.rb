@@ -29,5 +29,12 @@ module BloodContracts
         BloodContracts::Storages::Base
       end
     end
+
+    class Middleware
+      def call(contract, _round, rules, _context)
+        # TODO: do not propogate if switcher disabled!
+        yield if contract.switcher.enabled?
+      end
+    end
   end
 end

@@ -12,10 +12,12 @@ module BloodContracts
         File.join(default_path, session.to_s, contract_name.to_s)
       end
 
+      # FIXME: работа с FS
       def find_all(path = nil, **kwargs)
         Dir.glob("#{extract_name_from(path, **kwargs)}/*")
       end
 
+      # FIXME: работа с FS
       def exists?(path = nil, **kwargs)
         File.exist?("#{extract_name_from(path, **kwargs)}/input")
       end

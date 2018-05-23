@@ -1,6 +1,7 @@
 require_relative "contracts/dsl.rb"
 require_relative "contracts/patching.rb"
 require_relative "contracts/switching.rb"
+require_relative "contracts/status.rb"
 require_relative "contracts/toolbox.rb"
 
 module BloodContracts
@@ -40,6 +41,9 @@ module BloodContracts
     end
     # rubocop:enable Metrics/MethodLength
 
+    attr_reader :_contract_hash
+    alias :to_h :_contract_hash
+
     protected
 
     def before_call(args:, kwargs:, meta:); end
@@ -51,13 +55,9 @@ module BloodContracts
 
     attr_reader :runner
     def reset_runner!
-      @runner = Runner.new(
-        context: self, contract_hash: _contract_hash,
-        sampler: sampler, statistics: statistics
-      )
+      @runner = Runner.new(self, context: self)
     end
 
-    attr_reader :_contract_hash
     def reset_contract_hash!
       guarantees = self.class.guarantees_rules.map do |name|
         [name, { check: method("guarantee_#{name}") }]
