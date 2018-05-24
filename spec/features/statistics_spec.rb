@@ -11,96 +11,201 @@ RSpec.describe "Contract Statistics", type: :feature do
       config.statistics["enabled"] = true
     end
   end
-  after { contract.statistics.delete_all }
-
   let(:weather_service) { WeatherService.new }
   let(:contract) { WeatherUpdateContract.new }
 
-  context "when all matches are in current period" do
+  context "when Redis storage" do
     before do
-      5.times do
-        weather_service.update(:london)
-        weather_service.update(:saint_p)
-        weather_service.update(:code_401)
-        weather_service.update(:code_404)
+      BloodContracts.config do |config|
+        config.statistics["storage"] = :redis
       end
-      9.times do
-        weather_service.update(:parsing_exception) rescue nil
-        weather_service.update(:unexpected) rescue nil
+    end
+    after { contract.statistics.delete_all }
+
+    context "when all matches are in current period" do
+      before do
+        5.times do
+          weather_service.update(:london)
+          weather_service.update(:saint_p)
+          weather_service.update(:code_401)
+          weather_service.update(:code_404)
+        end
+        9.times do
+          weather_service.update(:parsing_exception) rescue nil
+          weather_service.update(:unexpected) rescue nil
+        end
+        weather_service.update("Errno::ENOENT, please") rescue nil
+        contract.call { {} } rescue nil
       end
-      weather_service.update("Errno::ENOENT, please") rescue nil
-      contract.call { {} } rescue nil
+
+      it "returns valid statistics" do
+        expect(contract.statistics.current)
+          .to match(hash_including(
+                      usual: 10,
+                      london_weather: 5,
+                      saint_p_weather: 5,
+                      client_error: 10,
+                      parsing_error: 9,
+                      __unexpected_behavior__: 9,
+                      __unexpected_exception__: 1,
+                      __guarantee_failure__: 1
+          ))
+      end
     end
 
-    it "returns valid statistics" do
-      expect(contract.statistics.current)
-        .to match(hash_including(
-                    usual: 10,
-                    london_weather: 5,
-                    saint_p_weather: 5,
-                    client_error: 10,
-                    parsing_error: 9,
-                    __unexpected_behavior__: 9,
-                    __unexpected_exception__: 1,
-                    __guarantee_failure__: 1
-        ))
+    context "when matches split between periods" do
+      before do
+        Timecop.freeze(Time.new(2018, 0o1, 0o1, 13, 0o0))
+        5.times do
+          weather_service.update(:london)
+          weather_service.update(:saint_p)
+          weather_service.update(:code_401)
+          weather_service.update(:code_404)
+        end
+
+        Timecop.freeze(Time.new(2018, 0o1, 0o1, 14, 0o0))
+        9.times do
+          weather_service.update(:parsing_exception) rescue nil
+          weather_service.update(:unexpected) rescue nil
+        end
+        weather_service.update("Errno::ENOENT, please") rescue nil
+        contract.call { {} } rescue nil
+      end
+      after { Timecop.return }
+
+      let(:previous_period_statistics) do
+        contract.statistics.current(Time.new(2018, 0o1, 0o1, 13, 24))
+      end
+
+      it "returns valid statistics" do
+        expect(contract.statistics.current)
+          .to match(hash_including(
+                      parsing_error: 9,
+                      __unexpected_behavior__: 9,
+                      __unexpected_exception__: 1,
+                      __guarantee_failure__: 1
+          ))
+        expect(previous_period_statistics)
+          .to match(hash_including(
+                      usual: 10,
+                      london_weather: 5,
+                      saint_p_weather: 5,
+                      client_error: 10
+          ))
+        expect(contract.statistics.total.values)
+          .to match_array([
+                            {
+                              parsing_error: 9,
+                              __unexpected_behavior__: 9,
+                              __unexpected_exception__: 1,
+                              __guarantee_failure__: 1
+                            },
+                            {
+                              usual: 10,
+                              london_weather: 5,
+                              saint_p_weather: 5,
+                              client_error: 10
+                            }
+                          ])
+      end
     end
+
   end
 
-  context "when matches split between periods" do
+  context "when Memory storage" do
     before do
-      Timecop.freeze(Time.new(2018, 0o1, 0o1, 13, 0o0))
-      5.times do
-        weather_service.update(:london)
-        weather_service.update(:saint_p)
-        weather_service.update(:code_401)
-        weather_service.update(:code_404)
+      BloodContracts.config do |config|
+        config.statistics["storage"] = :memory
+      end
+    end
+    after { contract.statistics.delete_all }
+
+    context "when all matches are in current period" do
+      before do
+        5.times do
+          weather_service.update(:london)
+          weather_service.update(:saint_p)
+          weather_service.update(:code_401)
+          weather_service.update(:code_404)
+        end
+        9.times do
+          weather_service.update(:parsing_exception) rescue nil
+          weather_service.update(:unexpected) rescue nil
+        end
+        weather_service.update("Errno::ENOENT, please") rescue nil
+        contract.call { {} } rescue nil
       end
 
-      Timecop.freeze(Time.new(2018, 0o1, 0o1, 14, 0o0))
-      9.times do
-        weather_service.update(:parsing_exception) rescue nil
-        weather_service.update(:unexpected) rescue nil
+      it "returns valid statistics" do
+        expect(contract.statistics.current)
+          .to match(hash_including(
+                      usual: 10,
+                      london_weather: 5,
+                      saint_p_weather: 5,
+                      client_error: 10,
+                      parsing_error: 9,
+                      __unexpected_behavior__: 9,
+                      __unexpected_exception__: 1,
+                      __guarantee_failure__: 1
+          ))
       end
-      weather_service.update("Errno::ENOENT, please") rescue nil
-      contract.call { {} } rescue nil
-    end
-    after { Timecop.return }
-
-    let(:previous_period_statistics) do
-      contract.statistics.current(Time.new(2018, 0o1, 0o1, 13, 24))
     end
 
-    it "returns valid statistics" do
-      expect(contract.statistics.current)
-        .to match(hash_including(
-                    parsing_error: 9,
-                    __unexpected_behavior__: 9,
-                    __unexpected_exception__: 1,
-                    __guarantee_failure__: 1
-        ))
-      expect(previous_period_statistics)
-        .to match(hash_including(
-                    usual: 10,
-                    london_weather: 5,
-                    saint_p_weather: 5,
-                    client_error: 10
-        ))
-      expect(contract.statistics.total.values)
-        .to match_array([
-                          {
-                            parsing_error: 9,
-                            __unexpected_behavior__: 9,
-                            __unexpected_exception__: 1,
-                            __guarantee_failure__: 1
-                          },
-                          {
-                            usual: 10,
-                            london_weather: 5,
-                            saint_p_weather: 5,
-                            client_error: 10
-                          }
-                        ])
+    context "when matches split between periods" do
+      before do
+        Timecop.freeze(Time.new(2018, 0o1, 0o1, 13, 0o0))
+        5.times do
+          weather_service.update(:london)
+          weather_service.update(:saint_p)
+          weather_service.update(:code_401)
+          weather_service.update(:code_404)
+        end
+
+        Timecop.freeze(Time.new(2018, 0o1, 0o1, 14, 0o0))
+        9.times do
+          weather_service.update(:parsing_exception) rescue nil
+          weather_service.update(:unexpected) rescue nil
+        end
+        weather_service.update("Errno::ENOENT, please") rescue nil
+        contract.call { {} } rescue nil
+      end
+      after { Timecop.return }
+
+      let(:previous_period_statistics) do
+        contract.statistics.current(Time.new(2018, 0o1, 0o1, 13, 24))
+      end
+
+      it "returns valid statistics" do
+        expect(contract.statistics.current)
+          .to match(hash_including(
+                      parsing_error: 9,
+                      __unexpected_behavior__: 9,
+                      __unexpected_exception__: 1,
+                      __guarantee_failure__: 1
+          ))
+        expect(previous_period_statistics)
+          .to match(hash_including(
+                      usual: 10,
+                      london_weather: 5,
+                      saint_p_weather: 5,
+                      client_error: 10
+          ))
+        expect(contract.statistics.total.values)
+          .to match_array([
+                            {
+                              parsing_error: 9,
+                              __unexpected_behavior__: 9,
+                              __unexpected_exception__: 1,
+                              __guarantee_failure__: 1
+                            },
+                            {
+                              usual: 10,
+                              london_weather: 5,
+                              saint_p_weather: 5,
+                              client_error: 10
+                            }
+                          ])
+      end
     end
   end
 end

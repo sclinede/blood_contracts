@@ -34,7 +34,7 @@ module BloodContracts
                     config_table_name: "blood_config"
                   },
                   redis: {
-                    # connection: -> { ... } # when :redis
+                    # connection: -> { ... }
                     redis_url: ENV["REDIS_URL"],
                     root_key: "blood_redis"
                   }

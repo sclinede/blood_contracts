@@ -72,8 +72,8 @@ module BloodContracts
         BloodContracts::Storages::Memory
       # when :postgres
       #   BloodContracts::Storages::Postgres
-      # when :redis
-      #   BloodContracts::Storages::Redis
+      when :redis
+        BloodContracts::Storages::Redis
       else
         warn "[#{self.class}] Unsupported storage type"\
              "(#{storage_type}) configured!"

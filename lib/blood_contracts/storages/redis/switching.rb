@@ -1,36 +1,73 @@
 module BloodContracts
   module Storages
-    module Redis
-      module ContractSwitcher
-        # def drop_table!
-        #   query.execute(:drop_tables)
-        # end
-        #
-        # def create_tables!
-        #   query.execute(:create_tables)
-        # end
-        # alias :init :create_tables!
-
-        def disable_contract!(a_contract_name = contract_name)
-          query.disable_contract(contract_name: a_contract_name)
+    class Redis < Base
+      class Switching
+        attr_reader :contract_name, :redis
+        def initialize(base_storage, redis)
+          @contract_name = base_storage.contract_name
+          @redis = redis
         end
 
-        def enable_contract!(a_contract_name = contract_name)
-          query.enable_contract(contract_name: a_contract_name)
+        def reset!
+          redis.del(GLOBAL_CONTRACTS_KEY)
+          redis.del(contract_key(contract_name))
         end
 
-        def enable_contracts_global!
-          query.enable_contracts_global
+        def disable!(a_contract_name = contract_name)
+          contract_switcher_set(a_contract_name, false)
         end
 
-        def disable_contracts_global!
-          query.disable_contracts_global
+        def enable!(a_contract_name = contract_name)
+          contract_switcher_set(a_contract_name, true)
         end
 
-        def contract_enabled?(a_contract_name = contract_name)
-          enabled = query.contract_enabled(a_contract_name)
-          return enabled unless enabled.nil?
+        def enable_all!
+          global_contracts_switcher_set(true)
+        end
+
+        def disable_all!
+          global_contracts_switcher_set(false)
+        end
+
+        def enabled?(a_contract_name = contract_name)
+          contract_state = contract_switcher_state(a_contract_name)
+          return contract_state unless contract_state.nil?
+          return global_switcher_state if global_state_set?
           BloodContracts.config.enabled
+        end
+
+        private
+
+        def global_state_set?
+          !global_switcher_state.nil?
+        end
+
+        def contract_state_set?(a_contract_name = contract_name)
+          !contract_switcher(a_contract_name).nil?
+        end
+
+        GLOBAL_CONTRACTS_KEY = "blood_contracts:global-contracts-enabled".freeze
+
+        def global_switcher_state
+          return unless (value = redis.get(GLOBAL_CONTRACTS_KEY))
+          Marshal.load(value)
+        end
+
+        def global_contracts_switcher_set(value)
+          redis.set(GLOBAL_CONTRACTS_KEY, Marshal.dump(value))
+        end
+
+        def contract_switcher_state(a_contract_name)
+          return unless (value = redis.get(contract_key(a_contract_name)))
+          Marshal.load(value)
+        end
+
+        def contract_switcher_set(a_contract_name, value)
+          redis.set(contract_key(a_contract_name), Marshal.dump(value))
+        end
+
+        def contract_key(a_contract_name)
+          "blood_contracts:contract-#{a_contract_name}-enabled"
         end
       end
     end

@@ -21,6 +21,8 @@ module BloodContracts
 
     def default_storage_klass
       case BloodContracts.switcher_config[:storage_type].to_s.downcase.to_sym
+      when :redis
+        BloodContracts::Storages::Redis
       when :memory
         BloodContracts::Storages::Memory
       when :postgres

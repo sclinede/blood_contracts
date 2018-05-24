@@ -4,7 +4,7 @@ module BloodContracts
       class Switching
         ROOT_KEY = "blood_switcher".freeze
 
-        attr_reader :global_store, :contract_name, :storage_klass, :statistics
+        attr_reader :global_store, :contract_name, :storage_klass
         def initialize(base_storage)
           @global_store = base_storage.global_store
           @contract_name = base_storage.contract_name
