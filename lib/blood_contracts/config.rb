@@ -19,10 +19,11 @@ module BloodContracts
                   # redis_url: ENV["REDIS_URL"], # when :redis
                   # redis_connection: -> { ... } # when :redis
                   #
-                  # pg_connection: -> { ... }          # when :postgres
-                  database_url: ENV["DATABASE_URL"],   # when :postgres
-                  samples_table_name: "blood_samples", # when :postgres
-                  config_table_name: "blood_config",   # when :postgres
+                  # pg_connection: -> { ... }                 # when :postgres
+                  # pg_release_connection: ->(c) { c.finish } # when :postgres
+                  database_url: ENV["DATABASE_URL"],          # when :postgres
+                  samples_table_name: "blood_samples",        # when :postgres
+                  config_table_name: "blood_config",          # when :postgres
                 },
                 tags: {},
                 debug_file: ".bcontracts_debug"

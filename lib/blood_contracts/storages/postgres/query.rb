@@ -40,6 +40,8 @@ module BloodContracts
           reset_connection!
           prepare_variables(options)
           connection.exec(sql(query_name))
+        ensure
+          release_connection_proc.call(connection)
         end
 
         def contract_enabled(contract_name)
@@ -106,14 +108,20 @@ module BloodContracts
 
         def connection
           return @connection unless @connection.nil?
-          return @connection = pg_connection_proc.call if pg_connection_proc
+          return @connection = connection_proc.call if connection_proc
           return @connection = ::PG.connect(database_url) if database_url
 
           raise ArgumentError, "Postgres connection not configured!"
         end
 
-        def pg_connection_proc
-          @pg_connection_proc ||= BloodContracts.storage_config[:pg_connection]
+        def release_connection_proc
+          @release_connection_proc ||=
+            BloodContracts.storage_config[:pg_release_connection]
+          @release_connection_proc ||= ->(connection) { connection.finish }
+        end
+
+        def connection_proc
+          @connection_proc ||= BloodContracts.storage_config[:pg_connection]
         end
 
         def database_url
