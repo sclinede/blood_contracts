@@ -21,9 +21,10 @@ module BloodContracts
       def runner
         return super unless debug_enabled?
         return @runner if @runner.is_a?(Debugger)
-        @runner = Debugger.new(context: self, suite: to_contract_suite)
+        @runner =
+          Debugger.new(context: self, contract: _contract, storage: storage)
       end
-      alias :debugger :runner
+      alias :debug_runner :runner
 
       def warn_about_reraise_on(error)
         error ||= {}
@@ -39,13 +40,12 @@ module BloodContracts
         return super unless debug_enabled?
 
         output = nil
-        iterator = Iterator.new(debugger.iterations)
-        debugger.statistics.iterations_count = iterator.count
+        iterator = Iterator.new(debug_runner.iterations)
+        debug_runner.statistics.iterations_count = iterator.count
 
         iterator.next do
-          data = debugger.call
-          error = data.last
-          warn_about_reraise_on(error)
+          round = debug_runner.call
+          warn_about_reraise_on(round.error)
         end
         output
       end

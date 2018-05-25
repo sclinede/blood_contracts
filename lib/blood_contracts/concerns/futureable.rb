@@ -5,20 +5,19 @@ if defined?(Concurrent::Future)
     module Concerns
       module Futureable
         def _runner
-          @_runner ||= Runner.new(context: self, suite: to_contract_suite)
+          @_runner ||= Runner.new(
+            context: self, contract: _contract, storage: storage
+          )
         end
 
         def runner
-          @runner ||= RunnerFuture.new(_runner)
+          @runner ||=
+            respond_to?(:testing?) ? _runner : RunnerFuture.new(_runner)
         end
 
-        class RunnerFuture
-          def initialize(runner)
-            @runner = runner
-          end
-
+        class RunnerFuture < SimpleDelegator
           def call(**kwargs)
-            Concurrent::Future.execute { @runner.call(**kwargs) }
+            Concurrent::Future.execute { __getobj__.call(**kwargs) }
           end
         end
       end

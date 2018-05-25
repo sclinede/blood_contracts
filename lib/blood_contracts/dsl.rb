@@ -5,63 +5,52 @@ module BloodContracts
     using StringPathize
     DEFAULT_TAG = :default
 
-    attr_reader :rules
+    attr_reader :rules, :statistics_rules
     def inherited(child_klass)
       child_klass.instance_variable_set(:@rules, Set.new)
+      child_klass.instance_variable_set(:@statistics_rules, Hash.new)
       child_klass.prepend Concerns::Debuggable
     end
 
     def tag(config)
-      tags = BloodContracts.config.tags[to_s.pathize] || {}
+      tags = BloodContracts.config.tags[name.pathize] || {}
       config.each_pair do |tag, rules|
         rules.each { |rule| tags[rule.to_s] ||= tag.to_s }
       end
-      BloodContracts.config.tags[to_s.pathize] = tags
+      BloodContracts.config.tags[name.pathize] = tags
     end
 
     def contract_rule(name, tag: DEFAULT_TAG, &block)
       define_method("_#{name}", &block)
       rules << name
 
-      tags = BloodContracts.config.tags[to_s.pathize] || {}
+      tags = BloodContracts.config.tags[self.name.pathize] || {}
       tags[name.to_s] = tag
-      BloodContracts.config.tags[to_s.pathize] = tags
+      BloodContracts.config.tags[self.name.pathize] = tags
     end
 
-    def apply_to(klass:, methods:, override: false)
-      contract_accessor = "#{to_s.downcase.gsub(/\W/, '_')}_contract"
-      if klass.instance_methods.include?(contract_accessor) && !override
-        return warn <<~WARNING
-          WARNING! Class #{klass} already has a contract assigned.
-          Skipping #{self}#apply_to(...) at #{caller[0]}.\n
-        WARNING
-      end
+    class UselessStatisticsRule < ArgumentError; end
 
-      patch = Module.new do
-        def find_contract(klass)
-          send("#{klass.to_s.downcase.gsub(/\W/, '_')}_contract")
-        end
-      end
-
-      patch.module_eval <<~CODE
-        def #{contract_accessor}
-          @#{contract_accessor} ||= #{self}.new
-        end
-
-        %i(#{Array(methods).join(',')}).each do |method_name|
-          define_method(method_name) do |*args, **kwargs|
-            #{contract_accessor}.call(*args, **kwargs) do
-              if kwargs.empty?
-                super(*args)
-              else
-                super(*args, **kwargs)
-              end
-            end
-          end
-        end
-      CODE
-
-      klass.prepend patch
+    def statistics(rule_name, limit: nil, threshold: nil)
+      raise UselessStatisticsRule unless limit || threshold
+      statistics_rules[rule_name] = {limit: limit, threshold: threshold}.compact
     end
   end
 end
+#
+# @example
+#   class APIContract < BaseContract
+#     contract_rule :success do |api_call|
+#       api_call.response.success?
+#     end
+#
+#     contract_rule :failure do |api_call|
+#       api_call.response.failure?
+#     end
+#
+#     statistics :failure, limit: "10%" # of sampling batch
+#   end
+#
+#
+#
+#

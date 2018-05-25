@@ -9,28 +9,29 @@ module BloodContracts
   class Runner
     extend Dry::Initializer
 
-    option :suite
-    option :storage, default: -> { suite.storage }
+    option :contract
+    option :storage
 
     option :context, optional: true
 
-    option :statistics, default: -> { Contracts::Statistics.new }
-    option :matcher, default: -> { Contracts::Matcher.new(suite.contract) }
+    option :statistics, default: -> { Contracts::Statistics.new(storage) }
+    option :matcher, default: -> { Contracts::Matcher.new(contract) }
 
     # FIXME: block argument is missing.
     def call(args:, kwargs:, output: "", meta: {}, error: nil)
       (output, meta, error = yield(meta)) if block_given?
-      data = [{ args: args, kwargs: kwargs }, output, meta, error]
-
-      matcher.call(*data, statistics: statistics) do |rules, round|
+      round = Contracts::Round.new(
+        input: { args: args, kwargs: kwargs },
+        output: output, error: error, meta: meta
+      )
+      matcher.call(round) do |rules|
+        Array(rules).each(&statistics.method(:store))
         storage.store(round: round, rules: rules, context: context)
       end
-
-      data
     end
 
     def valid?
-      Contracts::Validator.new(suite.contract).valid?(statistics)
+      Contracts::Validator.new(contract).valid?(statistics)
     end
 
     # FIXME: Move to locales
@@ -56,7 +57,7 @@ module BloodContracts
     protected
 
     def contract_description
-      @contract_description ||= Contracts::Description.call(suite.contract)
+      @contract_description ||= Contracts::Description.call(contract)
     end
 
     def unexpected_suggestion

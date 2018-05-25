@@ -1,11 +1,19 @@
 module BloodContracts
   module Contracts
     class Statistics
-      extend Dry::Initializer
-      param :iterations_count, ->(v) { v.to_i }, default: -> { 1 }
-      attr_writer :iterations_count
+      attr_accessor :iterations_count
+      attr_reader :storage, :trackable_rules
 
-      option :storage, default: -> { Hash.new(0) }
+      def initialize(storage, iterations_count = nil)
+        @storage = Hash.new(0)
+        @iterations_count = (iterations_count || 1).to_i
+        @trackable_rules = Set.new
+      end
+
+      def counts
+        return {} if trackable_rules.empty?
+        storage.samples_count_per_rule(*trackable_rules)
+      end
 
       def store(rule)
         storage[rule] += 1
@@ -16,11 +24,7 @@ module BloodContracts
       end
 
       def to_s
-        rule_stats = to_h.map do |name, occasions|
-          " - '#{name}' happened #{occasions.times} time(s) "\
-          "(#{(occasions.percent * 100).round(2)}% of the time)"
-        end.join("; \n")
-
+        rule_stats = to_h.map(&method(:rule_stats_description)).join("; \n")
         return "Nothing captured.\n\n" if rule_stats.empty?
 
         if found_unexpected_behavior?
@@ -35,7 +39,17 @@ module BloodContracts
         storage.key?(Storage::UNDEFINED_RULE)
       end
 
+      def caught_exception?
+        storage.key?(Storage::EXCEPTION_CAUGHT)
+      end
+
       private
+
+      def rule_stats_description(stats)
+        name, occasions = stats
+        " - '#{name}' happened #{occasions.times} time(s) "\
+        "(#{(occasions.percent * 100).round(2)}% of the time)"
+      end
 
       def rule_stats(times)
         Hashie::Mash.new(times: times, percent: (times.to_f / iterations_count))

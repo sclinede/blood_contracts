@@ -1,0 +1,11 @@
+INSERT INTO <%= samples_table_name %>
+  (contract, session, period, round, rule, input, output)
+VALUES (
+  '<%= connection.escape_string(contract_name) %>',
+  '<%= connection.escape_string(session_name) %>',
+  '<%= period_name %>',
+  '<%= round_name %>',
+  '<%= connection.escape_string(@rule_name) %>',
+  '<%= connection.escape_string(@input) %>',
+  '<%= connection.escape_string(@output) %>'
+);

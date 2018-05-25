@@ -1,3 +1,4 @@
+require "oj"
 require_relative "./storages/base_backend.rb"
 require_relative "./storages/file_backend.rb"
 require_relative "./storages/postgres_backend.rb"
@@ -38,10 +39,12 @@ module BloodContracts
     def_delegators :@backend, :sample_exists?,
                    :load_sample, :find_all_samples, :find_sample,
                    :serialize_sample, :describe_sample,
-                   :suggestion, :unexpected_suggestion
+                   :suggestion, :unexpected_suggestion, :init,
+                   :contract_enabled?, :enable_contract!, :disable_contract!,
+                   :enable_contracts_global!, :disable_contracts_global!
 
     def default_storage_klass
-      case BloodContracts.storage[:type].downcase.to_sym
+      case BloodContracts.storage_config[:type].downcase.to_sym
       when :file
         BloodContracts::Storages::FileBackend
       when :postgres
@@ -95,7 +98,9 @@ module BloodContracts
       return unless BloodContracts.config.store
       Array(rules).each do |rule_name|
         next if sampler.limit_reached?(rule_name)
+        backend.new_probe!
         describe_sample(rule_name, round, context)
+        serialize_sample(rule_name, round, context)
         serialize_sample(rule_name, round, context)
       end
     end

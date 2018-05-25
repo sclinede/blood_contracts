@@ -7,13 +7,48 @@ module BloodContracts
       extend Forwardable
 
       param :storage
-      param :example_name
-      option :name, default: -> do
-        BloodContracts.run_name || ::Nanoid.generate(size: 10)
+      param :contract_name
+      option :session, default: -> do
+        BloodContracts.session_name || ::Nanoid.generate(size: 10)
       end
       def_delegators :@storage, :input_writer, :output_writer,
                      :input_serializer, :output_serializer, :meta_serializer,
                      :error_serializer
+
+      def init; end
+
+      def name_generator
+        @name_generator ||=
+          Samples::NameGenerator.new(session, contract_name, "/")
+      end
+      def_delegators :name_generator, :new_probe!, :extract_name_from, :path,
+                     :parse, :current_period, :current_round
+
+      def disable_contract!(*)
+        false
+      end
+
+      def enable_contracts_global!
+        raise ArgumentError, <<~MESSAGE
+          Global "hot" enable for contracts is not supported.
+          Please, use configuration setting or another storage backend.
+        MESSAGE
+      end
+
+      def disable_contracts_global!
+        raise ArgumentError, <<~MESSAGE
+          Global "hot" disable for contracts is not supported.
+          Please, use configuration setting or another storage backend.
+        MESSAGE
+      end
+
+      def enable_contract!(*)
+        false
+      end
+
+      def contract_enabled?(*)
+        BloodContracts.config.enabled
+      end
 
       def write(writer, cntxt, round_data)
         writer = cntxt.method(writer) if cntxt && writer.respond_to?(:to_sym)
@@ -34,13 +69,16 @@ module BloodContracts
         raise NotImplementedError
       end
 
-      def load_sample(sample_name)
-        %i(input output meta error).map do |type|
-          load_sample_chunk(type, sample_name)
-        end
+      def load_sample(sample_name = nil, **kwargs)
+        Contracts::Round.new(
+          input:  load_sample_chunk(:input,  sample_name, **kwargs),
+          output: load_sample_chunk(:output, sample_name, **kwargs),
+          meta:   load_sample_chunk(:meta,   sample_name, **kwargs),
+          error:  load_sample_chunk(:error,  sample_name, **kwargs)
+        )
       end
 
-      def load_sample_chunk(_dump_type, _sample_name)
+      def load_sample_chunk(_dump_type, _sample_name, **_kwargs)
         raise NotImplementedError
       end
 

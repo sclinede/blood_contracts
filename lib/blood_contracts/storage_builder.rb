@@ -1,19 +1,14 @@
 module BloodContracts
-  module RunBuilder
+  module StorageBuilder
     using StringPathize
 
-    def runner
-      @runner ||= Runner.new(context: self, suite: to_contract_suite)
-    end
-
-    def contract
-      @contract ||= Hash[
-        self.class.rules.map { |name| [name, { check: method("_#{name}") }] }
-      ]
-    end
-
-    def build_storage(name)
-      s = Storage.new(contract_name: name)
+    # rubocop:disable Metrics/MethodLength
+    # rubocop:disable Metrics/AbcSize
+    # rubocop:disable Metrics/CyclomaticComplexity
+    # rubocop:disable Metrics/PerceivedComplexity
+    def storage
+      return @storage if defined? @storage
+      s = Storage.new(contract_name: self.class.to_s.pathize)
 
       s.input_writer  = method(:input_writer)    if defined? input_writer
       s.input_writer  = method(:request_writer)  if defined? request_writer
@@ -26,11 +21,11 @@ module BloodContracts
       s.output_serializer = response_serializer if defined? response_serializer
 
       s.meta_serializer   = meta_serializer if defined? meta_serializer
-      s
+      @storage = s
     end
-
-    def to_contract_suite(name: self.class.to_s.pathize)
-      Suite.new(storage: build_storage(name), contract: contract)
-    end
+    # rubocop:enable Metrics/MethodLength
+    # rubocop:enable Metrics/AbcSize
+    # rubocop:enable Metrics/CyclomaticComplexity
+    # rubocop:enable Metrics/PerceivedComplexity
   end
 end

@@ -1,65 +1,16 @@
 require_relative "./samples/name_generator.rb"
+require_relative "./postgres/contract_switcher.rb"
+require_relative "./postgres/query.rb"
 
 module BloodContracts
   module Storages
     class PostgresBackend < BaseBackend
-      option :root, default: -> { name }
-      alias :contract :example_name
-      alias :session :name
+      option :root, default: -> { session }
 
-      class << self
-        def connection
-          return @connection if defined? @connection
-          raise "'pg' gem was not required" unless defined?(PG)
-          if BloodContracts.storage[:connection]
-            @connection = BloodContracts.storage[:connection].call
-          elsif BloodContracts.storage[:database_url]
-            @connection = PG.connect(BloodContracts.storage[:database_url])
-          else
-            raise ArgumentError, "Postgres connection not configured!"
-          end
-          @connection
-        end
+      include Postgres::ContractSwitcher
 
-        def table_name
-          @table_name ||= BloodContracts.storage[:table_name]
-        end
-
-        def drop_table!
-          connection.exec "DROP TABLE IF EXISTS #{table_name};"
-        end
-
-        def create_table!
-          connection.exec(<<-SQL)
-            CREATE TABLE IF NOT EXISTS #{table_name} (
-              created_at timestamp DEFAULT current_timestamp,
-
-              contract text,
-              session text,
-              rule text,
-              round bigint,
-              period bigint,
-
-              input text,
-              output text,
-              input_dump text,
-              output_dump text,
-              meta_dump text,
-              error_dump text,
-              CONSTRAINT uniq_#{table_name}_name
-              UNIQUE(contract, session, period, rule, round)
-            );
-          SQL
-        end
-      end
-
-      def_delegators :"self.class", :connection, :table_name
-      def_delegators :name_generator,
-                     :extract_name_from, :path, :parse, :current_period,
-                     :current_round
-
-      def name_generator
-        @name_generator ||= Samples::NameGenerator.new(name, example_name, "/")
+      def query
+        @query ||= Postgres::Query.build(self)
       end
 
       def suggestion
@@ -70,105 +21,60 @@ module BloodContracts
         "Postgres(#{table_name}):#{path}/#{Storage::UNDEFINED_RULE}/*"
       end
 
-      def find_all_samples(sample_name)
-        match = parse(sample_name)
-        session, period, rule, round = match.map { |v| v.sub("*", ".*") }
-        connection.exec <<-SQL
-          SELECT session || '/' || contract || '/' || period || '/' ||
-                 rule || '/' || round as name
-          FROM #{table_name}
-          WHERE contract ~ '#{contract}'
-          AND session ~ '#{connection.escape_string(session)}'
-          AND period::text ~ '#{period}'
-          AND round::text ~ '#{round}'
-          AND rule ~ '#{connection.escape_string(rule)}';
-        SQL
+      def find_all_samples(path = nil, **kwargs)
+        session, period, rule, round = parse(path, **kwargs).map do |v|
+          v.sub("*", ".*")
+        end
+        query.find_all_samples(session, period, rule, round)
       end
 
       def samples_count(rule)
-        connection.exec(<<-SQL).first["count"].to_i
-          SELECT COUNT(1) FROM #{table_name}
-          WHERE contract = '#{example_name}'
-          AND period::text ~ '#{current_period}'
-          AND rule = '#{connection.escape_string(rule)}';
-        SQL
+        query.samples_count(rule)
       end
 
-      def find_sample(sample_name)
-        match = parse(sample_name)
-        session, period, rule, round = match.map { |v| v.sub("*", ".*") }
-        connection.exec(<<-SQL).first.to_h["name"]
-          SELECT session || '/' || contract || '/' || period || '/' ||
-                 rule || '/' || round as name
-          FROM #{table_name}
-          WHERE contract ~ '#{contract}'
-          AND session ~ '#{connection.escape_string(session)}'
-          AND period::text ~ '#{period}'
-          AND round::text ~ '#{round}'
-          AND rule ~ '#{connection.escape_string(rule)}';
-        SQL
+      def find_sample(path = nil, **kwargs)
+        session, period, rule, round = parse(path, **kwargs).map do |v|
+          v.to_s.sub("*", ".*")
+        end
+        query.find_sample(session, period, rule, round)
       end
 
-      def sample_exists?(sample_name)
-        match = parse(sample_name)
-        session, period, rule, round = match.map { |v| v.sub("*", ".*") }
-        connection.exec(<<-SQL).first["count"].to_i.positive?
-          SELECT COUNT(1) FROM #{table_name}
-          WHERE contract ~ '#{contract}'
-          AND session ~ '#{connection.escape_string(session)}'
-          AND period::text ~ '#{period}'
-          AND round::text ~ '#{round}'
-          AND rule ~ '#{connection.escape_string(rule)}';
-        SQL
+      def sample_exists?(path = nil, **kwargs)
+        find_sample(path, **kwargs).present?
       end
 
-      def load_sample_chunk(dump_type, sample_name)
-        session, period, rule, round = parse(sample_name)
-        send("#{dump_type}_serializer")[:load].call(
-          connection.exec(<<-SQL).first.to_h.fetch("dump")
-            SELECT #{dump_type}_dump as dump FROM #{table_name}
-            WHERE contract = '#{contract}'
-            AND session = '#{connection.escape_string(session)}'
-            AND period = '#{period}'
-            AND round = '#{round}'
-            AND rule = '#{connection.escape_string(rule)}';
-          SQL
+      class SampleNotFound < StandardError; end
+
+      def load_sample_chunk(chunk, path = nil, **kwargs)
+        raise SampleNotFound unless (found_sample = find_sample(path, **kwargs))
+        session, period, rule, round = parse(found_sample)
+        send("#{chunk}_serializer")[:load].call(
+          query.load_sample_chunk(session, period, rule, round, chunk)
         )
       end
 
-      def write(*)
-        connection.escape_string(super)
-      end
-
       def describe_sample(rule, round_data, context)
-        name_generator.reset_timestamp!
-        connection.exec(<<-SQL)
-          INSERT INTO #{table_name}
-            (contract, session, period, round, rule, input, output)
-          VALUES (
-            '#{contract}',
-            '#{session}',
-            '#{current_period}',
-            '#{current_round}',
-            '#{rule}',
-            '#{write(input_writer, context, round_data)}',
-            '#{write(output_writer, context, round_data)}'
-          )
-        SQL
+        query.execute(
+          :insert_sample,
+          period_name: current_period,
+          round_name: current_round,
+          rule_name: rule,
+          input: write(input_writer, context, round_data),
+          output: write(output_writer, context, round_data)
+        )
       end
 
       def serialize_sample_chunk(chunk, rule, round_data, context)
         return unless (dump_proc = send("#{chunk}_serializer")[:dump])
         data = round_data.send(chunk)
-        connection.exec(<<-SQL)
-          UPDATE #{table_name}
-          SET #{chunk}_dump = '#{write(dump_proc, context, data)}'
-          WHERE contract = '#{contract}'
-          AND session = '#{connection.escape_string(session)}'
-          AND period = '#{current_period}'
-          AND round = '#{current_round}'
-          AND rule = '#{connection.escape_string(rule.to_s)}';
-        SQL
+        query.execute(
+          :serialize_sample_chunk,
+          period_name: current_period,
+          round_name: current_round,
+          rule_name: rule,
+          chunk_name: chunk,
+          data: write(dump_proc, context, data)
+        )
       end
     end
   end

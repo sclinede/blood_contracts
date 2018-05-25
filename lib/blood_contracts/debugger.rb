@@ -1,6 +1,8 @@
 module BloodContracts
   class Debugger < Runner
-    option :statistics, default: -> { Contracts::Statistics.new(iterations) }
+    option :statistics, default: -> do
+      Contracts::Statistics.new(storage, iterations)
+    end
 
     def runs
       @runs ||= debug_runs # storage.find_all_samples(ENV["debug"]).each
@@ -10,12 +12,12 @@ module BloodContracts
       runs.size
     end
 
-    def call(args: nil, kwargs: nil, output: "", meta: {}, error: nil)
-      return [] unless debugging_samples?
+    def call(*)
+      return Contracts::Round.new unless debugging_samples?
 
-      data = storage.load_sample(runs.next)
-      matcher.call(*data, statistics: statistics)
-      data
+      matcher.call(storage.load_sample(runs.next)) do |rules|
+        Array(rules).each(&statistics.method(:store))
+      end
     end
 
     def description
