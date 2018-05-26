@@ -22,6 +22,8 @@ module BloodContracts
           reset_connection!
           prepare_variables(options)
           connection.exec(sql(query_name))
+        ensure
+          release_connection_proc.call(connection)
         end
 
         def contract_enabled(contract_name)

@@ -39,6 +39,11 @@ module BloodContracts
             raise ArgumentError, "Postgres connection not configured!"
           end
 
+          def release_connection_proc
+            @release_connection_proc ||= postgres_config[:release_connection]
+            @release_connection_proc ||= ->(connection) { connection.finish }
+          end
+
           def connection_proc
             @connection_proc ||= postgres_config[:connection]
           end

@@ -29,6 +29,7 @@ module BloodContracts
                   memory: {},
                   postgres: {
                     # connection: -> { ... }
+                    # release_connection: ->(c) { c.finish }, #
                     database_url: ENV["DATABASE_URL"],
                     samples_table_name: "blood_samples",
                     config_table_name: "blood_config"
