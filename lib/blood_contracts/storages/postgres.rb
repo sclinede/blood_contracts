@@ -15,7 +15,7 @@ module BloodContracts
         Sampling.new(query, sampler)
       end
 
-      def drop_table!
+      def drop_tables!
         query.execute(:drop_tables)
       end
 
