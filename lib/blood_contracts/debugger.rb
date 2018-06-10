@@ -11,10 +11,7 @@ module BloodContracts
     def call(*)
       return Contracts::Round.new unless debugging_samples_available?
 
-      matcher.call(sampler.load_sample(runs.next)) do |rules|
-        # FIXME: replace with Middleware, rememeber to exclude Sampling
-        Array(rules).each(&statistics.method(:store))
-      end
+      matcher.call(sampler.load_sample(runs.next))
     end
 
     # FIXME: move to Decorator
