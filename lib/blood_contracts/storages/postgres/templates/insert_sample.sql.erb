@@ -5,7 +5,7 @@ VALUES (
   '<%= connection.escape_string(session_name) %>',
   '<%= period_name %>',
   '<%= round_name %>',
-  '<%= connection.escape_string(@rule_name) %>',
-  '<%= connection.escape_string(@input) %>',
-  '<%= connection.escape_string(@output) %>'
+  '<%= connection.escape_string(@rule_name.to_s) %>',
+  '<%= connection.escape_string(@input.to_s) %>',
+  '<%= connection.escape_string(@output.to_s) %>'
 );
