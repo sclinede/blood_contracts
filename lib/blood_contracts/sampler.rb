@@ -1,5 +1,6 @@
 require_relative "./samplers/utils.rb"
-require_relative "./samplers/serializers_writers.rb"
+require_relative "./samplers/serializers_accessors.rb"
+require_relative "./samplers/preview_accessors.rb"
 require_relative "./samplers/limiter.rb"
 
 module BloodContracts
@@ -7,23 +8,11 @@ module BloodContracts
     extend Dry::Initializer
     extend Forwardable
 
-    include SerializersWriters
-
     option :contract_name
     option :session, optional: true
 
-    DEFAULT_INPUT_WRITER = ->(round) { "INPUT:\n#{round.input}" }
-    option :input_writer,
-           ->(v) { valid_writer(v) }, default: -> { DEFAULT_INPUT_WRITER }
-
-    DEFAULT_OUTPUT_WRITER = ->(round) { "OUTPUT:\n#{round.output}" }
-    option :output_writer,
-           ->(v) { valid_writer(v) }, default: -> { DEFAULT_OUTPUT_WRITER }
-
-    def self.valid_writer(writer)
-      return writer if writer.respond_to?(:call) || writer.respond_to?(:to_sym)
-      raise ArgumentError
-    end
+    include Samplers::SerializersAccessors
+    include Samplers::PreviewersAccessors
 
     def initialize(*)
       super
@@ -53,7 +42,7 @@ module BloodContracts
       Array(rules).each do |rule_name|
         reset_sample!
         next if limiter.limit_reached?(rule_name)
-        storage.describe(rule_name, round, context)
+        storage.preview(rule_name, round, context)
         storage.serialize(rule_name, round, context)
       end
     end

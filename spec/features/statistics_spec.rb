@@ -7,7 +7,6 @@ RSpec.describe "Contract Statistics", type: :feature do
   before do
     BloodContracts.config do |config|
       config.enabled = true
-      config.raise_on_failure = true
       config.statistics["enabled"] = true
     end
   end

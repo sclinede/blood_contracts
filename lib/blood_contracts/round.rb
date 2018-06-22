@@ -25,21 +25,20 @@ module BloodContracts
       @data["raw_error"]
     end
 
-    def input_description
-      @data["input_description"]
+    def input_preview
+      @data["input_preview"]
     end
-    alias :request_description :input_description
+    alias :request_preview :input_preview
 
-    def output_description
-      @data["output_description"]
+    def output_preview
+      @data["output_preview"]
     end
-    alias :response_description :output_description
+    alias :response_preview :output_preview
 
     def initialize(**kwargs)
       kwargs[:raw_error] = kwargs[:error]
       kwargs[:error] = wrap_error(kwargs[:raw_error])
-      kwargs[:input] = prepare_input(kwargs[:input])
-      @data = Hashie.stringify_keys!(kwargs)
+      @data = stringify_keys!(kwargs)
     end
 
     def to_h
@@ -52,9 +51,29 @@ module BloodContracts
 
     private
 
-    def prepare_input(input)
-      return input.inspect unless input.respond_to?(:to_h)
-      input.to_h.transform_values(&:inspect)
+    StringifyExtenstion = Hashie::Extensions::StringifyKeys
+
+    def stringify_keys!(hash)
+      return hash unless hash.respond_to?(:to_hash)
+      hash.extend(StringifyExtenstion) unless hash.respond_to?(:stringify_keys!)
+      hash.keys.each do |k|
+        stringify_keys_recursively!(hash[k])
+        hash[k.to_s] = hash.delete(k)
+      end
+      hash
+    end
+
+    def stringify_keys_recursively!(object)
+      case object
+      when self.class
+        stringify_keys!(object)
+      when ::Array
+        object.each do |i|
+          stringify_keys_recursively!(i)
+        end
+      when ::Hash
+        stringify_keys!(object)
+      end
     end
 
     def wrap_error(exception)

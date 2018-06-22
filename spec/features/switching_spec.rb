@@ -15,7 +15,6 @@ RSpec.describe "Contract Switching" do
       before do
         BloodContracts.config do |config|
           config.enabled = false
-          config.raise_on_failure = true
           config.switching["storage"] = :memory
         end
         contract
@@ -43,7 +42,6 @@ RSpec.describe "Contract Switching" do
       before do
         BloodContracts.config do |config|
           config.enabled = true
-          config.raise_on_failure = true
         end
       end
 
@@ -77,7 +75,6 @@ RSpec.describe "Contract Switching" do
       before do
         BloodContracts.config do |config|
           config.enabled = false
-          config.raise_on_failure = true
         end
         contract
       end
@@ -104,7 +101,6 @@ RSpec.describe "Contract Switching" do
       before do
         BloodContracts.config do |config|
           config.enabled = true
-          config.raise_on_failure = true
         end
       end
 

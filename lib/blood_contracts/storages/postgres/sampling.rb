@@ -40,20 +40,20 @@ module BloodContracts
           )
         end
 
-        def load_description(_chunk_name, path = nil, **kwargs)
+        def load_preview(_chunk_name, path = nil, **kwargs)
           raise SampleNotFound unless (name = find(path, **kwargs))
           session, period, rule, round = parse(name)
-          query.load_sample_description(session, period, rule, round, chunk)
+          query.load_sample_preview(session, period, rule, round, chunk)
         end
 
-        def describe(rule, round_data, context)
+        def preview(rule, round_data, context)
           query.execute(
             :insert_sample,
             sampling_period_name: sample.current_period,
             round_name: sample.current_round,
             rule_name: rule,
-            input: write(input_writer, context, round_data),
-            output: write(output_writer, context, round_data)
+            input: write(input_previewer, context, round_data),
+            output: write(output_previewer, context, round_data)
           )
         end
 

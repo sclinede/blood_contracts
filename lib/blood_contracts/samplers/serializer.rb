@@ -1,4 +1,4 @@
-require "json"
+require "oj"
 
 module BloodContracts
   module Samplers
@@ -33,7 +33,7 @@ module BloodContracts
       end
 
       def default_serializer
-        { load: JSON.method(:load), dump: JSON.method(:dump) }
+        { load: Oj.method(:load), dump: Oj.method(:dump) }
       end
 
       def hash_serializer?

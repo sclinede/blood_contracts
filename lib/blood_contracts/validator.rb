@@ -12,11 +12,10 @@ module BloodContracts
     # rubocop:disable Metrics/LineLength, Metrics/AbcSize
     def call
       return true if valid?
-      return false unless BloodContracts.config.raise_on_failure
-
       raise GuaranteesFailure, round.to_h if rules.include?(GUARANTEE_FAILURE)
       raise ExpectationsFailure, round.to_h if rules.include?(UNEXPECTED_BEHAVIOR)
       # FIXME: we have to output the `round` for the case, somewhere...
+      # use logger ?
       raise round.raw_error if rules.include?(UNEXPECTED_EXCEPTION)
     end
     # rubocop:enable Metrics/LineLength, Metrics/AbcSize

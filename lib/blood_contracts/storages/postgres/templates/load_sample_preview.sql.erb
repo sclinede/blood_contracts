@@ -1,4 +1,4 @@
-SELECT <%= @chunk_name %> as description
+SELECT <%= @chunk_name %> as preview
 FROM <%= samples_table_name %>
 WHERE contract ~ '<%= connection.escape_string(contract_name) %>'
 AND session = '<%= connection.escape_string(session_name) %>'

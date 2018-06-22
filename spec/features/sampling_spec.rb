@@ -6,7 +6,6 @@ RSpec.describe "Contract Sampling" do
   before do
     BloodContracts.config do |config|
       config.enabled = true
-      config.raise_on_failure = true
       config.sampling["enabled"] = true
       config.sampling["period"] = 3600
       config.sampling["limit_per_tag"] = {
@@ -43,8 +42,8 @@ RSpec.describe "Contract Sampling" do
     context "when sample is :usual" do
       let(:input) do
         hash_including(
-          "args" => [:saint_p].inspect.inspect,
-          "kwargs" => {}.inspect.inspect
+          "args" => [:saint_p],
+          "kwargs" => {}
         )
       end
 
@@ -62,8 +61,8 @@ RSpec.describe "Contract Sampling" do
     context "when sample is :client_error" do
       let(:input) do
         hash_including(
-          "args" => [:code_404].inspect.inspect,
-          "kwargs" => {}.inspect.inspect
+          "args" => [:code_404],
+          "kwargs" => {}
         )
       end
 
@@ -81,8 +80,8 @@ RSpec.describe "Contract Sampling" do
     context "when sample is :parsing_error" do
       let(:input) do
         hash_including(
-          "args" => [:parsing_exception].inspect.inspect,
-          "kwargs" => {}.inspect.inspect
+          "args" => [:parsing_exception],
+          "kwargs" => {}
         )
       end
 
@@ -90,8 +89,8 @@ RSpec.describe "Contract Sampling" do
         round = contract.sampler.load(rule: :parsing_error)
         expect(round.input).to match(input)
         expect(round.response).to be_nil
-        expect(round.input_description).to match(/args.*parsing_exception/)
-        expect(round.response_description).to match(/xml/)
+        expect(round.input_preview).to match(/args.*parsing_exception/)
+        expect(round.response_preview).to match(/xml/)
         expect(round.error.keys).to include(JSON::ParserError.to_s)
         expect(round.meta).to match(meta)
         expect(round.meta["checked_rules"].size).to eq(8)
@@ -103,8 +102,8 @@ RSpec.describe "Contract Sampling" do
     context "when sample is :__guarantee_failure__" do
       let(:input) do
         hash_including(
-          "args" => [].inspect.inspect,
-          "kwargs" => {}.inspect.inspect
+          "args" => [],
+          "kwargs" => {}
         )
       end
 
@@ -112,8 +111,8 @@ RSpec.describe "Contract Sampling" do
         round = contract.sampler.load(rule: BloodContracts::GUARANTEE_FAILURE)
         expect(round.input).to match(input)
         expect(round.response).to be_nil
-        expect(round.input_description).to match(/args.*\[\]/)
-        expect(round.response_description).to match(//)
+        expect(round.input_preview).to match(/args.*\[\]/)
+        expect(round.response_preview).to match(//)
         expect(round.error).to be_empty
         expect(round.meta).to match(meta)
         expect(round.meta["checked_rules"].size).to eq(1)
@@ -123,8 +122,8 @@ RSpec.describe "Contract Sampling" do
     context "when sample is :__unexpected_behavior__" do
       let(:input) do
         hash_including(
-          "args" => [:unexpected].inspect.inspect,
-          "kwargs" => {}.inspect.inspect
+          "args" => [:unexpected],
+          "kwargs" => {}
         )
       end
 
@@ -132,8 +131,8 @@ RSpec.describe "Contract Sampling" do
         round = contract.sampler.load(rule: BloodContracts::UNEXPECTED_BEHAVIOR)
         expect(round.input).to match(input)
         expect(round.response).to match(response)
-        expect(round.input_description).to match(/args.*unexpected/)
-        expect(round.response_description).to match(//)
+        expect(round.input_preview).to match(/args.*unexpected/)
+        expect(round.response_preview).to match(//)
         expect(round.error).to be_empty
         expect(round.meta).to match(meta)
         expect(round.meta["checked_rules"].size).to eq(8)
@@ -143,8 +142,8 @@ RSpec.describe "Contract Sampling" do
     context "when sample is :__unexpected_exception__" do
       let(:input) do
         hash_including(
-          "args" => ["Errno::ENOENT, please"].inspect.inspect,
-          "kwargs" => {}.inspect.inspect
+          "args" => ["Errno::ENOENT, please"],
+          "kwargs" => {}
         )
       end
 
@@ -154,8 +153,8 @@ RSpec.describe "Contract Sampling" do
         )
         expect(round.input).to match(input)
         expect(round.response).to be_nil
-        expect(round.input_description).to match(/args.*Errno::ENOENT, please/)
-        expect(round.response_description).to match(//)
+        expect(round.input_preview).to match(/args.*Errno::ENOENT, please/)
+        expect(round.response_preview).to match(//)
         expect(round.error.keys).to include(Errno::ENOENT.to_s)
         expect(round.meta).to match(meta)
         expect(round.meta["checked_rules"].size).to eq(8)
@@ -165,8 +164,8 @@ RSpec.describe "Contract Sampling" do
     context "when sample is :saint_p_weather" do
       let(:input) do
         hash_including(
-          "args" => [:saint_p].inspect.inspect,
-          "kwargs" => {}.inspect.inspect
+          "args" => [:saint_p],
+          "kwargs" => {}
         )
       end
 
@@ -184,8 +183,8 @@ RSpec.describe "Contract Sampling" do
     context "when sample is :london_weather" do
       let(:input) do
         hash_including(
-          "args" => [:london].inspect.inspect,
-          "kwargs" => {}.inspect.inspect
+          "args" => [:london],
+          "kwargs" => {}
         )
       end
 

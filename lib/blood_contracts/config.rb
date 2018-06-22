@@ -6,9 +6,7 @@ require "tmpdir"
 module BloodContracts
   class Config < Anyway::Config
     config_name :contracts
-    attr_config store: true,
-                enabled: false,
-                raise_on_failure: true,
+    attr_config enabled: false,
                 statistics: {
                   period: 3600,
                   storage: :memory
@@ -28,15 +26,15 @@ module BloodContracts
                   },
                   memory: {},
                   postgres: {
-                    # connection: -> { ... }
-                    # release_connection: ->(c) { c.finish }, #
-                    database_url: ENV["DATABASE_URL"],
+                    # connection: -> { ... },
+                    # release_connection: ->(c) { c.finish },
+                    # database_url: "",
                     samples_table_name: "blood_samples",
                     config_table_name: "blood_config"
                   },
                   redis: {
-                    # connection: -> { ... }
-                    redis_url: ENV["REDIS_URL"],
+                    # connection: -> { ... },
+                    # redis_url: "",
                     root_key: "blood_redis"
                   }
                 },

@@ -8,7 +8,6 @@ require_relative "blood_contracts/storages/file.rb"
 require_relative "blood_contracts/storages/redis.rb"
 require_relative "blood_contracts/storages/memory.rb"
 require_relative "blood_contracts/storages/postgres.rb"
-# require_relative "blood_contracts/storages/redis.rb"
 
 require_relative "blood_contracts/ext/string_pathize"
 require_relative "blood_contracts/config"

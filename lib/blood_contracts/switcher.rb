@@ -28,6 +28,8 @@ module BloodContracts
       when :postgres
         BloodContracts::Storages::Postgres
       else
+        warn "[#{self.class}] Unsupported storage type"\
+             "(#{storage_type}) configured!"
         BloodContracts::Storages::Base
       end
     end

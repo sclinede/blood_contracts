@@ -22,7 +22,6 @@ module BloodContracts
       def create_tables!
         query.execute(:create_tables)
       end
-      alias :init :create_tables!
 
       def query
         @query ||= Query.new(

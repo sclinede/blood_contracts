@@ -1,4 +1,5 @@
 if defined?(Concurrent::Future)
+  warn "EXPERIMENTAL. BloodContracts::Concerns::Futureable is experimental and could cause unexpected behavior if your code is not Thread-safe"
   require "concurrent"
 
   module BloodContracts
@@ -21,4 +22,6 @@ if defined?(Concurrent::Future)
       end
     end
   end
+else
+  warn "You're attempted to use Futureable, but Concurrent::Future class is not registered yet. Please, install `concurrent-ruby` gem."
 end

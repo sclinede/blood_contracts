@@ -49,7 +49,9 @@ module BloodContracts
           end
 
           def database_url
-            @database_url ||= postgres_config[:database_url]
+            @database_url ||= postgres_config.fetch(:database_url) do
+              ENV["DATABASE_URL"]
+            end
           end
 
           def postgres_config

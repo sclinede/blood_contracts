@@ -17,13 +17,13 @@ module BloodContracts
         end
       end
 
-      WRITERS_4_SAMPLER = {
-        input_writer: :input_writer=,
-        request_writer: :input_writer=,
-        request_formatter: :input_writer=,
-        output_writer: :output_writer=,
-        response_writer: :output_writer=,
-        response_formatter: :output_writer=
+      PREVIEWERS_4_SAMPLER = {
+        input_previewer: :input_previewer=,
+        request_previewer: :input_previewer=,
+        request_formatter: :input_previewer=,
+        output_previewer: :output_previewer=,
+        response_previewer: :output_previewer=,
+        response_formatter: :output_previewer=
       }.freeze
 
       SERIALIZERS_4_SAMPLER = {
@@ -38,9 +38,9 @@ module BloodContracts
       def reset_sampler!
         sampler = Sampler.new(contract_name: self.class.to_s.pathize)
 
-        WRITERS_4_SAMPLER.each do |writer_method, sampler_accessor|
-          next unless respond_to?(writer_method)
-          sampler.send(sampler_accessor, method(writer_method))
+        PREVIEWERS_4_SAMPLER.each do |previewer_method, sampler_accessor|
+          next unless respond_to?(previewer_method)
+          sampler.send(sampler_accessor, method(previewer_method))
         end
 
         SERIALIZERS_4_SAMPLER.each do |serializer_method, sampler_accessor|

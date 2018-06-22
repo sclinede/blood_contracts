@@ -70,4 +70,6 @@ if defined?(Sniffer)
       end
     end
   end
+else
+  warn "You're attempted to use Snifferable, but Sniffer class is not registered yet. Please, install `sniffer` gem."
 end

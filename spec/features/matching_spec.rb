@@ -6,7 +6,6 @@ RSpec.describe "Contract Rules Matching" do
   before do
     BloodContracts.config do |config|
       config.enabled = true
-      config.raise_on_failure = true
     end
   end
   after { contract.sampler.delete_all }

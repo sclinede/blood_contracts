@@ -37,7 +37,7 @@ module BloodContracts
           sampler.utils.exists?(sample_name)
         end
 
-        def load_description(chunk_name, path = nil, **kwargs)
+        def load_preview(chunk_name, path = nil, **kwargs)
           sample_path = find(path, **kwargs)
           ::File.read("#{sample_path}/#{chunk_name}")
         end
@@ -49,14 +49,14 @@ module BloodContracts
           )
         end
 
-        def describe(rule, round, context)
+        def preview(rule, round, context)
           name = sampler.sample.name(rule)
           ::FileUtils.mkdir_p(name)
           ::File.open("#{name}/input", "w+") do |f|
-            f << write(sampler.input_writer, context, round)
+            f << write(sampler.input_previewer, context, round)
           end
           ::File.open("#{name}/output", "w+") do |f|
-            f << write(sampler.output_writer, context, round)
+            f << write(sampler.output_previewer, context, round)
           end
         end
 

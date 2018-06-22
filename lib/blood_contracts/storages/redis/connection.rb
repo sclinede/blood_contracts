@@ -54,7 +54,7 @@ module BloodContracts
         # rubocop: enable Metrics/MethodLength
 
         def redis_url
-          @redis_url ||= redis_config[:redis_url]
+          @redis_url ||= redis_config.fetch(:redis_url) { ENV["REDIS_URL"] }
         end
 
         def redis_config
