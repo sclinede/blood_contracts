@@ -2,7 +2,10 @@ module BloodContracts::GlobalConfig
   class << self
     def extended(klass)
       klass.instance_variable_set(:@tags, {})
-      klass.instance_variable_set(:@chain, BloodContracts::Middleware::Chain.new)
+      klass.instance_variable_set(
+        :@chain,
+        BloodContracts::Middleware::Chain.new
+      )
       klass.apply_config! if init_config?
     end
 

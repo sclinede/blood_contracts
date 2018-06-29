@@ -43,10 +43,10 @@ module BloodContracts
 
         ROUND_CHUNK_ARGS = %i(
           session_name sampling_period_name rule_name round_name chunk_name
-        )
+        ).freeze
         ROUND_ARGS = %i(
           session_name sampling_period_name rule_name round_name
-        )
+        ).freeze
 
         def_single_row_query :load_sample_chunk,
                              field_name: "dump", args: ROUND_CHUNK_ARGS

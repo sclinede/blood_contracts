@@ -34,6 +34,7 @@ module BloodContracts
         entries.insert(i, new_entry)
       end
 
+      # rubocop:disable Metrics/AbcSize
       def insert_after(oldklass, newklass, *args)
         i = entries.index { |entry| entry.klass == newklass }
         new_entry = i.nil? ? Entry.new(newklass, *args) : entries.delete_at(i)
@@ -41,6 +42,7 @@ module BloodContracts
         i ||= entries.count - 1
         entries.insert(i + 1, new_entry)
       end
+      # rubocop:enable Metrics/AbcSize
 
       def exists?(klass)
         any? { |entry| entry.klass == klass }

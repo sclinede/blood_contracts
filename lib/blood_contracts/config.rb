@@ -40,6 +40,5 @@ module BloodContracts
                 },
                 tags: {},
                 debug_file: ".blood_debug"
-
   end
 end

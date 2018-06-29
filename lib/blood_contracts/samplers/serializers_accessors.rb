@@ -4,16 +4,18 @@ module BloodContracts
   module Samplers
     module SerializersAccessors
       Serializer = BloodContracts::Samplers::Serializer
+      DEFAULT_SERIALIZER_OPTS = [
+        ->(v) { Serializer.call(v) },
+        {
+          default: -> { nil }
+        }
+      ].freeze
 
       def self.included(klass)
-        klass.option :input_serializer,
-                     ->(v) { Serializer.call(v) }, default: -> { nil }
-        klass.option :output_serializer,
-                     ->(v) { Serializer.call(v) }, default: -> { nil }
-        klass.option :meta_serializer,
-                     ->(v) { Serializer.call(v) }, default: -> { nil }
-        klass.option :error_serializer,
-                     ->(v) { Serializer.call(v) }, default: -> { nil }
+        klass.option :input_serializer,  *DEFAULT_SERIALIZER_OPTS
+        klass.option :output_serializer, *DEFAULT_SERIALIZER_OPTS
+        klass.option :meta_serializer,   *DEFAULT_SERIALIZER_OPTS
+        klass.option :error_serializer,  *DEFAULT_SERIALIZER_OPTS
       end
 
       def self.serializer_accessor(name)

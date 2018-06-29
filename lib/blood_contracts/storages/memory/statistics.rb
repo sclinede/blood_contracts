@@ -35,16 +35,14 @@ module BloodContracts
           storage[period][rule] += 1
         end
 
+        # FIXME: #values_at not exist for Concurrent::Map
+        # stats = storage.values_at(*periods)
         def filter(*periods)
-          # FIXME: #values_at not exist for Concurrent::Map
-          # stats = storage.values_at(*periods)
           stats = periods.each_with_object([]) do |period, data|
             next unless (period_data = storage[period])
             data << Hash[period_data.keys.zip(period_data.values)]
           end
-          periods.map! do |period_int|
-            Time.at(period_int * statistics.period_size)
-          end
+          periods = periods_to_timestamps(periods)
           Hash[periods.zip(stats)]
         end
 
@@ -57,6 +55,12 @@ module BloodContracts
         end
 
         private
+
+        def periods_to_timestamps(periods)
+          periods.map do |period_int|
+            Time.at(period_int * statistics.period_size)
+          end
+        end
 
         def prepare_storage(period)
           return unless storage[period].nil?

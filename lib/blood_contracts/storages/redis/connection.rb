@@ -4,6 +4,12 @@ module BloodContracts
   module Storages
     class Redis < Base
       module Connection
+        REDIS_REQUIREMENTS =
+          "Please, install and configure 'redis' to use "\
+          "Redis DB:\n # Gemfile\n"\
+          "gem 'redis', '~> x.x', require: false\n"\
+          "gem 'connection_pool', '~> x.x', require: false".freeze
+
         def redis_loaded?
           return true if defined?(::Redis) && defined?(::ConnectionPool)
 
@@ -11,12 +17,7 @@ module BloodContracts
             require "redis"
             require "connection_pool"
           rescue LoadError
-            warn(
-              "Please, install and configure 'redis' to use Redis DB:\n" \
-              "# Gemfile\n" \
-              "gem 'redis', '~> x.x', require: false\n"\
-              "gem 'connection_pool', '~> x.x', require: false"
-            )
+            warn REDIS_REQUIREMENTS
           end
         end
 
@@ -31,7 +32,7 @@ module BloodContracts
         # FIXME: Do not forget about ConnectionPool, to be safe
         def connection
           return ::Redis.new(url: redis_url) if redis_url
-          connection_proc.call if connection_proc
+          connection_proc&.call
         end
 
         # rubocop: disable Metrics/MethodLength

@@ -48,6 +48,7 @@ module BloodContracts
 
         GLOBAL_CONTRACTS_KEY = "blood_contracts:global-contracts-enabled".freeze
 
+        # rubocop:disable Security/MarshalLoad
         def global_switcher_state
           return unless (value = redis.get(GLOBAL_CONTRACTS_KEY))
           Marshal.load(value)
@@ -65,6 +66,7 @@ module BloodContracts
         def contract_switcher_set(a_contract_name, value)
           redis.set(contract_key(a_contract_name), Marshal.dump(value))
         end
+        # rubocop:enable Security/MarshalLoad
 
         def contract_key(a_contract_name)
           "blood_contracts:contract-#{a_contract_name}-enabled"

@@ -108,7 +108,6 @@ RSpec.describe "Contract Statistics", type: :feature do
                           ])
       end
     end
-
   end
 
   context "when Memory storage" do

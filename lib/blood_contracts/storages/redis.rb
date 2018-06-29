@@ -30,6 +30,7 @@ module BloodContracts
           ConnectionPoolProxy.proxy_if_needed(conn)
       end
 
+      # rubocop:disable Style/GlobalVars
       def redis
         Thread.current[:__blood_contracts_redis] || $redis || Redis.current ||
           raise(
@@ -37,16 +38,19 @@ module BloodContracts
             "BloodContracts::Storage:Redis not set to a Redis.new connection"
           )
       end
+      # rubocop:enable Style/GlobalVars
 
       class ConnectionPoolProxy
         def initialize(pool)
-          raise ArgumentError "Should only proxy ConnectionPool!" unless self.class.should_proxy?(pool)
-          @pool = pool
+          @pool = pool if self.class.should_proxy?(pool)
+          raise ArgumentError "Should only proxy ConnectionPool!"
         end
 
+        # rubocop:disable Style/MethodMissing
         def method_missing(name, *args, &block)
           @pool.with { |x| x.send(name, *args, &block) }
         end
+        # rubocop:enable Style/MethodMissing
 
         def respond_to_missing?(name, include_all = false)
           @pool.with { |x| x.respond_to?(name, include_all) }

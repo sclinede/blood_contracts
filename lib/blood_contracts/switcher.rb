@@ -19,15 +19,18 @@ module BloodContracts
 
     private
 
+    STORAGES_MAP = {
+      redis: BloodContracts::Storages::Redis,
+      memory: BloodContracts::Storages::Memory,
+      postgres: BloodContracts::Storages::Postgres
+    }.freeze
+
+    def configured_storage_type
+      BloodContracts.switcher_config[:storage_type].to_s.downcase.to_sym
+    end
+
     def default_storage_klass
-      case BloodContracts.switcher_config[:storage_type].to_s.downcase.to_sym
-      when :redis
-        BloodContracts::Storages::Redis
-      when :memory
-        BloodContracts::Storages::Memory
-      when :postgres
-        BloodContracts::Storages::Postgres
-      else
+      STORAGES_MAP.fetch(configured_storage_type) do
         warn "[#{self.class}] Unsupported storage type"\
              "(#{storage_type}) configured!"
         BloodContracts::Storages::Base
@@ -35,7 +38,7 @@ module BloodContracts
     end
 
     class Middleware
-      def call(contract, _round, rules, _context)
+      def call(contract, _round, _rules, _context)
         # TODO: do not propogate if switcher disabled!
         yield if contract.switcher.enabled?
       end

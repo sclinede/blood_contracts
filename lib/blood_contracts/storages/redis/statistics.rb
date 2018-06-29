@@ -2,7 +2,6 @@ module BloodContracts
   module Storages
     class Redis < Base
       class Statistics
-
         attr_reader :contract_name, :statistics, :redis
         def initialize(base_storage, redis, statistics)
           @contract_name = base_storage.contract_name
@@ -40,8 +39,8 @@ module BloodContracts
         def total
           Hash[
             periods
-              .sort_by { |(period_int, _)| -period_int }
-              .map do |period|
+            .sort_by { |(period_int, _)| -period_int }
+            .map do |period|
               [
                 Time.at(period * statistics.period_size),
                 period_rules_counters(period)
@@ -66,7 +65,7 @@ module BloodContracts
 
         def period_rules(period)
           values = redis.smembers(period_rules_key(period))
-          values.nil? ? [] : values.map{ |v| Marshal.load(v) }
+          values.nil? ? [] : values.map { |v| Oj.load(v) }
         end
 
         def periods_key
@@ -81,7 +80,6 @@ module BloodContracts
         def counter_key(period, rule)
           "blood_contracts:contract-#{contract_name}"\
           ":statistics:period-#{period}:rule-#{rule}:counter"
-
         end
 
         def prepare_storage(period, rule)
@@ -92,25 +90,24 @@ module BloodContracts
         def add_period_rule_to_set(period, rule)
           rule_key = period_rules_key(period)
           counter_key = counter_key(period, rule)
-          redis.sadd(rule_key, Marshal.dump([counter_key, rule]))
+          redis.sadd(rule_key, Oj.dump([counter_key, rule]))
         end
 
         def periods(conn = nil)
           conn ||= redis
           values = conn.smembers(periods_key)
           values = values.value if values.is_a?(::Redis::Future)
-          values.nil? ? [] : values.map { |v| Marshal.load(v) }
+          values.nil? ? [] : values.map { |v| Oj.load(v) }
         end
-
 
         def add_period_to_set(period, conn = nil)
           conn ||= redis
-          conn.sadd(periods_key, Marshal.dump(period))
+          conn.sadd(periods_key, Oj.dump(period))
         end
 
         def remove_period_from_set(period, conn = nil)
           conn ||= redis
-          conn.srem(periods_key, Marshal.dump(period))
+          conn.srem(periods_key, Oj.dump(period))
         end
       end
     end

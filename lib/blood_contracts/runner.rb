@@ -31,7 +31,7 @@ module BloodContracts
         kwargs: kwargs.fetch(:kwargs)
       }
       kwargs[:output] = kwargs.fetch(:output) { "" }
-      kwargs[:meta]   = kwargs.fetch(:meta) { Hash.new }
+      kwargs[:meta]   = kwargs.fetch(:meta) { {} }
       kwargs[:error]  = kwargs.fetch(:error) { nil }
       kwargs
     end
