@@ -53,8 +53,17 @@ class WeatherUpdateContract < BloodContracts::BaseContract
   end
 
   expect :usual do |round|
-    round.response.success? && !round.response.city.to_s.empty? &&
-      (-100..100).cover?(round.response.temperature)
+    next unless round.response.success? &&
+                !round.response.city.to_s.empty? &&
+                (-100..100).cover?(round.response.temperature)
+
+    expect :saint_p_weather, tag: :critical_data do |saint_p_round|
+      saint_p_round.response.city.casecmp("saint-petersburg").zero?
+    end
+
+    expect :london_weather, tag: :critical_data do |london_round|
+      london_round.response.city.casecmp("london").zero?
+    end
   end
 
   expect :client_error, tag: :exception do |round|
@@ -67,13 +76,6 @@ class WeatherUpdateContract < BloodContracts::BaseContract
     (500..599).cover?(round.response.code.to_i)
   end
 
-  expect :saint_p_weather, tag: :critical_data, inherit: :usual do |round|
-    round.response.city.casecmp("saint-petersburg").zero?
-  end
-
-  expect :london_weather, tag: :critical_data, inherit: :usual do |round|
-    round.response.city.casecmp("london").zero?
-  end
 
   expect_error :parsing_error, tag: :exception do |round|
     round.error.keys.include?(JSON::ParserError.to_s)
