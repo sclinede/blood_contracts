@@ -27,22 +27,39 @@ module BloodContracts
       end
 
       def match_guarantees!(round)
-        return if contract_hash.guarantees.all? do |name, rule|
+        guarantees = contract_hash.guarantees
+        return if guarantees.all? do |(name, rule)|
           round.meta[:checked_rules] << name
-          rule.check.call(round)
+          rules_stack = rule[:check].call(round).to_a
+          rules_stack.shift.tap { guarantees.push(*rules_stack) }
         end
         [BloodContracts::GUARANTEE_FAILURE]
       end
 
       def match_expectations!(round)
-        match = Hash[
-          contract_hash.expectations.select do |name, rule|
-            round.meta[:checked_rules] << name
-            rule.check.call(round)
-          end
-        ]
-        match.empty? ? nil : match.keys
+        match = Set.new
+        expectations = contract_hash.expectations
+        expectations.each do |(name, rule)|
+          round.meta[:checked_rules] << name
+          rules_stack = rule[:check].call(round).to_a
+          match << name if rules_stack.shift
+          expectations.push(*rules_stack)
+        end
+        match.empty? ? nil : match.to_a
       end
+
+      # def match_expectations!(round)
+      #   match = []
+      #   contract.class.expectations_rules.each do |rule_name, rule|
+      #     result = rule[:check].call(round)
+      #     if result.respond_to(:to_ary)
+      #       match += result.to_a
+      #     elsif result
+      #       match << rule_name
+      #     end
+      #   end
+      #   match.empty? ? nil : match
+      # end
     end
   end
 end

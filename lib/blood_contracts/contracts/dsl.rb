@@ -25,15 +25,17 @@ module BloodContracts
   module Contracts
     module DSL
       using StringPathize
-      using StringCamelize
+      using StringCamelcase
       using ClassDescendants
       DEFAULT_TAG = :default
 
-      attr_reader :expectations_rules, :guarantees_rules, :statistics_guarantees
+      attr_reader :expectations_rules, :guarantees_rules,
+                  :statistics_guarantees, :rules_cache
       def inherited(child_klass)
         child_klass.instance_variable_set(:@expectations_rules, Set.new)
         child_klass.instance_variable_set(:@guarantees_rules, Set.new)
         child_klass.instance_variable_set(:@statistics_guarantees, {})
+        child_klass.instance_variable_set(:@rules_cache, {})
       end
 
       # def expectation_rule(name, tag: DEFAULT_TAG, inherit: nil, &block)
@@ -50,123 +52,153 @@ module BloodContracts
 
       class BaseRule
         class << self
-          RESERVED_CLASSES = %w(ExpectationRule GuaranteeRule ErrorRule).freeze
+          attr_accessor :contract
 
-          attr_accessor :parent, :children, :contract_name
           def inherited(child_klass)
-            self.children = (children.to_a << child_klass)
-            child_klass.instance_variable_set(:@contract_name, contract_name)
-            return if self.superclass == BaseRule
-            child_klass.instance_variable_set(:@parent, self)
+            child_klass.instance_variable_set(:@contract, contract)
           end
 
-          def with_children
-            ([self] + descendants).each
+          def full_name
+            name
+              .gsub(%r{#{contract.name}::}, '')
+              .pathize
+              .gsub(/expectation_|guarantee_/, '')
+          end
+
+          def to_h
+            stats_requirements = contract.statistics_guarantees[full_name].to_h
+            stats_requirements.merge!(check: self)
           end
 
           def call(round)
-            return if parent && !parent.call(round)
-            new.call(round)
-          end
-
-          def original_name
-            name.pathize
-              .gsub(%r{#{contract_name}/}, '')
-              .gsub(/expectation_|guarantee_/, '')
+            rule_stack = []
+            new.tap { |rule| rule_stack << rule.call(round) }
+               .tap { |rule| rule_stack.push(*rule.children)  }
+            rule_stack
           end
         end
 
+        attr_reader :children
+        def initialize
+          @children = []
+        end
+
+        def to_h
+          self.class.to_h
+        end
+
+        def register_rule(name, prefix, tag)
+          name = name.to_s
+          rule = contract.rules_cache.fetch(File.join(full_name, name)) do
+            create_sub_rule(name, prefix).tap do |new_rule|
+              yield(new_rule)
+              update_tags(new_rule.full_name, tag)
+            end
+          end
+          self.children << [rule.full_name.to_sym, rule.to_h]
+          true
+        end
+
+        def create_sub_rule(name, prefix)
+          new_rule = Class.new(self.class)
+          new_rule_name = "#{prefix}_#{name}".camelcase(:upper)
+          self.class.const_set(new_rule_name, new_rule)
+          contract.rules_cache.store(new_rule.full_name, new_rule)
+          new_rule
+        end
+
         def update_tags(rule_name, tag)
-          tags = BloodContracts.tags[self.class.contract_name] || {}
+          tags = BloodContracts.tags[contract.name] || {}
           tags[rule_name.to_s] = Array(tag)
-          BloodContracts.tags[self.class.contract_name] = tags
+          BloodContracts.tags[contract.name] = tags
+        end
+
+        def full_name
+          self.class.full_name
+        end
+
+        def contract
+          self.class.contract
         end
       end
 
       class ExpectationRule < BaseRule
         def expectation_rule(name, tag: DEFAULT_TAG, &block)
-          new_rule = Class.new(self.class)
-          new_rule.send(:define_method, :call, &block)
-          self.class.remove_const("expectation_#{name}".camelcase(:upper))
-          self.class.const_set("expectation_#{name}".camelcase(:upper), new_rule)
-          update_tags(name, tag)
+          register_rule(name, "expectation", tag) do |new_rule|
+            new_rule.send(:define_method, :call, &block)
+          end
         end
         alias :expect :expectation_rule
 
         def self.call(round)
-          return if round.error?
+          return [false] if round.error?
           super
         end
       end
 
       class ErrorRule < BaseRule
         def expectation_error_rule(name, tag: DEFAULT_TAG, &block)
-          new_rule = Class.new(self.class)
-          new_rule.send(:define_method, :call, &block)
-          self.class.remove_const("expectation_#{name}".camelcase(:upper))
-          self.class.const_set("expectation_#{name}".camelcase(:upper), new_rule)
-          update_tags(name, tag)
+          register_rule(name, "expectation", tag) do |new_rule|
+            new_rule.send(:define_method, :call, &block)
+          end
         end
         alias :expect_error :expectation_error_rule
 
         def self.call(round)
-          return unless round.error?
+          return [false] unless round.error?
           super
         end
       end
 
       class GuaranteeRule < BaseRule
         def guarantee_rule(name, tag: DEFAULT_TAG, &block)
-          new_rule = Class.new(self.class)
-          new_rule.send(:define_method, :call, &block)
-          self.class.remove_const("guarantee_#{name}".camelcase(:upper))
-          self.class.const_set("guarantee_#{name}".camelcase(:upper), new_rule)
-          update_tags(name, tag)
+          register_rule(name, "guarantee", tag) do |new_rule|
+            new_rule.send(:define_method, :call, &block)
+          end
         end
         alias :guarantee :guarantee_rule
+
+        def self.call(round)
+          return [true] if round.error?
+          super
+        end
       end
 
-      # test_rule :one do |round1|
+      # expect :one do |round1|
       #   next unless round1.response[:a]
       #
-      #   test_rule :two do |round2|
+      #   expect :two do |round2|
       #     next unless round2.response[:b]
       #     true
       #   end
       #
-      #   test_rule :three do |round3|
+      #   expect :three do |round3|
       #     next unless round3.response[:c]
       #     true
       #   end
       # end
 
       def expectation_rule(name, tag: DEFAULT_TAG, &block)
-        new_rule = Class.new(ExpectationRule)
-        new_rule.contract_name = self.name.pathize
-        new_rule.send(:define_method, :call, &block)
-        const_set("expectation_#{name}".camelcase(:upper), new_rule)
-        expectations_rules << name
-        update_tags(name, tag)
+        register_rule(ExpectationRule, "expectation", name, tag) do |new_rule|
+          new_rule.send(:define_method, :call, &block)
+          expectations_rules << name
+        end
       end
       alias :expect :expectation_rule
 
       def expectation_error_rule(name, tag: DEFAULT_TAG, inherit: nil, &block)
-        new_rule = Class.new(ErrorRule)
-        new_rule.contract_name = self.name.pathize
-        new_rule.send(:define_method, :call, &block)
-        const_set("expectation_#{name}".camelcase(:upper), new_rule)
-        expectations_rules << name
-        update_tags(name, tag)
+        register_rule(ErrorRule, "expectation", name, tag) do |new_rule|
+          new_rule.send(:define_method, :call, &block)
+          expectations_rules << name
+        end
       end
       alias :expect_error :expectation_error_rule
 
       def guarantee_rule(name, tag: DEFAULT_TAG, skip_on_error: true, &block)
-        new_rule = Class.new(GuaranteeRule)
-        new_rule.contract_name = self.name.pathize
-        new_rule.send(:define_method, :call, &block)
-        const_set("guarantee_#{name}".camelcase(:upper), new_rule)
-        guarantees_rules << name
-        update_tags(name, tag)
+        register_rule(GuaranteeRule, "guarantee", name, tag) do |new_rule|
+          new_rule.send(:define_method, :call, &block)
+          guarantees_rules << name
+        end
       end
       alias :guarantee :guarantee_rule
 
@@ -181,6 +213,14 @@ module BloodContracts
       alias :statistics_rule :statistics_guarantee
 
       private
+
+      def register_rule(klass, prefix, name, tag)
+        new_rule = Class.new(klass)
+        new_rule.contract = self
+        const_set("#{prefix}_#{name}".camelcase(:upper), new_rule)
+        yield(new_rule)
+        update_tags(name, tag)
+      end
 
       def update_tags(rule_name, tag)
         tags = BloodContracts.tags[name.pathize] || {}

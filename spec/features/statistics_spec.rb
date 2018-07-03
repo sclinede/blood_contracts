@@ -41,8 +41,8 @@ RSpec.describe "Contract Statistics", type: :feature do
         expect(contract.statistics.current)
           .to match(hash_including(
                       usual: 10,
-                      london_weather: 5,
-                      saint_p_weather: 5,
+                      "usual/london_weather": 5,
+                      "usual/saint_p_weather": 5,
                       client_error: 10,
                       parsing_error: 9,
                       __unexpected_behavior__: 9,
@@ -87,8 +87,8 @@ RSpec.describe "Contract Statistics", type: :feature do
         expect(previous_period_statistics)
           .to match(hash_including(
                       usual: 10,
-                      london_weather: 5,
-                      saint_p_weather: 5,
+                      "usual/london_weather": 5,
+                      "usual/saint_p_weather": 5,
                       client_error: 10
           ))
         expect(contract.statistics.total.values)
@@ -101,8 +101,8 @@ RSpec.describe "Contract Statistics", type: :feature do
                             },
                             {
                               usual: 10,
-                              london_weather: 5,
-                              saint_p_weather: 5,
+                              "usual/london_weather": 5,
+                              "usual/saint_p_weather": 5,
                               client_error: 10
                             }
                           ])
@@ -138,8 +138,8 @@ RSpec.describe "Contract Statistics", type: :feature do
         expect(contract.statistics.current)
           .to match(hash_including(
                       usual: 10,
-                      london_weather: 5,
-                      saint_p_weather: 5,
+                      "usual/london_weather": 5,
+                      "usual/saint_p_weather": 5,
                       client_error: 10,
                       parsing_error: 9,
                       __unexpected_behavior__: 9,
@@ -184,8 +184,8 @@ RSpec.describe "Contract Statistics", type: :feature do
         expect(previous_period_statistics)
           .to match(hash_including(
                       usual: 10,
-                      london_weather: 5,
-                      saint_p_weather: 5,
+                      "usual/london_weather": 5,
+                      "usual/saint_p_weather": 5,
                       client_error: 10
           ))
         expect(contract.statistics.total.values)
@@ -198,8 +198,8 @@ RSpec.describe "Contract Statistics", type: :feature do
                             },
                             {
                               usual: 10,
-                              london_weather: 5,
-                              saint_p_weather: 5,
+                              "usual/london_weather": 5,
+                              "usual/saint_p_weather": 5,
                               client_error: 10
                             }
                           ])

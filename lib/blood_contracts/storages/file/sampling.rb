@@ -20,7 +20,7 @@ module BloodContracts
 
         def delete_all(path = nil, **kwargs)
           files = sampler.utils.find_all(path, **kwargs)
-          FileUtils.rm(files)
+          FileUtils.rm_r(files)
         end
 
         def find_all(path = nil, **kwargs)

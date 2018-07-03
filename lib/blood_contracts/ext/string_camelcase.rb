@@ -1,5 +1,5 @@
 module BloodContracts
-  module StringCamelize
+  module StringCamelcase
     refine String do
       # See gem Facets String#camelcase
       #

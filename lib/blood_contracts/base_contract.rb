@@ -6,7 +6,7 @@ require_relative "contracts/toolbox.rb"
 
 module BloodContracts
   class BaseContract
-    using StringCamelize
+    using StringCamelcase
     extend Contracts::DSL
     extend Contracts::Patching
     include Contracts::Toolbox
@@ -60,35 +60,19 @@ module BloodContracts
     end
 
     def reset_contract_hash!
-      guarantees = self.class.guarantees_rules.flat_map do |name|
-        prepare_guarantee(name)
+      guarantees = self.class.guarantees_rules.map do |rule_name|
+        [rule_name, {check: constantize_rule(rule_name, "guarantee")}]
       end
-      expectations = self.class.expectations_rules.flat_map do |rule_name|
-        prepare_expectation(rule_name)
+      expectations = self.class.expectations_rules.map do |rule_name|
+        check = constantize_rule(rule_name, "expectation")
+        stats_requirements = self.class.statistics_guarantees[name].to_h
+        [rule_name, stats_requirements.merge(check: check)]
       end
       @_contract_hash = { guarantees: guarantees, expectations: expectations }
     end
 
     def constantize_rule(rule_name, prefix)
       self.class.const_get("#{prefix}_#{rule_name}".camelcase(:upper))
-    end
-
-    def prepare_guarantee(rule_name)
-      constantize_rule(rule_name, "guarantee")
-        .with_children
-        .map do |rule, name|
-        [rule.original_name, {check: rule}]
-      end
-    end
-
-    def prepare_expectation(rule_name)
-      constantize_rule(rule_name, "expectation")
-        .with_children
-        .map do |rule|
-        name = rule.original_name
-        stats_requirements = self.class.statistics_guarantees[name].to_h
-        [name, stats_requirements.merge(check: rule)]
-      end
     end
   end
 end
