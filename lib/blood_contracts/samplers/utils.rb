@@ -41,14 +41,19 @@ module BloodContracts
 
       private
 
+      PATH_REGEXP = %r{(?<session>[\w\*]+)/(?<contract>[\w/\*]+)/(?<period>[\d\*]+)/(?<rule>[\w/\*]+)/(?<round>[\d\*]+)}
+      # FIXME: нужен лучший алгоритм разделения пути на куски
+      # :session/:contract/:period/:rule/:round
       def split_path_by_parts!(path)
         path = path.to_s
         path.sub!(default_path, "") if path.start_with?(default_path)
-        path_items = path.split("/")
-        period, tag, round = path_items.pop(3)
-        session = path_items.shift
-        contract = path_items.join("/")
-        [session, contract, period, tag, round]
+        path.match(PATH_REGEXP).to_a[1..-1]
+        # require'pry';binding.pry
+        # path_items = path.split("/")
+        # period, tag, round = path_items.pop(3)
+        # session = path_items.shift
+        # contract = path_items.join("/")
+        # [session, contract, period, tag, round]
       end
 
       def path_from_options(options)

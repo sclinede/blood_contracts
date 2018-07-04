@@ -40,6 +40,10 @@ module BloodContracts::GlobalConfig
     reset_switcher!
   end
 
+  def reset_config!
+    @config = BloodContracts::Config.new
+  end
+
   def prepare_tool_config(source, config)
     base_config = Hashie.symbolize_keys_recursively!(source)
     return base_config if (storage_type = base_config[:storage]).nil?

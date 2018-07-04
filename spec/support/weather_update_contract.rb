@@ -45,6 +45,10 @@ class WeatherUpdateContract < BloodContracts::BaseContract
     }
   end
 
+  def self.rule_name_from_city(round)
+    "#{round.response.city.downcase[0..6]}_weather".gsub(/\W/, "_").to_sym
+  end
+
   guarantee :correct_response do |round|
     round.response.respond_to?(:temperature) &&
       round.response.respond_to?(:city) &&
@@ -57,13 +61,8 @@ class WeatherUpdateContract < BloodContracts::BaseContract
                 !round.response.city.to_s.empty? &&
                 (-100..100).cover?(round.response.temperature)
 
-    expect :saint_p_weather, tag: :critical_data do |saint_p_round|
-      saint_p_round.response.city.casecmp("saint-petersburg").zero?
-    end
-
-    expect :london_weather, tag: :critical_data do |london_round|
-      london_round.response.city.casecmp("london").zero?
-    end
+    next unless round.response.city.downcase =~ /(london|saint-p)/
+    expect(rule_name_from_city(round), tag: :critical_data) { |_| true }
   end
 
   expect :client_error, tag: :exception do |round|
@@ -75,7 +74,6 @@ class WeatherUpdateContract < BloodContracts::BaseContract
     next if round.response.success?
     (500..599).cover?(round.response.code.to_i)
   end
-
 
   expect_error :parsing_error, tag: :exception do |round|
     round.error.keys.include?(JSON::ParserError.to_s)

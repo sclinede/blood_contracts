@@ -50,7 +50,7 @@ module BloodContracts
       # end
       # alias :expect :expectation_rule
 
-      class BaseRule
+      class BaseRule < Delegator
         class << self
           attr_accessor :contract
 
@@ -92,7 +92,7 @@ module BloodContracts
           rule = contract.rules_cache.fetch(File.join(full_name, name)) do
             create_sub_rule(name, prefix).tap do |new_rule|
               yield(new_rule)
-              update_tags(new_rule.full_name, tag)
+              contract.update_tags(new_rule.full_name, tag)
             end
           end
           self.children << [rule.full_name.to_sym, rule.to_h]
@@ -107,12 +107,6 @@ module BloodContracts
           new_rule
         end
 
-        def update_tags(rule_name, tag)
-          tags = BloodContracts.tags[contract.name] || {}
-          tags[rule_name.to_s] = Array(tag)
-          BloodContracts.tags[contract.name] = tags
-        end
-
         def full_name
           self.class.full_name
         end
@@ -120,6 +114,7 @@ module BloodContracts
         def contract
           self.class.contract
         end
+        alias :__getobj__ :contract
       end
 
       class ExpectationRule < BaseRule
@@ -212,6 +207,12 @@ module BloodContracts
       end
       alias :statistics_rule :statistics_guarantee
 
+      def update_tags(rule_name, tag)
+        tags = BloodContracts.tags[name.pathize] || {}
+        tags[rule_name.to_s] = Array(tag)
+        BloodContracts.tags[name.pathize] = tags
+      end
+
       private
 
       def register_rule(klass, prefix, name, tag)
@@ -220,12 +221,6 @@ module BloodContracts
         const_set("#{prefix}_#{name}".camelcase(:upper), new_rule)
         yield(new_rule)
         update_tags(name, tag)
-      end
-
-      def update_tags(rule_name, tag)
-        tags = BloodContracts.tags[name.pathize] || {}
-        tags[rule_name.to_s] = Array(tag)
-        BloodContracts.tags[name.pathize] = tags
       end
     end
   end
