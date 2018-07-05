@@ -1,8 +1,8 @@
 require "spec_helper"
 
 RSpec.describe "Contract Switching" do
+  after { contract.switcher.reset! }
   let(:contract) { WeatherUpdateContract.new }
-  before { BloodContracts.reset_config! }
 
   context "when Memory storage" do
     before do

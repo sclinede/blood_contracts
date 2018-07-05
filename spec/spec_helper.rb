@@ -20,4 +20,10 @@ RSpec.configure do |config|
   config.expect_with :rspec do |c|
     c.syntax = :expect
   end
+
+  config.before(:each) { BloodContracts.reset_config! }
+  config.after(:each) do
+    BloodContracts.reset_config!
+    BloodContracts.session_name = ::Nanoid.generate(size: 12)
+  end
 end

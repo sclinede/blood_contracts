@@ -42,6 +42,9 @@ module BloodContracts::GlobalConfig
 
   def reset_config!
     @config = BloodContracts::Config.new
+    apply_config!(@config)
+    reset_sampler!
+    reset_switcher!
   end
 
   def prepare_tool_config(source, config)

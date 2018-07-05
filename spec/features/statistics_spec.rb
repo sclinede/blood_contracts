@@ -10,6 +10,12 @@ RSpec.describe "Contract Statistics", type: :feature do
       config.statistics["enabled"] = true
     end
   end
+  after do
+    contract.statistics.delete_all
+    contract.sampler.delete_all
+    contract.switcher.reset!
+    BloodContracts.reset_config!
+  end
   let(:weather_service) { WeatherService.new }
   let(:contract) { WeatherUpdateContract.new }
 
@@ -19,7 +25,6 @@ RSpec.describe "Contract Statistics", type: :feature do
         config.statistics["storage"] = :redis
       end
     end
-    after { contract.statistics.delete_all }
 
     context "when all matches are in current period" do
       before do
@@ -116,7 +121,6 @@ RSpec.describe "Contract Statistics", type: :feature do
         config.statistics["storage"] = :memory
       end
     end
-    after { contract.statistics.delete_all }
 
     context "when all matches are in current period" do
       before do

@@ -20,9 +20,7 @@ RSpec.describe BloodContracts do
         end
       end
       after do
-        BloodContracts.config do |config|
-          config.sampling["storage"] = :file
-        end
+        BloodContracts.reset_config!
       end
       let(:expected_storage) { BloodContracts::Storages::Postgres::Sampling }
 

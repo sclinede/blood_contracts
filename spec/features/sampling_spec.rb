@@ -14,11 +14,16 @@ RSpec.describe "Contract Sampling" do
       }
     end
   end
-  after { contract.sampler.delete_all }
-  after { contract.statistics.delete_all }
+  after do
+    contract.statistics.delete_all
+    contract.sampler.delete_all
+    contract.switcher.reset!
+    BloodContracts.reset_config!
+  end
 
   let(:default_tag_limit) { 3 }
   let(:weather_service) { WeatherService.new }
+
   let(:contract) { WeatherUpdateContract.new }
 
   describe "Sample contents" do

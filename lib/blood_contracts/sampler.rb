@@ -18,6 +18,7 @@ module BloodContracts
       super
       reset_utils!
       reset_storage!
+      reset_sample!
     end
 
     attr_reader :storage

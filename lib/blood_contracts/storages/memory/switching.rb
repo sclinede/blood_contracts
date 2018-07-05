@@ -41,12 +41,21 @@ module BloodContracts
         end
 
         def enabled?
-          enabled = global_store[all_contracts_key] || storage[contract_name]
-          return BloodContracts.config.enabled if enabled.nil?
-          enabled
+          contract_state = storage[contract_name]
+          return contract_state unless contract_state.nil?
+          return global_switcher_state if global_state_set?
+          BloodContracts.config.enabled
         end
 
         private
+
+        def global_switcher_state
+          global_store[all_contracts_key]
+        end
+
+        def global_state_set?
+          !global_store[all_contracts_key].nil?
+        end
 
         def all_contracts_key
           "#{ROOT_KEY}-all-contracts-enabled"
