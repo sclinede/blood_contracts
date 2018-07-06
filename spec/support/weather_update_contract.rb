@@ -61,18 +61,32 @@ class WeatherUpdateContract < BloodContracts::BaseContract
                 !round.response.city.to_s.empty? &&
                 (-100..100).cover?(round.response.temperature)
 
-    next unless round.response.city.downcase =~ /(london|saint-p)/
-    expect(rule_name_from_city(round), tag: :critical_data) { |_| true }
+    # next unless round.response.city.downcase =~ /(london|saint-p)/
+    expect(rule_name_from_city(round), tag: :critical_data) do |_|
+      expect :cold do |sub_round|
+        sub_round.response.temperature.negative?
+      end
+
+      expect :warm do |sub_round|
+        sub_round.response.temperature.positive?
+      end
+
+      skip
+    end
   end
 
-  expect :client_error, tag: :exception do |round|
+  expect :error_response, tag: :exception do |round|
     next if round.response.success?
-    (400..499).cover?(round.response.code.to_i)
-  end
 
-  expect :server_error, tag: :exception do |round|
-    next if round.response.success?
-    (500..599).cover?(round.response.code.to_i)
+    expect :client do |sub_round|
+      (400..499).cover?(sub_round.response.code.to_i)
+    end
+
+    expect :server do |sub_round|
+      (500..599).cover?(sub_round.response.code.to_i)
+    end
+
+    skip
   end
 
   expect_error :parsing_error, tag: :exception do |round|

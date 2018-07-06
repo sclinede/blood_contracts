@@ -8,17 +8,6 @@ module BloodContracts
           @sampler = sampler
         end
 
-        def find_all(path = nil, **kwargs)
-          session, period, rule, round = parse(path, **kwargs).map do |v|
-            v.sub("*", ".*")
-          end
-          query.find_all_samples(session, period, rule, round)
-        end
-
-        def count(rule)
-          query.samples_count(rule)
-        end
-
         def find(path = nil, **kwargs)
           session, period, rule, round = parse(path, **kwargs).map do |v|
             v.to_s.sub("*", ".*")
@@ -26,8 +15,26 @@ module BloodContracts
           query.find_sample(session, period, rule, round)
         end
 
+        def count(rule)
+          query.samples_count(rule)
+        end
+
         def exists?(path = nil, **kwargs)
           find(path, **kwargs).present?
+        end
+
+        def find_all(path = nil, **kwargs)
+          session, period, rule, round = parse(path, **kwargs).map do |v|
+            v.sub("*", ".*")
+          end
+          query.find_all_samples(session, period, rule, round)
+        end
+
+        def delete_all(path = nil, **kwargs)
+          session, period, rule, round = parse(path, **kwargs).map do |v|
+            v.to_s.sub("*", ".*")
+          end
+          query.delete_all_samples(session, period, rule, round)
         end
 
         class SampleNotFound < StandardError; end
@@ -35,7 +42,7 @@ module BloodContracts
         def load_chunk(chunk, path = nil, **kwargs)
           raise SampleNotFound unless (name = find(path, **kwargs))
           session, period, rule, round = parse(name)
-          send("#{chunk}_serializer")[:load].call(
+          sampler.send("#{chunk}_serializer")[:load].call(
             query.load_sample_chunk(session, period, rule, round, chunk)
           )
         end
@@ -52,13 +59,13 @@ module BloodContracts
             sampling_period_name: sample.current_period,
             round_name: sample.current_round,
             rule_name: rule,
-            input: write(input_previewer, context, round_data),
-            output: write(output_previewer, context, round_data)
+            input: write(sampler.input_previewer, context, round_data),
+            output: write(sampler.output_previewer, context, round_data)
           )
         end
 
         def serialize_chunk(chunk, rule, round_data, context)
-          return unless (dump_proc = send("#{chunk}_serializer")[:dump])
+          return unless (dump_proc = sampler.send("#{chunk}_serializer")[:dump])
           data = round_data.send(chunk)
           query.execute(
             :serialize_sample_chunk,

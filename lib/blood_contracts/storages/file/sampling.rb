@@ -9,6 +9,10 @@ module BloodContracts
           @sampler = sampler
         end
 
+        def find(path = nil, **kwargs)
+          find_all(path, **kwargs).first
+        end
+
         def count(rule)
           find_all(
             session: session,
@@ -16,6 +20,10 @@ module BloodContracts
             period: sampler.sample.current_period,
             rule: rule
           ).count
+        end
+
+        def exists?(sample_name)
+          sampler.utils.exists?(sample_name)
         end
 
         def delete_all(path = nil, **kwargs)
@@ -29,24 +37,16 @@ module BloodContracts
                .map { |f| f.chomp("/output") }
         end
 
-        def find(path = nil, **kwargs)
-          find_all(path, **kwargs).first
-        end
-
-        def exists?(sample_name)
-          sampler.utils.exists?(sample_name)
+        def load_chunk(chunk_name, path = nil, **kwargs)
+          sample_path = find(path, **kwargs)
+          sampler.send("#{chunk_name}_serializer")[:load].call(
+            ::File.read("#{sample_path}/#{chunk_name}.dump")
+          )
         end
 
         def load_preview(chunk_name, path = nil, **kwargs)
           sample_path = find(path, **kwargs)
           ::File.read("#{sample_path}/#{chunk_name}")
-        end
-
-        def load_chunk(chunk_name, path = nil, **kwargs)
-          sample_path = find(path, **kwargs)
-          send("#{chunk_name}_serializer")[:load].call(
-            ::File.read("#{sample_path}/#{chunk_name}.dump")
-          )
         end
 
         def preview(rule, round, context)

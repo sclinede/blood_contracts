@@ -41,25 +41,19 @@ module BloodContracts
           execute(:delete_all_samples, parse_arguments!(args))
         end
 
-        ROUND_CHUNK_ARGS = %i(
-          session_name sampling_period_name rule_name round_name chunk_name
-        ).freeze
-        ROUND_ARGS = %i(
-          session_name sampling_period_name rule_name round_name
-        ).freeze
-
         def_single_row_query :load_sample_chunk,
-                             field_name: "dump", args: ROUND_CHUNK_ARGS
+                             field_name: "dump", args: DSL::ROUND_CHUNK_ARGS
 
         def_single_row_query :load_sample_preview,
-                             field_name: "preview", args: ROUND_CHUNK_ARGS
+                             field_name: "preview", args: DSL::ROUND_CHUNK_ARGS
 
         def_single_row_query :find_sample,
                              field_name: "sample_path",
-                             template_name: :find_all_samples, args: ROUND_ARGS
+                             template_name: :find_all_samples,
+                             args: DSL::ROUND_ARGS
 
         def_multi_rows_query :find_all_samples,
-                             field_name: "sample_path", args: ROUND_ARGS
+                             field_name: "sample_path", args: DSL::ROUND_ARGS
 
         private
 

@@ -3,6 +3,13 @@ module BloodContracts
     class Postgres < Base
       class Query
         module DSL
+          ROUND_CHUNK_ARGS = %i(
+            session_name sampling_period_name rule_name round_name chunk_name
+          ).freeze
+          ROUND_ARGS = %i(
+            session_name sampling_period_name rule_name round_name
+          ).freeze
+
           def self.extended(child)
             child.include(InstanceMethods)
           end
@@ -44,7 +51,7 @@ module BloodContracts
               execute(query_name, query_options).to_a.map { |r| r[field_name] }
             end
 
-            def parse_arguments!(args, expected_args:)
+            def parse_arguments!(args, expected_args: ROUND_ARGS)
               raise ArgumentError unless args.size.eql?(expected_args.size)
               expected_args.zip(args)
             end

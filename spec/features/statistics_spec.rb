@@ -46,9 +46,9 @@ RSpec.describe "Contract Statistics", type: :feature do
         expect(contract.statistics.current)
           .to match(hash_including(
                       usual: 10,
-                      "usual/london_weather": 5,
-                      "usual/saint_p_weather": 5,
-                      client_error: 10,
+                      "usual/london_weather/warm": 5,
+                      "usual/saint_p_weather/cold": 5,
+                      "error_response/client": 10,
                       parsing_error: 9,
                       __unexpected_behavior__: 9,
                       __unexpected_exception__: 1,
@@ -92,9 +92,9 @@ RSpec.describe "Contract Statistics", type: :feature do
         expect(previous_period_statistics)
           .to match(hash_including(
                       usual: 10,
-                      "usual/london_weather": 5,
-                      "usual/saint_p_weather": 5,
-                      client_error: 10
+                      "usual/london_weather/warm": 5,
+                      "usual/saint_p_weather/cold": 5,
+                      "error_response/client": 10
           ))
         expect(contract.statistics.total.values)
           .to match_array([
@@ -106,9 +106,9 @@ RSpec.describe "Contract Statistics", type: :feature do
                             },
                             {
                               usual: 10,
-                              "usual/london_weather": 5,
-                              "usual/saint_p_weather": 5,
-                              client_error: 10
+                              "usual/london_weather/warm": 5,
+                              "usual/saint_p_weather/cold": 5,
+                              "error_response/client": 10
                             }
                           ])
       end
@@ -142,10 +142,9 @@ RSpec.describe "Contract Statistics", type: :feature do
         expect(contract.statistics.current)
           .to match(hash_including(
                       usual: 10,
-                      "usual/london_weather": 5,
-                      "usual/saint_p_weather": 5,
-                      client_error: 10,
-                      parsing_error: 9,
+                      "usual/london_weather/warm": 5,
+                      "usual/saint_p_weather/cold": 5,
+                      "error_response/client": 10,
                       __unexpected_behavior__: 9,
                       __unexpected_exception__: 1,
                       __guarantee_failure__: 1
@@ -188,9 +187,9 @@ RSpec.describe "Contract Statistics", type: :feature do
         expect(previous_period_statistics)
           .to match(hash_including(
                       usual: 10,
-                      "usual/london_weather": 5,
-                      "usual/saint_p_weather": 5,
-                      client_error: 10
+                      "usual/london_weather/warm": 5,
+                      "usual/saint_p_weather/cold": 5,
+                      "error_response/client": 10
           ))
         expect(contract.statistics.total.values)
           .to match_array([
@@ -202,9 +201,9 @@ RSpec.describe "Contract Statistics", type: :feature do
                             },
                             {
                               usual: 10,
-                              "usual/london_weather": 5,
-                              "usual/saint_p_weather": 5,
-                              client_error: 10
+                              "usual/london_weather/warm": 5,
+                              "usual/saint_p_weather/cold": 5,
+                              "error_response/client": 10
                             }
                           ])
       end

@@ -56,7 +56,7 @@ RSpec.describe "Contract Sampling" do
         round = contract.sampler.load(rule: :usual)
         expect(round.input).to match(input)
         expect(round.response).to match(response)
-        expect(round.response.temperature).to eq(8.5)
+        expect(round.response.temperature).to eq(-21.49999999999997)
         expect(round.response.city).to eq("Saint-Petersburg")
         expect(round.meta).to match(meta)
         # expect(round.meta["checked_rules"].size).to eq(8)
@@ -72,7 +72,7 @@ RSpec.describe "Contract Sampling" do
       end
 
       it "loads sample correctly" do
-        round = contract.sampler.load(rule: :client_error)
+        round = contract.sampler.load(rule: :"error_response/client")
         expect(round.input).to match(input)
         expect(round.response).to match(response)
         expect(round.response.code).to eq("404")
@@ -175,10 +175,10 @@ RSpec.describe "Contract Sampling" do
       end
 
       it "loads sample correctly" do
-        round = contract.sampler.load(rule: :"usual/saint_p_weather")
+        round = contract.sampler.load(rule: "usual/saint_p_weather/*")
         expect(round.input).to match(input)
         expect(round.response).to match(response)
-        expect(round.response.temperature).to eq(8.5)
+        expect(round.response.temperature).to eq(-21.49999999999997)
         expect(round.response.city).to eq("Saint-Petersburg")
         expect(round.meta).to match(meta)
         # expect(round.meta["checked_rules"].size).to eq(8)
@@ -194,7 +194,7 @@ RSpec.describe "Contract Sampling" do
       end
 
       it "loads sample correctly" do
-        round = contract.sampler.load(rule: :"usual/london_weather")
+        round = contract.sampler.load(rule: :"usual/london_weather/*")
         expect(round.input).to match(input)
         expect(round.response).to match(response)
         expect(round.response.temperature).to eq(8.5)
@@ -219,12 +219,12 @@ RSpec.describe "Contract Sampling" do
     end
 
     it "creates one sample per rule" do
-      expect(contract.sampler.count(:client_error)).to eq(2)
-      expect(contract.sampler.count(:server_error)).to eq(0)
+      expect(contract.sampler.count(:"error_response/client")).to eq(2)
+      expect(contract.sampler.count(:"error_response/server")).to eq(0)
       expect(contract.sampler.count(:parsing_error)).to eq(1)
       expect(contract.sampler.count(:timeout_error)).to eq(1)
-      expect(contract.sampler.count(:"usual/saint_p_weather")).to eq(1)
-      expect(contract.sampler.count(:"usual/london_weather")).to eq(1)
+      expect(contract.sampler.count(:"usual/saint_p_weather/cold")).to eq(1)
+      expect(contract.sampler.count(:"usual/london_weather/warm")).to eq(1)
       expect(contract.sampler.count(:usual)).to eq(2)
       expect(
         contract.sampler.count(BloodContracts::UNEXPECTED_BEHAVIOR)
@@ -240,6 +240,9 @@ RSpec.describe "Contract Sampling" do
 
   describe "Samples count equal to limit" do
     before do
+      BloodContracts.config do |config|
+        config.sampling["storage"] = :postgres
+      end
       5.times do
         weather_service.update(:london)
         weather_service.update(:saint_p)
@@ -253,11 +256,11 @@ RSpec.describe "Contract Sampling" do
     end
 
     it "creates number of samples eq to limit" do
-      expect(contract.sampler.count(:client_error)).to eq(10)
-      expect(contract.sampler.count(:server_error)).to eq(0)
+      expect(contract.sampler.count(:"error_response/client")).to eq(10)
+      expect(contract.sampler.count(:"error_response/server")).to eq(0)
       expect(contract.sampler.count(:parsing_error)).to eq(5)
-      expect(contract.sampler.count(:"usual/saint_p_weather")).to eq(5)
-      expect(contract.sampler.count(:"usual/london_weather")).to eq(5)
+      expect(contract.sampler.count(:"usual/saint_p_weather/cold")).to eq(5)
+      expect(contract.sampler.count(:"usual/london_weather/warm")).to eq(5)
       expect(contract.sampler.count(:usual)).to eq(3)
       expect(
         contract.sampler.count(BloodContracts::UNEXPECTED_BEHAVIOR)
@@ -286,11 +289,11 @@ RSpec.describe "Contract Sampling" do
     end
 
     it "creates number of samples eq to limit" do
-      expect(contract.sampler.count(:client_error)).to eq(30)
-      expect(contract.sampler.count(:server_error)).to eq(0)
+      expect(contract.sampler.count(:"error_response/client")).to eq(30)
+      expect(contract.sampler.count(:"error_response/server")).to eq(0)
       expect(contract.sampler.count(:parsing_error)).to eq(15)
-      expect(contract.sampler.count(:"usual/saint_p_weather")).to eq(5)
-      expect(contract.sampler.count(:"usual/london_weather")).to eq(5)
+      expect(contract.sampler.count(:"usual/saint_p_weather/cold")).to eq(5)
+      expect(contract.sampler.count(:"usual/london_weather/warm")).to eq(5)
       expect(contract.sampler.count(:usual)).to eq(3)
       expect(
         contract.sampler.count(BloodContracts::UNEXPECTED_BEHAVIOR)

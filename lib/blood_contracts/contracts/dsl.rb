@@ -38,21 +38,9 @@ module BloodContracts
         child_klass.instance_variable_set(:@rules_cache, {})
       end
 
-      # def expectation_rule(name, tag: DEFAULT_TAG, inherit: nil, &block)
-      #   define_method("raw_check_#{name}", &block)
-      #   define_method("expectation_#{name}") do |round|
-      #     next if round.error?
-      #     next(send("raw_check_#{name}", round)) unless !!inherit
-      #     send("expectation_#{inherit}", round) && send("raw_check_#{name}", round)
-      #   end
-      #   expectations_rules << name
-      #   update_tags(name, tag)
-      # end
-      # alias :expect :expectation_rule
-
       class BaseRule < Delegator
         class << self
-          attr_accessor :contract
+          attr_accessor :contract, :tag
 
           def inherited(child_klass)
             child_klass.instance_variable_set(:@contract, contract)
@@ -91,6 +79,7 @@ module BloodContracts
           name = name.to_s
           rule = contract.rules_cache.fetch(File.join(full_name, name)) do
             create_sub_rule(name, prefix).tap do |new_rule|
+              new_rule.tag = tag
               yield(new_rule)
               contract.update_tags(new_rule.full_name, tag)
             end
@@ -118,7 +107,7 @@ module BloodContracts
       end
 
       class ExpectationRule < BaseRule
-        def expectation_rule(name, tag: DEFAULT_TAG, &block)
+        def expectation_rule(name, tag: self.class.tag, &block)
           register_rule(name, "expectation", tag) do |new_rule|
             new_rule.send(:define_method, :call, &block)
           end
@@ -132,7 +121,7 @@ module BloodContracts
       end
 
       class ErrorRule < BaseRule
-        def expectation_error_rule(name, tag: DEFAULT_TAG, &block)
+        def expectation_error_rule(name, tag: self.class.tag, &block)
           register_rule(name, "expectation", tag) do |new_rule|
             new_rule.send(:define_method, :call, &block)
           end
@@ -146,7 +135,7 @@ module BloodContracts
       end
 
       class GuaranteeRule < BaseRule
-        def guarantee_rule(name, tag: DEFAULT_TAG, &block)
+        def guarantee_rule(name, tag: self.class.tag, &block)
           register_rule(name, "guarantee", tag) do |new_rule|
             new_rule.send(:define_method, :call, &block)
           end
@@ -213,11 +202,16 @@ module BloodContracts
         BloodContracts.tags[name.pathize] = tags
       end
 
+      def skip
+        false
+      end
+
       private
 
       def register_rule(klass, prefix, name, tag)
         new_rule = Class.new(klass)
         new_rule.contract = self
+        new_rule.tag = tag
         const_set("#{prefix}_#{name}".camelcase(:upper), new_rule)
         yield(new_rule)
         update_tags(name, tag)

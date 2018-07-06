@@ -25,7 +25,7 @@
     ],
     "base": "stations",
     "main": {
-        "temp": 281.65,
+        "temp": 251.65,
         "pressure": 1002,
         "humidity": 87,
         "temp_min": 279.15,
