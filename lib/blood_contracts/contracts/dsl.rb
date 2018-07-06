@@ -8,7 +8,10 @@ require_relative "debuggable"
 #     end
 #
 #     expect :success do |api_call|
-#       api_call.response.success?
+#       next unless api_call.response.success?
+#
+#       # dynamic nested rule for stats
+#       expect api_call.response.city { |_| true }
 #     end
 #
 #     expect :failure do |api_call|
@@ -26,7 +29,6 @@ module BloodContracts
     module DSL
       using StringPathize
       using StringCamelcase
-      using ClassDescendants
       DEFAULT_TAG = :default
 
       attr_reader :expectations_rules, :guarantees_rules,
@@ -48,9 +50,9 @@ module BloodContracts
 
           def full_name
             name
-              .gsub(%r{#{contract.name}::}, '')
+              .gsub(/#{contract.name}::/, "")
               .pathize
-              .gsub(/expectation_|guarantee_/, '')
+              .gsub(/expectation_|guarantee_/, "")
           end
 
           def to_h
@@ -61,7 +63,7 @@ module BloodContracts
           def call(round)
             rule_stack = []
             new.tap { |rule| rule_stack << rule.call(round) }
-               .tap { |rule| rule_stack.push(*rule.children)  }
+               .tap { |rule| rule_stack.push(*rule.children) }
             rule_stack
           end
         end
@@ -79,13 +81,17 @@ module BloodContracts
           name = name.to_s
           rule = contract.rules_cache.fetch(File.join(full_name, name)) do
             create_sub_rule(name, prefix).tap do |new_rule|
-              new_rule.tag = tag
+              after_sub_rule_create(new_rule, tag)
               yield(new_rule)
-              contract.update_tags(new_rule.full_name, tag)
             end
           end
-          self.children << [rule.full_name.to_sym, rule.to_h]
+          children << [rule.full_name.to_sym, rule.to_h]
           true
+        end
+
+        def after_sub_rule_create(new_rule, tag)
+          new_rule.tag = tag
+          contract.update_tags(new_rule.full_name, tag)
         end
 
         def create_sub_rule(name, prefix)
@@ -148,20 +154,6 @@ module BloodContracts
         end
       end
 
-      # expect :one do |round1|
-      #   next unless round1.response[:a]
-      #
-      #   expect :two do |round2|
-      #     next unless round2.response[:b]
-      #     true
-      #   end
-      #
-      #   expect :three do |round3|
-      #     next unless round3.response[:c]
-      #     true
-      #   end
-      # end
-
       def expectation_rule(name, tag: DEFAULT_TAG, &block)
         register_rule(ExpectationRule, "expectation", name, tag) do |new_rule|
           new_rule.send(:define_method, :call, &block)
@@ -170,7 +162,7 @@ module BloodContracts
       end
       alias :expect :expectation_rule
 
-      def expectation_error_rule(name, tag: DEFAULT_TAG, inherit: nil, &block)
+      def expectation_error_rule(name, tag: DEFAULT_TAG, &block)
         register_rule(ErrorRule, "expectation", name, tag) do |new_rule|
           new_rule.send(:define_method, :call, &block)
           expectations_rules << name
@@ -178,7 +170,7 @@ module BloodContracts
       end
       alias :expect_error :expectation_error_rule
 
-      def guarantee_rule(name, tag: DEFAULT_TAG, skip_on_error: true, &block)
+      def guarantee_rule(name, tag: DEFAULT_TAG, &block)
         register_rule(GuaranteeRule, "guarantee", name, tag) do |new_rule|
           new_rule.send(:define_method, :call, &block)
           guarantees_rules << name

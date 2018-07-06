@@ -37,14 +37,20 @@ module BloodContracts
       end
 
       def match_expectations!(round)
-        match = Set.new
-        expectations = contract_hash.expectations
-        expectations.each do |(name, rule)|
-          round.meta[:checked_rules] << name
-          rules_stack = rule[:check].call(round).to_a
-          match << name if rules_stack.shift
-          expectations.push(*rules_stack)
+        with_expectation_match do |match|
+          expectations = contract_hash.expectations
+          expectations.each do |(name, rule)|
+            round.meta[:checked_rules] << name
+            rules_stack = rule[:check].call(round).to_a
+            match << name if rules_stack.shift
+            expectations.push(*rules_stack)
+          end
         end
+      end
+
+      def with_expectation_match
+        match = Set.new
+        yield(match)
         match.empty? ? nil : match.to_a
       end
 

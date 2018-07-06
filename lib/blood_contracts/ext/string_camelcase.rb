@@ -1,6 +1,7 @@
 module BloodContracts
   module StringCamelcase
     refine String do
+      # rubocop:disable Metrics/LineLength
       # See gem Facets String#camelcase
       #
       # Converts a string to camelcase. This method leaves the first character
@@ -24,29 +25,39 @@ module BloodContracts
       # Note that this implementation is different from ActiveSupport's.
       # If that is what you are looking for you may want {#modulize}.
       #
+      # rubocop:enable Metrics/LineLength
+
+      # rubocop:disable Metrics/AbcSize,Metrics/MethodLength
       def camelcase(*separators)
         case separators.first
         when Symbol, TrueClass, FalseClass, NilClass
           first_letter = separators.shift
         end
 
-        separators = ['_', '\s'] if separators.empty?
+        separators = ["_", '\s'] if separators.empty?
 
-        str = self.dup
+        str = dup
 
         separators.each do |s|
-          str = str.gsub(/(?:#{s}+)([a-z])/){ $1.upcase }
+          str = str.gsub(/(?:#{s}+)([a-z])/) do
+            Regexp.last_match(1).upcase
+          end
         end
 
         case first_letter
         when :upper, true
-          str = str.gsub(/(\A|\s)([a-z])/){ $1 + $2.upcase }
+          str = str.gsub(/(\A|\s)([a-z])/) do
+            Regexp.last_match(1) + Regexp.last_match(2).upcase
+          end
         when :lower, false
-          str = str.gsub(/(\A|\s)([A-Z])/){ $1 + $2.downcase }
+          str = str.gsub(/(\A|\s)([A-Z])/) do
+            Regexp.last_match(1) + Regexp.last_match(2).downcase
+          end
         end
 
         str
       end
+      # rubocop:enable Metrics/AbcSize,Metrics/MethodLength
     end
   end
 end

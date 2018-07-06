@@ -61,7 +61,7 @@ module BloodContracts
 
     def reset_contract_hash!
       guarantees = self.class.guarantees_rules.map do |rule_name|
-        [rule_name, {check: constantize_rule(rule_name, "guarantee")}]
+        [rule_name, { check: constantize_rule(rule_name, "guarantee") }]
       end
       expectations = self.class.expectations_rules.map do |rule_name|
         check = constantize_rule(rule_name, "expectation")
