@@ -50,6 +50,7 @@ module BloodContracts::GlobalConfig
   def prepare_tool_config(source, config)
     base_config = Hashie.symbolize_keys_recursively!(source)
     return base_config if (storage_type = base_config[:storage]).nil?
+
     base_config.merge(
       storage_type: storage_type,
       storage: Hashie.symbolize_keys_recursively!(

@@ -4,9 +4,11 @@ module BloodContracts
   module Storages
     class File < Base
       def init
+        root = BloodContracts.sampling_config.dig(:storage, :root)
+        root = root.call if root.respond_to?(:call)
         FileUtils.mkdir_p(
           ::File.join(
-            BloodContracts.sampling_config.dig(:storage, :root),
+            root,
             "blood_samples",
             session
           )

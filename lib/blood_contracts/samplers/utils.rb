@@ -77,7 +77,9 @@ module BloodContracts
       end
 
       def root
-        BloodContracts.sampling_config.dig(:storage, :root) || "/"
+        root = BloodContracts.sampling_config.dig(:storage, :root)
+        root = root.call if root.respond_to?(:call)
+        root || "/"
       end
 
       def build_sample(session, period, round)

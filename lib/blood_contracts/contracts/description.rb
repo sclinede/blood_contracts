@@ -3,13 +3,14 @@ module BloodContracts
     class Description
       class << self
         def call(contract_hash)
-          Hashie::Mash.new(contract_hash).map do |name, rule|
+          # TODO: guarantees
+          Hashie::Mash.new(contract_hash)[:expectations].map do |name, rule|
             is_between = rule.threshold && rule.limit
             next(between_description(name, rule)) if is_between
             next(threshold_description(name, rule)) if rule.threshold
             next(limit_description(rule)) if rule.limit
             " - '#{name}' in any number of cases;"
-          end.compact.join
+          end.compact.join("\n")
         end
 
         private

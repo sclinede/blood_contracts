@@ -6,6 +6,8 @@ module RSpec
     extend RSpec::Matchers::DSL
     Testable = ::BloodContracts::Contracts::Testable
     Iterator = ::BloodContracts::Runners::Iterator
+    GuaranteesFailure = BloodContracts::GuaranteesFailure
+    ExpectationsFailure = BloodContracts::ExpectationsFailure
 
     matcher :meet_contract_rules_of do |contract|
       match do |block|
@@ -14,35 +16,40 @@ module RSpec
         end
         contract.enable!
 
-        if contract.debug_enabled?
+        if contract.respond_to?(:debug_enabled?) && contract.debug_enabled?
           @_contract_runner = contract.debugger
           contract.call
         else
-          contract.class.prepend Testable
+          # contract.class.prepend Testable
 
-          @_contract_runner = contract.runner
           iterator = Iterator.new(@_iterations, @_time_to_run)
-          @_contract_runner.statistics.iterations_count = iterator.count
 
           next false if catch(:unexpected) do
             iterator.next do
-              block.call
-              next if @_contract_runner.valid?
-              throw :unexpected, :halt if @_halt_on_unexpected
+              begin
+                block.call
+              rescue ExpectationsFailure, GuaranteesFailure
+                throw :unexpected, :halt if @_halt_on_unexpected
+              end
             end
           end == :halt
         end
 
         contract.disable!
-
-        @_contract_runner.valid?
+        BloodContracts::Validator.new(contract.statistics.current.keys, {}).call
       end
 
       supports_block_expectations
 
-      failure_message { @_contract_runner.failure_message }
+      failure_message do
+        "match:\n#{contract.description}\n\n"\
+        "Got: \n#{JSON.pretty_generate(contract.statistics.current)}"
+      end
 
-      description { @_contract_runner.description }
+      description do
+        "match:\n#{contract.description}\n\n"\
+        "Got: \n#{JSON.pretty_generate(contract.statistics.current)}"
+      end
 
       chain :during_n_iterations do |iterations|
         @_iterations = Integer(iterations)

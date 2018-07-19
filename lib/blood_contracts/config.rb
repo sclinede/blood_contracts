@@ -21,7 +21,7 @@ module BloodContracts
                 },
                 storage: {
                   file: {
-                    root: defined?(::Rails) ? ::Rails.root : Dir.tmpdir,
+                    root: -> { defined?(::Rails) ? ::Rails.root : Dir.tmpdir },
                     samples_folder: "blood_samples"
                   },
                   memory: {},

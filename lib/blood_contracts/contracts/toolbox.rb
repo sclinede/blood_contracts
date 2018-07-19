@@ -14,6 +14,7 @@ module BloodContracts
           reset_sampler!
           super
           reset_status!
+          reset_description!
         end
       end
 
@@ -33,6 +34,11 @@ module BloodContracts
         response_serializer: :output_serializer=,
         meta_serializer: :meta_serializer=
       }.freeze
+
+      attr_reader :description
+      def reset_description!
+        @description = Description.call(_contract_hash)
+      end
 
       attr_reader :sampler
       def reset_sampler!
