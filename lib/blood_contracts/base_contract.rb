@@ -3,6 +3,7 @@ require_relative "contracts/patching.rb"
 require_relative "contracts/switching.rb"
 require_relative "contracts/status.rb"
 require_relative "contracts/toolbox.rb"
+require_relative "concerns/contractable.rb"
 
 module BloodContracts
   class BaseContract

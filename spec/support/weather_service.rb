@@ -1,4 +1,9 @@
+require_relative 'weather_update_contract'
 class WeatherService
+  extend BloodContracts::Contractable
+
+  contractable WeatherUpdateContract,
+               after_call: [:update_contract_postprocess, :update_contract_postprocess2]
   def update(template = :london)
     case template
     when :timeout
@@ -11,8 +16,17 @@ class WeatherService
 
   private
 
+  def update_contract_postprocess(_input, _output, meta)
+    meta["raw_response"] = @raw_response
+  end
+
+  def update_contract_postprocess2(_input, _output, meta)
+    meta["test"] = 123
+  end
+
   def load_response(name)
-    File.read(File.join(__dir__, "..", "fixtures/responses/#{name}.json"))
+    @raw_response =
+      File.read(File.join(__dir__, "..", "fixtures/responses/#{name}.json"))
   end
 
   class Response

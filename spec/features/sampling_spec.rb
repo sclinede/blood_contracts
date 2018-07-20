@@ -1,8 +1,6 @@
 require "spec_helper"
 
 RSpec.describe "Contract Sampling" do
-  apply_contract
-
   before do
     BloodContracts.config do |config|
       config.enabled = true

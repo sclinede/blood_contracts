@@ -1,8 +1,6 @@
 require "spec_helper"
 
 RSpec.describe "Contract Rules Matching" do
-  apply_contract
-
   before do
     BloodContracts.config do |config|
       config.enabled = true

@@ -2,8 +2,6 @@ require "spec_helper"
 require "timecop"
 
 RSpec.describe "Contract Statistics", type: :feature do
-  apply_contract
-
   before do
     BloodContracts.config do |config|
       config.enabled = true
