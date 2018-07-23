@@ -48,11 +48,15 @@ module BloodContracts
       end
     end
 
-    private
-
     def current_session
       session || BloodContracts.session_name || ::Nanoid.generate(size: 10)
     end
+
+    def storage_type
+      BloodContracts.sampling_config[:storage_type].to_s.downcase.to_sym
+    end
+
+    private
 
     def default_storage_klass
       case storage_type
@@ -67,10 +71,6 @@ module BloodContracts
              "(#{storage_type}) configured!"
         BloodContracts::Storages::Base
       end
-    end
-
-    def storage_type
-      BloodContracts.sampling_config[:storage_type].to_s.downcase.to_sym
     end
 
     def period_size

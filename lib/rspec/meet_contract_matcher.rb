@@ -41,15 +41,9 @@ module RSpec
 
       supports_block_expectations
 
-      failure_message do
-        "match:\n#{contract.description}\n\n"\
-        "Got: \n#{JSON.pretty_generate(contract.statistics.current)}"
-      end
+      failure_message { contract.status.failure_message }
 
-      description do
-        "match:\n#{contract.description}\n\n"\
-        "Got: \n#{JSON.pretty_generate(contract.statistics.current)}"
-      end
+      description { contract.status.description }
 
       chain :during_n_iterations do |iterations|
         @_iterations = Integer(iterations)
