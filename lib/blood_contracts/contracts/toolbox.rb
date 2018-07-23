@@ -8,11 +8,11 @@ module BloodContracts
       end
 
       module Initializer
-        def initialize(*)
+        def initialize_contract
+          super
           reset_statistics!
           reset_switcher!
           reset_sampler!
-          super
           reset_status!
           reset_description!
         end

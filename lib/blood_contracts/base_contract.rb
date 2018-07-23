@@ -1,5 +1,4 @@
 require_relative "contracts/dsl.rb"
-require_relative "contracts/patching.rb"
 require_relative "contracts/switching.rb"
 require_relative "contracts/status.rb"
 require_relative "contracts/toolbox.rb"
@@ -9,11 +8,14 @@ module BloodContracts
   class BaseContract
     using StringCamelcase
     extend Contracts::DSL
-    extend Contracts::Patching
     include Contracts::Toolbox
     include Contracts::Switching
 
     def initialize
+      initialize_contract
+    end
+
+    def initialize_contract
       reset_contract_hash!
       reset_runner!
     end
