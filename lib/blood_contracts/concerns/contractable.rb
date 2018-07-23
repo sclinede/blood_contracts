@@ -52,7 +52,7 @@ module BloodContracts
               begin
                 result = super(*args, **kwargs)
               ensure
-                %i(#{Array(after_call).join(",")}).each do |after_call_callback|
+                %i(#{Array(after_call).join(" ")}).each do |after_call_callback|
                   send(after_call_callback, [*args, **kwargs], result, meta)
                 end
               end
