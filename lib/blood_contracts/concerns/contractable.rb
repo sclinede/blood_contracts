@@ -1,21 +1,10 @@
+require 'ann'
+
 module BloodContracts
   module Contractable
     def self.extended(klass)
+      klass.include Ann
       klass.prepend ContractsAccessor
-    end
-
-    def method_added(method_name)
-      contracts_applied = (Thread.current[:contracts_applied] || [])
-      contracts_applied.map do |contract, args, after_call|
-        prepend ContractValidator.new(method_name, contract, args, after_call)
-      end
-      Thread.current[:contracts_applied] = nil
-    end
-
-    def contractable(*args, after_call: nil)
-      contract = args.shift
-      Thread.current[:contracts_applied] ||= []
-      Thread.current[:contracts_applied] << [contract, args, after_call]
     end
 
     module ContractsAccessor
@@ -30,11 +19,30 @@ module BloodContracts
       end
     end
 
+    class ContractDescriptor
+      # args - see ContractValidator.new
+      def initialize(caller_klass, *args)
+        caller_klass.prepend ContractValidator.new(*args)
+      end
+    end
+
+    def contractable(*args, after_call: nil)
+      contract, *contract_args = args
+      ann ContractDescriptor, contract, contract_args, after_call
+    end
+
     class ContractValidator < Module
       def initialize(method_name, contract, cargs, after_call)
         super()
         define_contract_initializer(method_name, contract, cargs)
         wrap_method_in_contract(method_name, after_call)
+      end
+
+      def define_contract_initializer(method_name, contract, args)
+        key = :"_#{method_name}_contract"
+        define_method(key) do
+          _contracts.fetch(key) { _contracts.store(key, contract.new(*args)) }
+        end
       end
 
       def wrap_method_in_contract(method_name, after_call)
@@ -51,13 +59,6 @@ module BloodContracts
             end
           end
         RUBY
-      end
-
-      def define_contract_initializer(method_name, contract, args)
-        key = :"_#{method_name}_contract"
-        define_method(key) do
-          _contracts.fetch(key) { _contracts.store(key, contract.new(*args)) }
-        end
       end
     end
   end
