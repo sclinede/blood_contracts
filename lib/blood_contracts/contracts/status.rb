@@ -32,7 +32,7 @@ module BloodContracts
           "[session_name=#{sampler.current_session},"\
           "rule=#{BloodContracts::UNEXPECTED_BEHAVIOR}]"
         else
-          "[session_name=#{sampler.current_session}}]"
+          "[session_name=#{sampler.current_session}]"
         end
       end
     end
