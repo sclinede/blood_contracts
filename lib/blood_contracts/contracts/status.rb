@@ -11,7 +11,7 @@ module BloodContracts
       def failure_message
         intro = "expected that given Proc would meet the contract:"
         "#{intro}\n#{contract_description}\n#{statistics}"\
-        "For further investigations check storage (#{sampler.storage.class}): "\
+        "For further investigations check storage (#{sampler.storage_type}): "\
         "#{suggestion}"
       end
 
