@@ -75,7 +75,11 @@ module BloodContracts
     end
 
     def constantize_rule(rule_name, prefix)
-      self.class.const_get("#{prefix}_#{rule_name}".camelcase(:upper))
+      self.class.const_get(new_rule_name(prefix, rule_name))
+    end
+
+    def new_rule_name(prefix, name)
+      "#{prefix}_#{name}".gsub(/\W/, "_").camelcase(:upper)
     end
   end
 end
