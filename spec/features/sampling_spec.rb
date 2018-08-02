@@ -45,7 +45,7 @@ RSpec.describe "Contract Sampling" do
     context "when sample is :usual" do
       let(:input) do
         hash_including(
-          "args" => [:saint_p],
+          "args" => ["saint_p"],
           "kwargs" => {}
         )
       end
@@ -64,7 +64,7 @@ RSpec.describe "Contract Sampling" do
     context "when sample is :client_error" do
       let(:input) do
         hash_including(
-          "args" => [:code_404],
+          "args" => ["code_404"],
           "kwargs" => {}
         )
       end
@@ -83,7 +83,7 @@ RSpec.describe "Contract Sampling" do
     context "when sample is :parsing_error" do
       let(:input) do
         hash_including(
-          "args" => [:parsing_exception],
+          "args" => ["parsing_exception"],
           "kwargs" => {}
         )
       end
@@ -125,7 +125,7 @@ RSpec.describe "Contract Sampling" do
     context "when sample is :__unexpected_behavior__" do
       let(:input) do
         hash_including(
-          "args" => [:unexpected],
+          "args" => ["unexpected"],
           "kwargs" => {}
         )
       end
@@ -167,7 +167,7 @@ RSpec.describe "Contract Sampling" do
     context "when sample is :saint_p_weather" do
       let(:input) do
         hash_including(
-          "args" => [:saint_p],
+          "args" => ["saint_p"],
           "kwargs" => {}
         )
       end
@@ -186,7 +186,7 @@ RSpec.describe "Contract Sampling" do
     context "when sample is :london_weather" do
       let(:input) do
         hash_including(
-          "args" => [:london],
+          "args" => ["london"],
           "kwargs" => {}
         )
       end
