@@ -14,7 +14,7 @@ if defined?(Sniffer)
     end
 
     def response
-      responses.last
+      responses.last.to_h
     end
 
     def responses
