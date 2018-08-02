@@ -96,10 +96,14 @@ module BloodContracts
 
         def create_sub_rule(name, prefix)
           new_rule = Class.new(self.class)
-          new_rule_name = "#{prefix}_#{name}".camelcase(:upper)
-          self.class.const_set(new_rule_name, new_rule)
+          # new_rule_name = "#{prefix}_#{name}".camelcase(:upper)
+          self.class.const_set(new_rule_name(prefix, name), new_rule)
           contract.rules_cache.store(new_rule.full_name, new_rule)
           new_rule
+        end
+
+        def new_rule_name(prefix, name)
+          "#{prefix}_#{name}".gsub(/\W/, "_").camelcase(:upper)
         end
 
         def full_name
@@ -204,9 +208,13 @@ module BloodContracts
         new_rule = Class.new(klass)
         new_rule.contract = self
         new_rule.tag = tag
-        const_set("#{prefix}_#{name}".camelcase(:upper), new_rule)
+        const_set(new_rule_name(prefix, name), new_rule)
         yield(new_rule)
         update_tags(name, tag)
+      end
+
+      def new_rule_name(prefix, name)
+        "#{prefix}_#{name}".gsub(/\W/, "_").camelcase(:upper)
       end
     end
   end
