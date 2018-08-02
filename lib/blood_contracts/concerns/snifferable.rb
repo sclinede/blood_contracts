@@ -57,12 +57,19 @@ if defined?(Sniffer)
       module Snifferable
         def self.included(klass)
           klass.extend ClassMethods
+          klass.instance_variable_set(:@snifffers, {})
         end
 
         module ClassMethods
           def sniffer(http_round = nil, meta: nil, **kwargs)
             http_round ||= kwargs[:http_round]
-            ContractSniffer.new(http_round: http_round, meta: meta)
+            fetch_sniffer(http_round: http_round, meta: meta)
+          end
+
+          def fetch_sniffer(**kwargs)
+            @sniffers.fetch(kwargs) do |key|
+              @sniffers.store(key, ContractSniffer.new(**kwargs))
+            end
           end
         end
 
