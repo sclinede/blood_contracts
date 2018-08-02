@@ -96,7 +96,6 @@ module BloodContracts
 
         def create_sub_rule(name, prefix)
           new_rule = Class.new(self.class)
-          # new_rule_name = "#{prefix}_#{name}".camelcase(:upper)
           self.class.const_set(new_rule_name(prefix, name), new_rule)
           contract.rules_cache.store(new_rule.full_name, new_rule)
           new_rule

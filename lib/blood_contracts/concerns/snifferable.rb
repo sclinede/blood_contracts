@@ -51,13 +51,20 @@ if defined?(Sniffer)
   module BloodContracts
     module Concerns
       module Snifferable
-        def sniffer(http_round: nil, meta: nil)
-          ContractSniffer.new(http_round: http_round, meta: meta)
+        def self.included(klass)
+          klass.extend ClassMethods
+        end
+
+        module ClassMethods
+          def sniffer(http_round = nil, meta: nil, **kwargs)
+            http_round ||= kwargs[:http_round]
+            ContractSniffer.new(http_round: http_round, meta: meta)
+          end
         end
 
         def before_call(meta:, **kwargs)
           super
-          @_sniffer = sniffer(meta: meta)
+          @_sniffer = self.class.sniffer(meta: meta)
           @_sniffer.enable!
         end
 
