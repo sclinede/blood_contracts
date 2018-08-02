@@ -14,7 +14,11 @@ if defined?(Sniffer)
     end
 
     def response
-      return {} unless requested_http?
+      responses.last
+    end
+
+    def responses
+      return [] unless requested_http?
       last_http_session = meta["last_http_session"].to_a
       last_http_session.map do |session|
         session["response"].to_h.slice("body", "status")
