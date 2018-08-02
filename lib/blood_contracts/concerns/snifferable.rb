@@ -57,7 +57,7 @@ if defined?(Sniffer)
       module Snifferable
         def self.included(klass)
           klass.extend ClassMethods
-          klass.instance_variable_set(:@snifffers, {})
+          klass.instance_variable_set(:@sniffers, {})
         end
 
         module ClassMethods
