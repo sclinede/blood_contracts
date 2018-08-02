@@ -32,12 +32,16 @@ module BloodContracts
         }
       end
 
+      def default_load(data)
+        Oj.load(data, mode: :object, circular: true)
+      end
+
       def default_dump(data)
         Oj.dump(data, mode: :object, circular: true, max_nesting: 10)
       end
 
       def default_serializer
-        { load: Oj.method(:load), dump: method(:default_dump) }
+        { load: method(:default_load), dump: method(:default_dump) }
       end
 
       def hash_serializer?
