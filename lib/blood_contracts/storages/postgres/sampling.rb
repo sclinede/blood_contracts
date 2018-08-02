@@ -47,7 +47,7 @@ module BloodContracts
           )
         end
 
-        def load_preview(_chunk_name, path = nil, **kwargs)
+        def load_preview(chunk, path = nil, **kwargs)
           raise SampleNotFound unless (name = find(path, **kwargs))
           session, period, rule, round = parse(name)
           query.load_sample_preview(session, period, rule, round, chunk)
