@@ -34,7 +34,7 @@ module BloodContracts
               send(
                 :select_multiple_rows,
                 template_name,
-                parse_arguments(args, expected_args: kwargs.fetch(:args)),
+                parse_arguments!(args, expected_args: kwargs.fetch(:args)),
                 field_name: kwargs.fetch(:field_name)
               )
             end
