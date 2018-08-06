@@ -6,6 +6,10 @@ if defined?(Sniffer)
     end
 
     def request
+      requests.last.to_h
+    end
+
+    def requests
       return {} unless requested_http?
       last_http_session = meta["last_http_session"].to_a
       last_http_session.map do |session|
@@ -67,7 +71,7 @@ if defined?(Sniffer)
           end
 
           def fetch_sniffer(**kwargs)
-            @sniffers.fetch(kwargs) do |key|
+            @sniffers.fetch(kwargs.hash) do |key|
               @sniffers.store(key, ContractSniffer.new(**kwargs))
             end
           end
