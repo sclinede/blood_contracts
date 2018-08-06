@@ -27,6 +27,7 @@ module BloodContracts
       output = ""
       meta = {}
       error = nil
+
       before_call(args: args, kwargs: kwargs, meta: meta)
 
       begin
@@ -75,11 +76,7 @@ module BloodContracts
     end
 
     def constantize_rule(rule_name, prefix)
-      self.class.const_get(new_rule_name(prefix, rule_name))
-    end
-
-    def new_rule_name(prefix, name)
-      "#{prefix}_#{name}".gsub(/\W/, "_").camelcase(:upper)
+      self.class.const_get(self.class.new_rule_name(prefix, rule_name))
     end
   end
 end

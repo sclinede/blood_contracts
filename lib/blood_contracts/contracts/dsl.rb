@@ -101,10 +101,6 @@ module BloodContracts
           new_rule
         end
 
-        def new_rule_name(prefix, name)
-          "#{prefix}_#{name}".gsub(/\W/, "_").camelcase(:upper)
-        end
-
         def full_name
           self.class.full_name
         end
@@ -201,6 +197,10 @@ module BloodContracts
         false
       end
 
+      def new_rule_name(prefix, name)
+        "#{prefix}_#{name}".gsub(/\W/, "_").camelcase(:upper)
+      end
+
       private
 
       def register_rule(klass, prefix, name, tag)
@@ -210,10 +210,6 @@ module BloodContracts
         const_set(new_rule_name(prefix, name), new_rule)
         yield(new_rule)
         update_tags(name, tag)
-      end
-
-      def new_rule_name(prefix, name)
-        "#{prefix}_#{name}".gsub(/\W/, "_").camelcase(:upper)
       end
     end
   end
