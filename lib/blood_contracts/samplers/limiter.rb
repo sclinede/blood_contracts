@@ -6,13 +6,24 @@ module BloodContracts
       param :contract_name
       param :storage
 
-      def limit_reached?(rule)
+      def limit_reached?(contract, rule)
         rules_or_tags = Array(contract_tags[rule.to_sym] || rule).map(&:to_sym)
         return unless (limit = limits.values_at(*rules_or_tags).compact.min)
-        storage.count(rule) >= limit
+        occasions_count(contract, rule) >= limit
       end
 
       private
+
+      require_relative '../statistics.rb'
+      Statistics = ::BloodContracts::Statistics::Middleware
+
+      def occasions_count(contract, rule)
+        if BloodContracts.middleware.exists?(Statistics)
+          contract.statistics.current[rule] - 1
+        else
+          storage.count(rule)
+        end
+      end
 
       def contract_tags
         @contract_tags ||=

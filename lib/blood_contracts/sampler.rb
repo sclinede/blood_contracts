@@ -39,10 +39,10 @@ module BloodContracts
       @sample = Samplers::Sample.new(utils.path, contract_name)
     end
 
-    def store(round:, rules:, context:)
+    def store(contract, round, rules, context)
       Array(rules).each do |rule_name|
         reset_sample!
-        next if limiter.limit_reached?(rule_name)
+        next if limiter.limit_reached?(contract, rule_name)
         storage.preview(rule_name, round, context)
         storage.serialize(rule_name, round, context)
       end
@@ -83,7 +83,7 @@ module BloodContracts
 
     class Middleware
       def call(contract, round, rules, context)
-        contract.sampler.store(round: round, rules: rules, context: context)
+        contract.sampler.store(contract, round, rules, context)
         yield
       end
     end
