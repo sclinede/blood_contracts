@@ -1,7 +1,6 @@
 require_relative "./samplers/utils.rb"
 require_relative "./samplers/serializers_accessors.rb"
 require_relative "./samplers/preview_accessors.rb"
-require_relative "./samplers/limiter.rb"
 
 module BloodContracts
   class Sampler
@@ -19,6 +18,7 @@ module BloodContracts
       reset_utils!
       reset_storage!
       reset_sample!
+      reset_limiter!
     end
 
     attr_reader :storage
@@ -77,15 +77,17 @@ module BloodContracts
       BloodContracts.sampling_config[:period] || 1
     end
 
-    def limiter
-      Samplers::Limiter.new(contract_name, storage)
-    end
-
     class Middleware
       def call(contract, round, rules, context)
         contract.sampler.store(contract, round, rules, context)
         yield
       end
+    end
+
+    require_relative "./samplers/limiter.rb"
+    attr_reader :limiter
+    def reset_limiter!
+      @limiter = Samplers::Limiter.new(contract_name, storage)
     end
   end
 end

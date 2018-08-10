@@ -6,6 +6,12 @@ module BloodContracts
       param :contract_name
       param :storage
 
+      attr_reader :offset
+      def initialize(*)
+        super
+        recalibrate_stats_count_offset
+      end
+
       def limit_reached?(contract, rule)
         rules_or_tags = Array(contract_tags[rule.to_sym] || rule).map(&:to_sym)
         return unless (limit = limits.values_at(*rules_or_tags).compact.min)
@@ -14,12 +20,24 @@ module BloodContracts
 
       private
 
+      def recalibrate_stats_count_offset
+        stats_mw_index = BloodContracts.middleware.index_of(Statistics)
+        return(@offset = nil) unless stats_mw_index
+        sampler_mw_index = BloodContracts.middleware.index_of(Sampler)
+        @offset = sampler_mw_index > stats_mw_index ? -1 : 0
+      end
+
       require_relative '../statistics.rb'
       Statistics = ::BloodContracts::Statistics::Middleware
+      Sampler = ::BloodContracts::Sampler::Middleware
+
+      def fallback_to_statistics?
+        !!@offset
+      end
 
       def occasions_count(contract, rule)
-        if BloodContracts.middleware.exists?(Statistics)
-          contract.statistics.current[rule] - 1
+        if fallback_to_statistics?
+          contract.statistics.current[rule] + offset
         else
           storage.count(rule)
         end

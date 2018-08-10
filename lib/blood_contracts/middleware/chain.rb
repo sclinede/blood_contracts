@@ -44,6 +44,10 @@ module BloodContracts
       end
       # rubocop:enable Metrics/AbcSize
 
+      def index_of(klass)
+        entries.index { |entry| entry.klass == klass }
+      end
+
       def exists?(klass)
         any? { |entry| entry.klass == klass }
       end
