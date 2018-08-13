@@ -81,17 +81,15 @@ if defined?(Sniffer)
           def sniffer(http_round = nil, meta: nil, **kwargs)
             http_round ||= kwargs[:http_round]
             input = kwargs.fetch(:input) { http_round.input }
-            output = kwargs.fetch(:output) { http_round.output }
             fetch_sniffer(
               input: input,
-              output: output,
               meta: meta
             )
           end
 
-          def fetch_sniffer(input:, output:, meta:)
-            @sniffers.fetch(kwargs.slice(:input, :output)) do |key|
-              @sniffers.store(key, ContractSniffer.new(kwargs.slice(:meta)))
+          def fetch_sniffer(input:, meta:)
+            @sniffers.fetch(input) do |key|
+              @sniffers.store(key, ContractSniffer.new(meta: meta))
             end
           end
         end
@@ -103,7 +101,7 @@ if defined?(Sniffer)
 
         def before_call(meta:, **kwargs)
           super
-          @_sniffer = self.class.sniffer(meta: meta, **kwargs)
+          @_sniffer = self.class.sniffer(meta: meta, input: kwargs)
           @_sniffer.enable!
         end
 
