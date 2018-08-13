@@ -80,6 +80,7 @@ if defined?(Sniffer)
         module ClassMethods
           def sniffer(http_round = nil, meta: nil, **kwargs)
             http_round ||= kwargs[:http_round]
+            meta ||= kwargs.fetch(:meta) { http_round.meta }
             input = kwargs.fetch(:input) { http_round.input }
             fetch_sniffer(
               input: input,
