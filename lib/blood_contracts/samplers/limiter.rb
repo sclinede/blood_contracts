@@ -37,7 +37,9 @@ module BloodContracts
 
       def occasions_count(contract, rule)
         if fallback_to_statistics?
-          contract.statistics.current[rule].to_i + offset
+          count = contract.statistics.current[rule.to_s]
+          count ||= contract.statistics.current[rule.to_sym]
+          count.to_i + offset
         else
           storage.count(rule)
         end
