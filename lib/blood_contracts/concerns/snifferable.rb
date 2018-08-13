@@ -103,7 +103,7 @@ if defined?(Sniffer)
 
         def before_call(meta:, **kwargs)
           super
-          @_sniffer = self.class.sniffer(meta: meta)
+          @_sniffer = self.class.sniffer(meta: meta, **kwargs)
           @_sniffer.enable!
         end
 
