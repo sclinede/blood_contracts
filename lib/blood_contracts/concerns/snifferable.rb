@@ -1,8 +1,10 @@
 if defined?(Sniffer)
   class ContractSniffer
     attr_reader :meta
+    # attr_reader :sniffer
     def initialize(http_round: nil, meta: nil)
       @meta = http_round&.meta || meta
+      # @sniffer = Sniffer.new(logger: nil)
     end
 
     def request
@@ -10,7 +12,7 @@ if defined?(Sniffer)
     end
 
     def requests
-      return {} unless requested_http?
+      return [] unless requested_http?
       last_http_session = meta["last_http_session"].to_a
       last_http_session.map do |session|
         session["request"].to_h.slice("body", "query")
@@ -45,6 +47,17 @@ if defined?(Sniffer)
       ::Sniffer.disable!
     end
 
+    def capture!
+      sniffer.capture { yield }
+      sniffer_buffer = sniffer.data
+      requested_api = sniffer_buffer.size.positive?
+      meta["requested_http"] = requested_api
+      return unless requested_api
+      meta["last_http_session"] = sniffer_buffer.map do |session|
+        Hashie.stringify_keys_recursively!(session.to_h)
+      end
+    end
+
     def merge_buffer_to_meta!
       sniffer_buffer = ::Sniffer.data
       requested_api = sniffer_buffer.size.positive?
@@ -67,15 +80,26 @@ if defined?(Sniffer)
         module ClassMethods
           def sniffer(http_round = nil, meta: nil, **kwargs)
             http_round ||= kwargs[:http_round]
-            fetch_sniffer(http_round: http_round, meta: meta)
+            input = kwargs.fetch(:input) { http_round.input }
+            output = kwargs.fetch(:output) { http_round.output }
+            fetch_sniffer(
+              input: input,
+              output: output,
+              meta: meta
+            )
           end
 
-          def fetch_sniffer(**kwargs)
-            @sniffers.fetch(kwargs.hash) do |key|
-              @sniffers.store(key, ContractSniffer.new(**kwargs))
+          def fetch_sniffer(input:, output:, meta:)
+            @sniffers.fetch(kwargs.slice(:input, :output)) do |key|
+              @sniffers.store(key, ContractSniffer.new(kwargs.slice(:meta)))
             end
           end
         end
+
+        # def around_call(**kwargs)
+        #   sniffer_args = kwargs.slice(:input, :output, :meta)
+        #   self.class.fetch_sniffer(sniffer_args).capture { super }
+        # end
 
         def before_call(meta:, **kwargs)
           super
