@@ -11,7 +11,7 @@ module BloodContracts
 
       def initialize(*)
         redis_loaded?
-        self.redis = connection
+        self.redis ||= connection
         super
       end
 
@@ -32,7 +32,7 @@ module BloodContracts
 
       # rubocop:disable Style/GlobalVars
       def redis
-        Thread.current[:__blood_contracts_redis] || $redis || Redis.current ||
+        Thread.current[:__blood_contracts_redis] || $redis || current_redis ||
           raise(
             NotConnected,
             "BloodContracts::Storage:Redis not set to a Redis.new connection"

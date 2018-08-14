@@ -43,7 +43,7 @@ RSpec.describe "Contract Statistics", type: :feature do
       it "returns valid statistics" do
         expect(contract.statistics.current)
           .to match(hash_including(
-                      usual: 10,
+                      "usual" => 10,
                       "usual/london_weather/warm": 5,
                       "usual/saint_p_weather/cold": 5,
                       "error_response/client": 10,
@@ -89,7 +89,7 @@ RSpec.describe "Contract Statistics", type: :feature do
           ))
         expect(previous_period_statistics)
           .to match(hash_including(
-                      usual: 10,
+                      "usual" => 10,
                       "usual/london_weather/warm": 5,
                       "usual/saint_p_weather/cold": 5,
                       "error_response/client": 10
@@ -103,7 +103,7 @@ RSpec.describe "Contract Statistics", type: :feature do
                               __guarantee_failure__: 1
                             },
                             {
-                              usual: 10,
+                              "usual" => 10,
                               "usual/london_weather/warm": 5,
                               "usual/saint_p_weather/cold": 5,
                               "error_response/client": 10
@@ -139,7 +139,7 @@ RSpec.describe "Contract Statistics", type: :feature do
       it "returns valid statistics" do
         expect(contract.statistics.current)
           .to match(hash_including(
-                      usual: 10,
+                      "usual" => 10,
                       "usual/london_weather/warm": 5,
                       "usual/saint_p_weather/cold": 5,
                       "error_response/client": 10,
@@ -184,7 +184,7 @@ RSpec.describe "Contract Statistics", type: :feature do
           ))
         expect(previous_period_statistics)
           .to match(hash_including(
-                      usual: 10,
+                      "usual" => 10,
                       "usual/london_weather/warm": 5,
                       "usual/saint_p_weather/cold": 5,
                       "error_response/client": 10
@@ -198,7 +198,7 @@ RSpec.describe "Contract Statistics", type: :feature do
                               __guarantee_failure__: 1
                             },
                             {
-                              usual: 10,
+                              "usual" => 10,
                               "usual/london_weather/warm": 5,
                               "usual/saint_p_weather/cold": 5,
                               "error_response/client": 10

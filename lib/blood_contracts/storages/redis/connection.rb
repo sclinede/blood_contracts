@@ -29,6 +29,11 @@ module BloodContracts
           @config_root ||= redis_config.fetch(:config_root)
         end
 
+        def current_redis
+          return unless ::Redis.respond_to?(:current)
+          ::Redis.current
+        end
+
         # FIXME: Do not forget about ConnectionPool, to be safe
         def connection
           return ::Redis.new(url: redis_url) if redis_url

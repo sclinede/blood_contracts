@@ -30,7 +30,7 @@ RSpec.describe "Contract Runner Validation", type: :feature do
   context "when expected behavior" do
     it "does not raise error" do
       expect { weather_service.update(:london) }.to_not raise_error
-      expect(contract.statistics.current.key?(:usual)).to be_truthy
+      expect(contract.statistics.current.key?("usual")).to be_truthy
     end
   end
 
