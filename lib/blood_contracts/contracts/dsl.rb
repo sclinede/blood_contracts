@@ -77,8 +77,11 @@ module BloodContracts
           self.class.to_h
         end
 
+        NO_NAME_RULE = "empty_rule_name".freeze
+
         def register_rule(name, prefix, tag)
           name = name.to_s
+          name = NO_NAME_RULE if name.empty?
           rule = contract.rules_cache.fetch(File.join(full_name, name)) do
             create_sub_rule(name, prefix).tap do |new_rule|
               after_sub_rule_create(new_rule, tag)

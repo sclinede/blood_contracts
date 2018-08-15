@@ -92,7 +92,8 @@ RSpec.describe "Contract Statistics", type: :feature do
                       "usual" => 10,
                       "usual/london_weather/warm": 5,
                       "usual/saint_p_weather/cold": 5,
-                      "error_response/client": 10
+                      "error_response/client": 10,
+                      "error_response/empty_rule_name": 10
           ))
         expect(contract.statistics.total.values)
           .to match_array([
@@ -106,7 +107,8 @@ RSpec.describe "Contract Statistics", type: :feature do
                               "usual" => 10,
                               "usual/london_weather/warm": 5,
                               "usual/saint_p_weather/cold": 5,
-                              "error_response/client": 10
+                              "error_response/client": 10,
+                              "error_response/empty_rule_name": 10
                             }
                           ])
       end
@@ -187,7 +189,8 @@ RSpec.describe "Contract Statistics", type: :feature do
                       "usual" => 10,
                       "usual/london_weather/warm": 5,
                       "usual/saint_p_weather/cold": 5,
-                      "error_response/client": 10
+                      "error_response/client": 10,
+                      "error_response/empty_rule_name": 10
           ))
         expect(contract.statistics.total.values)
           .to match_array([
@@ -201,7 +204,8 @@ RSpec.describe "Contract Statistics", type: :feature do
                               "usual" => 10,
                               "usual/london_weather/warm": 5,
                               "usual/saint_p_weather/cold": 5,
-                              "error_response/client": 10
+                              "error_response/client": 10,
+                              "error_response/empty_rule_name": 10
                             }
                           ])
       end

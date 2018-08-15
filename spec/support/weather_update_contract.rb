@@ -58,6 +58,7 @@ class WeatherUpdateContract < BloodContracts::BaseContract
       (500..599).cover?(sub_round.response.code.to_i)
     end
 
+    expect("") { |_| true }
     skip
   end
 
