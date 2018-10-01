@@ -23,7 +23,9 @@ module BloodContracts
         def execute(query_name, options = {})
           reset_connection!
           prepare_variables(options)
-          connection.exec(sql(query_name))
+          connection.transaction do
+            connection.exec(sql(query_name))
+          end
         ensure
           release_connection_proc.call(connection)
         end
