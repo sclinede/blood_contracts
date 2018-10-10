@@ -34,6 +34,7 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency "oj", "~> 3.3"
 
   spec.add_development_dependency "bundler", "~> 1.16"
+  spec.add_development_dependency "sniffer"
   spec.add_development_dependency "pry", "~> 0.9"
   spec.add_development_dependency "pry-doc", "~> 0.13"
   spec.add_development_dependency "rake", "~> 10.0"

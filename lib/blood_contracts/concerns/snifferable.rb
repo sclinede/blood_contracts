@@ -1,4 +1,4 @@
-if defined?(Sniffer)
+if defined?(::Sniffer)
   class ContractSniffer
     attr_reader :meta
     # attr_reader :sniffer
@@ -78,6 +78,11 @@ if defined?(Sniffer)
         end
 
         module ClassMethods
+          def inherited(klass)
+            super
+            klass.instance_variable_set(:@sniffers, {})
+          end
+
           def sniffer(http_round = nil, meta: nil, **kwargs)
             http_round ||= kwargs[:http_round]
             meta ||= kwargs.fetch(:meta) { http_round.meta }

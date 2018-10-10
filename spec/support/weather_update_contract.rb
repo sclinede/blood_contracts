@@ -1,7 +1,11 @@
 require "timeout"
 require "json"
 
-class WeatherUpdateContract < BloodContracts::BaseContract
+require "sniffer"
+require "blood_contracts/concerns/snifferable"
+class WeatherBaseContract < BloodContracts::BaseContract
+  include BloodContracts::Concerns::Snifferable
+
   def response_formatter(round)
     round.meta["raw_response"]
   end
@@ -20,7 +24,9 @@ class WeatherUpdateContract < BloodContracts::BaseContract
   def self.rule_name_from_city(round)
     "#{round.response.city.downcase[0..6]}_weather".gsub(/\W/, "_")
   end
+end
 
+class WeatherUpdateContract < WeatherBaseContract
   guarantee "correct_response" do |round|
     round.response.respond_to?(:temperature) &&
       round.response.respond_to?(:city) &&
@@ -29,6 +35,7 @@ class WeatherUpdateContract < BloodContracts::BaseContract
   end
 
   expect "usual" do |round|
+
     next unless round.response.success? &&
                 !round.response.city.to_s.empty? &&
                 (-100..100).cover?(round.response.temperature)

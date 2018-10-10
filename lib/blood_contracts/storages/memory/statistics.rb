@@ -48,13 +48,24 @@ module BloodContracts
 
         def total
           Hash[
-            storage.sort_by { |(period_int, _)| -period_int }.map do |k, v|
+            storage_to_h.sort_by { |(period_int, _)| -period_int }.map do |k, v|
               [Time.at(k * statistics.period_size), v]
             end
           ]
         end
 
         private
+
+        def storage_to_h
+          return storage.to_h if storage.respond_to?(:to_h)
+          raise ArgumentError unless storage.is_a?(Concurrent::Map)
+          Hash[
+            storage.keys.zip(
+              storage.instance_variable_get(:@backend).values.map do |v|
+                v.instance_variable_get(:@backend)
+              end)
+          ]
+        end
 
         def periods_to_timestamps(periods)
           periods.map do |period_int|
