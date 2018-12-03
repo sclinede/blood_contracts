@@ -29,7 +29,7 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency "dry-initializer", "~> 2.0"
   spec.add_runtime_dependency "hashie", "~> 3.0"
   spec.add_runtime_dependency "oj", "~> 3.0"
-  spec.add_runtime_dependency "nanoid", "~> 0.2"
+  spec.add_runtime_dependency "nanoid", "~> 2.0"
   spec.add_runtime_dependency "anyway_config", "~> 1.1"
 
   spec.add_development_dependency "bundler", "~> 1.16"
