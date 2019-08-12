@@ -1,7 +1,0 @@
-SELECT '/' || session || '/' || contract || '/' || period || '/' || rule || '/' || round as sample_path
-FROM <%= samples_table_name %>
-WHERE contract ~ '<%= contract_name %>'
-AND session ~ '<%= connection.escape_string(session_name) %>'
-AND period::text ~ '<%= period_name %>'
-AND round::text ~ '<%= round_name %>'
-AND rule ~ '<%= connection.escape_string(@rule_name) %>';

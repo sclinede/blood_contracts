@@ -1,3 +1,0 @@
-SELECT true as enabled
-FROM <%= config_table_name %>
-WHERE enabled OR enabled_contracts @> ARRAY['<%= connection.escape_string(contract_name) %>']::text[];

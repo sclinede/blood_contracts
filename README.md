@@ -1,14 +1,63 @@
 # BloodContracts
 
-Ruby gem to define and validate behavior of API using contract.
+Simple and agile Ruby data validation tool inspired by refinement types and functional approach
 
-Possible use-cases:
-- Automated external API status check (shooting with critical requests and validation that behavior meets the contract);
-- Automated detection of unexpected external API behavior (Rack::request/response pairs that don't match contract);
-- Contract definition assistance tool (generate real-a-like requests and iterate through oddities of your system behavior)
+* **Powerful**. [Algebraic Data Type][adt_wiki] guarantees that gem is enough to implement any kind of complex data validation, while [Functional Approach][functional_programming_wiki] gives you full control over validation outcomes
+* **Simple**. You could write your first [Refinment Type][refinement_types_wiki] as simple as single Ruby method in single class
+* **Brings transparency**. Comes with instrumentation tools, so now you will exactly know how often each type matches in your production
+* **Rubyish**. DSL is inspired by Ruby Struct. If you love Ruby way you'd like the BloodContracts types
+* **Born in production**. Created on basis of [eBaymag][ebaymag] project, used as a tool to control and monitor data inside API communication
 
-<a href="https://evilmartians.com/">
-<img src="https://evilmartians.com/badges/sponsored-by-evil-martians.svg" alt="Sponsored by Evil Martians" width="236" height="54"></a>
+```ruby
+# Write your "types" as simple as...
+class Email < ::BC::Refined
+  REGEX = /\A[\w+\-.]+@[a-z\d\-]+(\.[a-z\d\-]+)*\.[a-z]+\z/i
+
+  def match
+    return if (context[:email] = value.to_s) =~ REGEX
+    failure(:invalid_email)
+  end
+end
+
+class Phone < ::BC::Refined
+  REGEX = /\A(\+7|8)(9|8)\d{9}\z/i
+
+  def match
+    return if (context[:phone] = value.to_s) =~ REGEX
+    failure(:invalid_phone)
+  end
+end
+
+# ... compose them...
+Login = Email.or_a(Phone)
+
+# ... and match!
+case match = Login.match("not-a-login")
+when Phone, Email
+  match # use as you wish, you exactly know what kind of login you received
+when BC::ContractFailure # translate error message
+  match.messages # => [:no_matches, :invalid_phone, :invalid_email]
+else raise # to make sure you covered all scenarios (Functional Way)
+end
+
+# And then in
+# config/initializers/contracts.rb
+
+module Contracts
+  class YabedaInstrument
+    def call(session)
+      valid_marker = session.valid? ? "V" : "I"
+      result = "[#{valid_marker}] #{session.result_type_name}"
+      Yabeda.api_contract_matches.increment(result: result)
+    end
+  end
+end
+
+BloodContracts::Instrumentation.configure do |cfg|
+  # Attach to every BC::Refined ancestor with Login in the name
+  cfg.instrument "Login", Contracts::YabedaInstrument.new
+end
+```
 
 ## Installation
 
@@ -28,120 +77,10 @@ Or install it yourself as:
 
 ## Usage
 
-```ruby
-# define contract
-def contract
-  Hash[
-    success: {
-      check: ->(_input, output) do
-        data = output.data
-        shipping_cost = data.dig(
-          "BkgDetails", "QtdShp", "ShippingCharge"
-        )
-        output.success? && shipping_cost.present?
-      end,
-      threshold: 0.98,
-    },
-    data_missing_error: {
-      check: ->(_input, output) do
-        output.error_codes.present? &&
-        (output.error_codes - ["111"]).empty?
-      end,
-      limit: 0.01,
-    },
-    data_invalid_error: {
-      check: ->(_input, output) do
-        output.error_codes.present? &&
-        (output.error_codes - ["4300", "123454"]).empty?
-      end,
-      limit: 0.01,
-    },
-    strange_weight: {
-      check: ->(input, output) do
-        input.weight > 100 && output.error_codes.empty? && !output.success?
-      end,
-      limit: 0.01,
-    }
-  ]
-end
+This gem is just facade for the whole data validation and monitoring toolset.
 
-# define the API input
-def generate_data
-  DHL::RequestData.new(
-    data_source.origin_addresses.sample,
-    data_source.destinations.sample,
-    data_source.prices.sample,
-    data_source.products.sample,
-    data_source.weights.sample,
-    data_source.dates.sample.days.since.to_date.to_s(:iso8601),
-    data_source.accounts.sample,
-  ).to_h
-end
+For deeper understanding see [BloodContracts::Core](https://github.com/sclinede/blood_contracts-core), [BloodContracts::Ext](https://github.com/sclinede/blood_contracts-ext) and [BloodContracts::Instrumentation](https://github.com/sclinede/blood_contracts-instrumentation)
 
-def data_source
-  Hashie::Mash.new(load_fixture("dhl/obfuscated-production-data.yaml"))
-end
-
-# initiate contract suite
-# with default storage (in tmp/blood_contracts/ folder of the project)
-contract_suite = BloodContract::Suite.new(
-  contract: contract,
-  data_generator: method(:generate_data),
-)
-
-# with custom storage backend (e.g. Postgres DB)
-conn = PG.connect( dbname: "blood_contracts" )
-conn.exec(<<~SQL);
-  CREATE TABLE runs (
-    created_at timestamp DEFAULT current_timestamp,
-    contract_name text,
-    rules_matched array text[],
-    input text,
-    output text
-  );
-SQL
-
-contract_suite = BloodContract::Suite.new(
-  contract: contract,
-  data_generator: method(:generate_data),
-
-  storage_backend: ->(contract_name, rules_matched, input, output) do
-    conn.exec(<<~SQL, contract_name, rules_matched, input, output)
-      INSERT INTO runs (contract_name, rules_matched, input, output) VALUES (?, ?, ?, ?);
-    SQL
-  end
-)
-
-# run validation
-runner = BloodContract::Runner.new(
-           ->(input) { DHL::Client.call(input) }
-           suite: contract_suite,
-           time_to_run: 3600, # seconds
-           # or
-           # iterations: 1000
-         ).tap(&:call)
-
-# chech the results
-runner.valid? # true if behavior was aligned with contract or false in any other case
-runner.run_stats # stats about each contract rule or exceptions occasions during the run
-
-```
-
-## TODO
-- Add rake task to run contracts validation
-- Add executable to run contracts validation
-
-## Possible Features
-- Store the actual code of the contract rules in Storage (gem 'sourcify')
-- Store reports in Storage
-- Export/import contracts to YAML, JSON....
-- Contracts inheritance (already exists using `Hash#merge`?)
-- Export `Runner#run_stats` to CSV
-- Create simple web app, to read the reports
-
-## Other specific use cases
-
-For Rack request/response validation use: `blood_contracts-rack`
 
 ## Development
 
