@@ -1,3 +1,8 @@
+[adt_wiki]: https://en.wikipedia.org/wiki/Algebraic_data_type
+[functional_programming_wiki]: https://en.wikipedia.org/wiki/Functional_programming
+[refinement_types_wiki]: https://en.wikipedia.org/wiki/Refinement_type
+[ebaymag]: https://ebaymag.com/
+
 # BloodContracts
 
 Simple and agile Ruby data validation tool inspired by refinement types and functional approach
