@@ -14,35 +14,73 @@ Simple and agile Ruby data validation tool inspired by refinement types and func
 * **Born in production**. Created on basis of [eBaymag][ebaymag] project, used as a tool to control and monitor data inside API communication
 
 ```ruby
-# Write your "types" as simple as...
-class Email < ::BC::Refined
-  REGEX = /\A[\w+\-.]+@[a-z\d\-]+(\.[a-z\d\-]+)*\.[a-z]+\z/i
+# Example of using for Rubygems API
+module RubygemsAPI
+   require 'json'
 
-  def match
-    return if (context[:email] = value.to_s) =~ REGEX
-    failure(:invalid_email)
+  class Json < BC::Refined
+    def match
+      # now it's easy to understand why we caught JSON::ParserError
+      context[:response] = value.to_s
+      context[:parsed] = ::JSON.parse(context[:response])
+      self
+    rescue JSON::ParserError => ex
+      context[:exception] = ex # now we could easily playaround with exception and reraise it
+      failure(:invalid_json)
+    end
+
+    # so the next validation in the pipe will receive parsed response, not unparsed string
+    def mapped
+      context[:parsed]
+    end
   end
-end
 
-class Phone < ::BC::Refined
-  REGEX = /\A(\+7|8)(9|8)\d{9}\z/i
+  class GemInfo < BC::Refined
+    # I chose some data that is interesing for me
+    INFO_KEYS = %w(name downloads info authors version homepage_uri source_code_uri)
 
-  def match
-    return if (context[:phone] = value.to_s) =~ REGEX
-    failure(:invalid_phone)
+    def match
+      # We have to make sure that result is a hash with appropriate keys
+      is_a_project = value.is_a?(Hash) && (INFO_KEYS - value.keys).empty?
+      return failure(:reponse_is_not_gem_info) unless is_a_project
+
+      context[:gem_info] = value.slice(*INFO_KEYS)
+      self
+    end
+
+    def mapped
+      context[:gem_info]
+    end
   end
-end
 
-# ... compose them...
-Login = Email.or_a(Phone)
+  class PlainTextError < BC::Refined
+    def match
+      context[:response] = value.to_s
+      # to avoid multiple parsing of response, we'll try to save it
+      context[:parsed] = JSON.parse(context[:response])
+      failure(:non_plain_text_response)
+    rescue JSON::ParserError
+      self
+    end
+
+    def mapped
+      context[:response]
+    end
+  end
+  
+  # ... compose them...
+  Validation = PlainTextError.or_a(Json.and_then(GemInfo))
+end
 
 # ... and match!
-case match = Login.match("not-a-login")
-when Phone, Email
-  match # use as you wish, you exactly know what kind of login you received
-when BC::ContractFailure # translate error message
-  match.messages # => [:no_matches, :invalid_phone, :invalid_email]
-else raise # to make sure you covered all scenarios (Functional Way)
+case gem = RubygemsAPI::Client.gem("rack")
+when GemInfo
+  gem.unpack # show data to user
+when PlaintTextError
+  {message: gem.unpack, status: 400} # wrap it into json response
+when BC::ContractFailure
+  match.messages
+else raise # ... you know why
 end
 
 # And then in
@@ -59,8 +97,8 @@ module Contracts
 end
 
 BloodContracts::Instrumentation.configure do |cfg|
-  # Attach to every BC::Refined ancestor with Login in the name
-  cfg.instrument "Login", Contracts::YabedaInstrument.new
+  # Attach to every BC::Refined ancestor with RubygemsAPI::Validation in the name
+  cfg.instrument "RubygemsAPI::Validation", Contracts::YabedaInstrument.new
 end
 ```
 
