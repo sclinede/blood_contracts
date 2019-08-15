@@ -13,7 +13,7 @@ Simple and agile Ruby data validation tool inspired by refinement types and func
 * **Rubyish**. DSL is inspired by Ruby Struct. If you love Ruby way you'd like the BloodContracts types
 * **Born in production**. Created on basis of [eBaymag][ebaymag] project, used as a tool to control and monitor data inside API communication
 
-<a href="https://evilmartians.com/?utm_source=yabeda&utm_campaign=project_page">
+<a href="https://evilmartians.com/?utm_source=blood_contracts&utm_campaign=project_page">
 <img src="https://evilmartians.com/badges/sponsored-by-evil-martians.svg" alt="Sponsored by Evil Martians" width="236" height="54">
 </a>
 
