@@ -80,7 +80,9 @@ when PlaintTextError
   {message: gem.unpack, status: 400} # wrap it into json response
 when BC::ContractFailure
   match.messages
-else raise # ... you know why
+else 
+  Honeybadger.notify("Unexpected Rubygems API behavior", context: gem)
+  {message: "Service is not available at the moment!", status: 500}
 end
 
 # And then in
