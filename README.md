@@ -19,14 +19,26 @@ Simple and agile Ruby data validation tool inspired by refinement types and func
 
 ```ruby
 # Example of using for Rubygems API
+
+require 'blood_contracts'
+require 'net/http'
+require 'json'
+
 module RubygemsAPI
-   require 'json'
+  def self.gem(name)
+    Request.and_then(Response).match(name) do |request|
+      uri = request.unpack
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true
+      http.get(uri.request_uri).body
+    end
+  end
 
   class Json < BC::Refined
     def match
       # now it's easy to understand why we caught JSON::ParserError
       context[:response] = value.to_s
-      context[:parsed] = ::JSON.parse(context[:response])
+      context[:parsed] ||= ::JSON.parse(context[:response])
       self
     rescue JSON::ParserError => ex
       context[:exception] = ex # now we could easily playaround with exception and reraise it
@@ -71,20 +83,37 @@ module RubygemsAPI
       context[:response]
     end
   end
-  
+
+  class Request < BC::Refined
+    ROOT = "https://rubygems.org/api/v1/gems/".freeze
+
+    def match
+      context[:name] = String(value)
+      context[:uri] = URI.parse("#{File.join(ROOT, context[:name])}.json")
+      self
+    rescue StandardError => ex
+      context[:exception] = ex # now we could easily playaround with exception and reraise it
+      failure(:invalid_gem_name_for_request)
+    end
+
+    def mapped
+      context[:uri]
+    end
+  end
+
   # ... compose them...
-  Validation = PlainTextError.or_a(Json.and_then(GemInfo))
+  Response = PlainTextError.or_a(Json.and_then(GemInfo))
 end
 
 # ... and match!
-case gem = RubygemsAPI::Client.gem("rack")
+case gem = RubygemsAPI.gem("rack")
 when GemInfo
   gem.unpack # show data to user
 when PlaintTextError
   {message: gem.unpack, status: 400} # wrap it into json response
 when BC::ContractFailure
   match.messages
-else 
+else
   Honeybadger.notify("Unexpected Rubygems API behavior", context: gem)
   {message: "Service is not available at the moment!", status: 500}
 end
@@ -103,8 +132,8 @@ module Contracts
 end
 
 BloodContracts::Instrumentation.configure do |cfg|
-  # Attach to every BC::Refined ancestor with RubygemsAPI::Validation in the name
-  cfg.instrument "RubygemsAPI::Validation", Contracts::YabedaInstrument.new
+  # Attach to every BC::Refined ancestor with RubygemsAPI::Response in the name
+  cfg.instrument "RubygemsAPI::Response", Contracts::YabedaInstrument.new
 end
 ```
 
