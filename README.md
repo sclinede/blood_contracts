@@ -113,7 +113,7 @@ when PlaintTextError
   {message: gem.unpack, status: 400} # wrap it into json response
 else 
   # ...basically it's a case of ContractFailure, we have to improve contract then
-  Honeybadger.notify("Unexpected Rubygems API behavior", context: gem.messages)
+  Honeybadger.notify("Unexpected Rubygems API behavior", context: gem.context) # or gem.messages to see only error messages
   {message: "Service is not available at the moment!", status: 500}
 end
 
